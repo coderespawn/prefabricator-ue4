@@ -1,0 +1,10 @@
+DerivedDataCache
+Intermediate
+Saved
+Binaries
+Deploy
+Build
+.DS_Store
+*.sdf
+*.opensdf
+*.v12.suo

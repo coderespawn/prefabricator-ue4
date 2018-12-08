@@ -1,0 +1,29 @@
+{
+	"FileVersion" : 3,
+	"FriendlyName" : "Prefabricator",
+	"Version" : 0,
+	"VersionName" : "0.0.1",
+	"CreatedBy" : "Ali Akbar Vathi",
+	"CreatedByURL" : "http://coderespawn.com",
+	"EngineVersion" : "4.21.0",
+	"Description" : "Create prefabs in unreal engine",
+	"Category" : "Prefab",
+	"EnabledByDefault" : true,
+	"MarketplaceURL" : "",
+	
+	"Modules" :
+	[
+		{
+			"Name" : "PrefabricatorRuntime",
+			"Type" : "Runtime",
+			"LoadingPhase" : "PreDefault"
+		},
+		{
+			"Name" : "PrefabricatorEditor",
+			"Type" : "Editor",
+			"LoadingPhase" : "Default"
+		}
+	],
+
+	"CanContainContent" : true
+}
