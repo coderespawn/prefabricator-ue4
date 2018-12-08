@@ -11,6 +11,8 @@
 #include "PrefabEditorCommands.h"
 #include "UICommandList.h"
 #include "PrefabTools.h"
+#include "PrefabricatorAssetTypeActions.h"
+#include "PrefabricatorAssetBroker.h"
 
 #define LOCTEXT_NAMESPACE "DungeonArchitectEditorModule" 
 
@@ -91,6 +93,16 @@ class FPrefabricatorEditorModule : public IPrefabricatorEditorModule
 		);
 
 		LevelEditorModule.GetToolBarExtensibilityManager().Get()->AddExtender(LevelToolbarExtender);
+
+
+		// Register asset types
+		IAssetTools& AssetTools = FModuleManager::LoadModuleChecked<FAssetToolsModule>("AssetTools").Get();
+		RegisterAssetTypeAction(AssetTools, MakeShareable(new FPrefabricatorAssetTypeActions));
+
+		// Register the asset brokers (used for asset to component mapping)
+		PrefabAssetBroker = MakeShareable(new FPrefabricatorAssetBroker);
+		FComponentAssetBrokerage::RegisterBroker(PrefabAssetBroker, UPrefabComponent::StaticClass(), true, true);
+
 	}
 
 
@@ -111,12 +123,37 @@ class FPrefabricatorEditorModule : public IPrefabricatorEditorModule
 			}
 		}
 
+
+		// Unregister all the asset types that we registered
+		if (FModuleManager::Get().IsModuleLoaded("AssetTools"))
+		{
+			IAssetTools& AssetTools = FModuleManager::GetModuleChecked<FAssetToolsModule>("AssetTools").Get();
+			for (int32 Index = 0; Index < CreatedAssetTypeActions.Num(); ++Index)
+			{
+				AssetTools.UnregisterAssetTypeActions(CreatedAssetTypeActions[Index].ToSharedRef());
+			}
+		}
+		CreatedAssetTypeActions.Empty();
+
+		if (PrefabAssetBroker.IsValid()) {
+			FComponentAssetBrokerage::UnregisterBroker(PrefabAssetBroker);
+		}
+
+
 		FPrefabEditorStyle::Shutdown();
 	}
 
 private:
+	void RegisterAssetTypeAction(IAssetTools& AssetTools, TSharedRef<IAssetTypeActions> Action)
+	{
+		AssetTools.RegisterAssetTypeActions(Action);
+		CreatedAssetTypeActions.Add(Action);
+	}
+
 	FDelegateHandle LevelViewportExtenderHandle;
 	TSharedPtr<FExtender> LevelToolbarExtender;
+	TArray< TSharedPtr<IAssetTypeActions> > CreatedAssetTypeActions;
+	TSharedPtr<IComponentAssetBroker> PrefabAssetBroker;
 };
 
 IMPLEMENT_MODULE(FPrefabricatorEditorModule, PrefabricatorEditor)
