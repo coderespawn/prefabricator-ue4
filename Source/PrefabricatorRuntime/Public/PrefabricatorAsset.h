@@ -6,6 +6,17 @@
 #include "PrefabricatorAsset.generated.h"
 
 USTRUCT()
+struct PREFABRICATORRUNTIME_API FPrefabricatorFieldData {
+	GENERATED_USTRUCT_BODY()
+
+	UPROPERTY()
+	FName FieldName;
+
+	UPROPERTY()
+	TArray<uint8> Data;
+};
+
+USTRUCT()
 struct PREFABRICATORRUNTIME_API FPrefabricatorComponentData {
 	GENERATED_USTRUCT_BODY()
 
@@ -13,7 +24,7 @@ struct PREFABRICATORRUNTIME_API FPrefabricatorComponentData {
 	FName ComponentName;
 
 	UPROPERTY()
-	TArray<uint8> Data;
+	TArray<FPrefabricatorFieldData> Fields;
 };
 
 USTRUCT()
@@ -27,7 +38,10 @@ struct PREFABRICATORRUNTIME_API FPrefabricatorActorData {
 	UClass* ActorClass;
 
 	UPROPERTY()
-	TArray<FPrefabricatorComponentData> ComponentData;
+	TArray<FPrefabricatorFieldData> Fields;
+
+	UPROPERTY()
+	TArray<FPrefabricatorComponentData> Components;
 };
 
 

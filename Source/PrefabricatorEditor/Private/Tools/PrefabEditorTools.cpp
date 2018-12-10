@@ -18,6 +18,7 @@
 #include "EngineUtils.h"
 #include "ObjectWriter.h"
 #include "ObjectReader.h"
+#include "UnrealMemory.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogPrefabEditorTools, Log, All);
 
@@ -224,18 +225,6 @@ public:
 	//~ End FArchive Interface
 
 private:
-	static UClass* FindNativeSuperClass(UObject* Object)
-	{
-		UClass* Class = Object->GetClass();
-		for (; Class; Class = Class->GetSuperClass())
-		{
-			if ((Class->ClassFlags & CLASS_Native) != 0)
-			{
-				break;
-			}
-		}
-		return Class;
-	}
 
 	bool bSkipCompilerGeneratedDefaults;
 };
@@ -278,14 +267,37 @@ public:
 ///////////////////////////////////
 
 namespace {
-	void DumpPropertyList(UObject* Obj) {
-		
-		for (TFieldIterator<UProperty> PropertyIterator(Obj->GetClass()); PropertyIterator; ++PropertyIterator)
-		{
+
+	void GetPropertyData(UProperty* Property, UObject* Obj, TArray<uint8>& OutPropertyData) {
+		if (Property) {
+			int32 Size = Property->GetSize();
+			uint8* SrcData = Property->ContainerPtrToValuePtr<uint8>(Obj);
+			OutPropertyData.AddUninitialized(Size);
+			FMemory::Memcpy(OutPropertyData.GetData(), SrcData, Size);
+		}
+	}
+
+	void SerializeFields(UObject* Obj, TArray<FPrefabricatorFieldData>& OutFields) {
+		for (TFieldIterator<UProperty> PropertyIterator(Obj->GetClass()); PropertyIterator; ++PropertyIterator) {
 			UProperty* Property = *PropertyIterator;
-			if (Property) {
-				
+			int32 Size = Property->GetSize();
+			TArray<uint8> PropertyData, TemplatePropertyData;
+			GetPropertyData(Property, Obj, PropertyData);
+			GetPropertyData(Property, Obj->GetArchetype(), TemplatePropertyData);
+			bool bDefaultValue = FMemory::Memcmp(PropertyData.GetData(), TemplatePropertyData.GetData(), Size) == 0;
+
+			if (UObjectProperty* ObjProperty = Cast<UObjectProperty>(Property)) {
+				UObject* PropertyObject = ObjProperty->GetObjectPropertyValue(Property->ContainerPtrToValuePtr<UObject*>(Obj));
+				if (PropertyObject && (PropertyObject->IsA<AActor>() || PropertyObject->IsA<UActorComponent>())) {
+					continue;
+				}
 			}
+
+			if (bDefaultValue) {
+				continue;
+			}
+
+			UE_LOG(LogPrefabEditorTools, Error, TEXT("Property: %s,  Size: %d"), *Property->GetName(), Size);
 
 		}
 	}
@@ -296,15 +308,8 @@ void FPrefabEditorTools::SaveStateToPrefabAsset(AActor* InActor, const FTransfor
 	FTransform LocalTransform = InActor->GetTransform() * InversePrefabTransform;
 	OutActorData.RelativeTransform = LocalTransform;
 	OutActorData.ActorClass = InActor->GetClass();
-
-	for (UActorComponent* Component : InActor->GetComponents()) {
-		FPrefabricatorComponentData ComponentItemData;
-		ComponentItemData.ComponentName = Component->GetFName();
-
-		UEngine::FCopyPropertiesForUnrelatedObjectsParams CopyParams;
-		FPrefabricatorWriter Writer(Component, ComponentItemData.Data, CopyParams);
-		OutActorData.ComponentData.Add(ComponentItemData);
-	}
+	
+	DumpPropertyList(InActor->GetRootComponent());
 }
 
 void FPrefabEditorTools::GetActorChildren(AActor* InParent, TArray<AActor*>& OutChildren)
@@ -348,7 +353,7 @@ void FPrefabEditorTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor)
 		else {
 			// The pool is exhausted for this class type. Spawn a new actor
 			ChildActor = World->SpawnActor<AActor>(ActorItemData.ActorClass);
-			ChildActor->AttachToActor(PrefabActor, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
+			GEditor->ParentActors(PrefabActor, ChildActor, NAME_None);
 		}
 
 
@@ -361,16 +366,9 @@ void FPrefabEditorTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor)
 				}
 			}
 
-			for (UActorComponent* Component : ChildActor->GetComponents()) {
-				FName ComponentName = Component->GetFName();
-				if (ComponentDataByName.Contains(ComponentName)) {
-					FPrefabricatorComponentData& ComponentData = *ComponentDataByName[ComponentName];
-					
-					FPrefabricatorReader(Component, ComponentData.Data);
-					Component->ReregisterComponent();
-				}
-			}
+			// TODO: ..
 		}
+
 
 		AssignAssetUserData(ChildActor, PrefabActor);
 
