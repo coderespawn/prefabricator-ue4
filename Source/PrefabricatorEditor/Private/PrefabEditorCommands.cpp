@@ -3,7 +3,7 @@
 #include "PrefabEditorCommands.h"
 
 #include "PrefabEditorStyle.h"
-#include "Utils/PrefabEditorTools.h"
+#include "Tools/PrefabEditorTools.h"
 
 #include "Framework/Commands/Commands.h"
 #include "Framework/Commands/UIAction.h"

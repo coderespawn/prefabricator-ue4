@@ -2,7 +2,9 @@
 
 #pragma once
 #include "CoreMinimal.h"
-#include "GameFramework/Actor.h"
+
+class AActor;
+class APrefabActor;
 
 class PREFABRICATOREDITOR_API FPrefabEditorTools {
 public:
@@ -10,4 +12,5 @@ public:
 	static void CreatePrefab();
 	static void CreatePrefabFromActors(const TArray<AActor*>& Actors);
 	static void GetSelectedActors(TArray<AActor*>& OutActors);
+	static void AddAssetUserData(AActor* InActor, APrefabActor* Prefab);
 };

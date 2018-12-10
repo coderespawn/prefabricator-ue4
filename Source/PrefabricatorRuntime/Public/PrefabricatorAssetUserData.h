@@ -2,6 +2,7 @@
 
 #pragma once
 #include "CoreMinimal.h"
+#include "Engine/AssetUserData.h"
 #include "PrefabricatorAssetUserData.generated.h"
 
 UCLASS()
@@ -10,6 +11,6 @@ class PREFABRICATORRUNTIME_API UPrefabricatorAssetUserData : public UAssetUserDa
 
 public:
 	UPROPERTY(VisibleAnywhere, Category = "Prefabricator")
-	TWeakObjectPtr<class UPrefabComponent> PrefabComponent;
+	TWeakObjectPtr<class APrefabActor> PrefabActor;
 };
 

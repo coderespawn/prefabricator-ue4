@@ -1,12 +1,14 @@
 //$ Copyright 2015-18, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
-#include "Utils/PrefabEditorTools.h"
+#include "Tools/PrefabEditorTools.h"
 
 #include "PrefabActor.h"
 #include "PrefabricatorAsset.h"
 
 #include "Editor/EditorEngine.h"
 #include "Engine/Selection.h"
+#include "PrefabricatorAssetUserData.h"
+#include "GameFramework/Actor.h"
 
 bool FPrefabEditorTools::CanCreatePrefab()
 {
@@ -36,20 +38,22 @@ void FPrefabEditorTools::CreatePrefabFromActors(const TArray<AActor*>& Actors)
 
 	FVector Pivot = FPrefabricatorAssetUtils::FindPivot(Actors);
 	APrefabActor* PrefabActor = World->SpawnActor<APrefabActor>(Pivot, FRotator::ZeroRotator);
-	if (GEditor) {
-		// Find the compatible mobility for the prefab actor
-		EComponentMobility::Type Mobility = FPrefabricatorAssetUtils::FindMobility(Actors);
-		PrefabActor->GetRootComponent()->SetMobility(Mobility);
-		
-		// Attach the actors to the prefab
-		for (AActor* Actor : Actors) {
-			if (Actor->GetRootComponent()) {
-				Actor->GetRootComponent()->SetMobility(Mobility);
-			}
-			FAttachmentTransformRules AttachmentRules(EAttachmentRule::KeepWorld, true);
-			Actor->AttachToActor(PrefabActor, AttachmentRules);
-		}
 
+	// Find the compatible mobility for the prefab actor
+	EComponentMobility::Type Mobility = FPrefabricatorAssetUtils::FindMobility(Actors);
+	PrefabActor->GetRootComponent()->SetMobility(Mobility);
+
+	// Attach the actors to the prefab
+	for (AActor* Actor : Actors) {
+		if (Actor->GetRootComponent()) {
+			Actor->GetRootComponent()->SetMobility(Mobility);
+			AddAssetUserData(Actor, PrefabActor);
+		}
+		FAttachmentTransformRules AttachmentRules(EAttachmentRule::KeepWorld, true);
+		Actor->AttachToActor(PrefabActor, AttachmentRules);
+	}
+
+	if (GEditor) {
 		GEditor->SelectNone(true, true);
 		GEditor->SelectActor(PrefabActor, true, true);
 	}
@@ -69,5 +73,16 @@ void FPrefabEditorTools::GetSelectedActors(TArray<AActor*>& OutActors)
 			}
 		}
 	}
+}
+
+void FPrefabEditorTools::AddAssetUserData(AActor* InActor, APrefabActor* Prefab)
+{
+	if (!InActor || !InActor->GetRootComponent()) {
+		return;
+	}
+	
+	UPrefabricatorAssetUserData* PrefabUserData = NewObject<UPrefabricatorAssetUserData>(InActor->GetRootComponent());
+	PrefabUserData->PrefabActor = Prefab;
+	InActor->GetRootComponent()->AddAssetUserData(PrefabUserData);
 }
 
