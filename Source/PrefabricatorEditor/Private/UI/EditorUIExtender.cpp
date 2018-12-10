@@ -1,16 +1,16 @@
 //$ Copyright 2015-18, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
-#include "EditorUIExtender.h"
+#include "UI/EditorUIExtender.h"
 
+#include "PrefabEditorCommands.h"
+#include "PrefabEditorStyle.h"
+#include "Tools/PrefabEditorTools.h"
+
+#include "AssetToolsModule.h"
 #include "Framework/Commands/UICommandList.h"
 #include "Framework/MultiBox/MultiBoxBuilder.h"
 #include "Framework/MultiBox/MultiBoxExtender.h"
-#include "PrefabEditorStyle.h"
-#include "PrefabEditorTools.h"
-#include "AssetToolsModule.h"
 #include "LevelEditor.h"
-#include "PrefabEditorCommands.h"
-
 
 #define LOCTEXT_NAMESPACE "EditorUIExtender" 
 
@@ -99,3 +99,4 @@ void FEditorUIExtender::Release()
 }
 
 #undef LOCTEXT_NAMESPACE
+

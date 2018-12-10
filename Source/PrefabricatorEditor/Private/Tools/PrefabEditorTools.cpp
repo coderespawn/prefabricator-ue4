@@ -4,10 +4,10 @@
 
 #include "PrefabActor.h"
 #include "PrefabricatorAsset.h"
+#include "PrefabricatorAssetUserData.h"
 
 #include "Editor/EditorEngine.h"
 #include "Engine/Selection.h"
-#include "PrefabricatorAssetUserData.h"
 #include "GameFramework/Actor.h"
 
 bool FPrefabEditorTools::CanCreatePrefab()

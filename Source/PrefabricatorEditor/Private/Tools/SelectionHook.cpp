@@ -1,10 +1,12 @@
 //$ Copyright 2015-18, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
-#include "SelectionHook.h"
+#include "Tools/SelectionHook.h"
+
+#include "PrefabActor.h"
+#include "PrefabricatorAssetUserData.h"
+
 #include "Engine/Selection.h"
 #include "GameFramework/Actor.h"
-#include "PrefabricatorAssetUserData.h"
-#include "PrefabActor.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogPrefabricatorSelectionHook, Log, All);
 
@@ -36,3 +38,4 @@ void FPrefabricatorSelectionHook::OnObjectSelected(UObject* Object)
 		}
 	}
 }
+
