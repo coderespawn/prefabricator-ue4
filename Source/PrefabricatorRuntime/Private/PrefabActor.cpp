@@ -2,12 +2,17 @@
 
 #include "PrefabActor.h"
 #include "PrefabComponent.h"
+#include "Engine/PointLight.h"
+#include "Components/BillboardComponent.h"
 
 
 APrefabActor::APrefabActor(const FObjectInitializer& ObjectInitializer) 
 	: Super(ObjectInitializer)
 {
 	PrefabComponent = ObjectInitializer.CreateDefaultSubobject<UPrefabComponent>(this, "PrefabComponent");
-	
+	RootComponent = PrefabComponent;
+
+	Sprite = ObjectInitializer.CreateDefaultSubobject<UBillboardComponent>(this, "Sprite");
+	Sprite->SetupAttachment(RootComponent);
 }
 

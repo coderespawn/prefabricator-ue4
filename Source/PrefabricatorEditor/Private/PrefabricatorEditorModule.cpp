@@ -10,7 +10,7 @@
 #include "PrefabEditorStyle.h"
 #include "PrefabEditorCommands.h"
 #include "UICommandList.h"
-#include "PrefabTools.h"
+#include "PrefabEditorTools.h"
 #include "PrefabricatorAssetTypeActions.h"
 #include "PrefabricatorAssetBroker.h"
 
@@ -60,8 +60,8 @@ class FPrefabricatorEditorModule : public IPrefabricatorEditorModule
 				// Add a button to open a TimecodeSynchronizer Editor
 				ToolbarBuilder.AddToolBarButton(
 					FUIAction(
-						FExecuteAction::CreateStatic(&FPrefabTools::CreatePrefab),
-						FCanExecuteAction::CreateStatic(&FPrefabTools::CanCreatePrefab)
+						FExecuteAction::CreateStatic(&FPrefabEditorTools::CreatePrefab),
+						FCanExecuteAction::CreateStatic(&FPrefabEditorTools::CanCreatePrefab)
 					),
 					NAME_None,
 					LOCTEXT("PrefabToolbarButtonText", "Create Prefab"),

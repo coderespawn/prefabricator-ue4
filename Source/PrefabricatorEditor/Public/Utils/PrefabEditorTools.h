@@ -4,7 +4,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 
-class PREFABRICATOREDITOR_API FPrefabTools {
+class PREFABRICATOREDITOR_API FPrefabEditorTools {
 public:
 	static bool CanCreatePrefab();
 	static void CreatePrefab();

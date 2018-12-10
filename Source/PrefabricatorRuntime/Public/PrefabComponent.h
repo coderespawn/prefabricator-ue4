@@ -10,8 +10,10 @@ UCLASS(Blueprintable)
 class PREFABRICATORRUNTIME_API UPrefabComponent : public USceneComponent {
 	GENERATED_UCLASS_BODY()
 public:
-
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Prefabricator")
 	class UPrefabricatorAsset* PrefabAsset;
+
+	UPROPERTY()
+	TArray<TWeakObjectPtr<AActor>> SpawnedActors;
 
 };

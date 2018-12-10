@@ -3,6 +3,7 @@
 #pragma once
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Engine/AssetUserData.h"
 #include "PrefabActor.generated.h"
 
 /** A Dungeon Theme asset lets you design the look and feel of you dungeon with an intuitive graph based approach */
@@ -10,7 +11,12 @@ UCLASS(Blueprintable, ConversionRoot, ComponentWrapperClass)
 class PREFABRICATORRUNTIME_API APrefabActor : public AActor {
 	GENERATED_UCLASS_BODY()
 public:
-	UPROPERTY(Category = Prefabricator, VisibleAnywhere, BlueprintReadOnly)
+
+	UPROPERTY(Category = Prefabricator, VisibleAnywhere, BlueprintReadOnly, meta = (ExposeFunctionCategories = "Prefabricator", AllowPrivateAccess = "true"))
+	class UBillboardComponent* Sprite;
+
+	UPROPERTY(Category = Prefabricator, VisibleAnywhere, BlueprintReadOnly, meta = (ExposeFunctionCategories = "Prefabricator", AllowPrivateAccess = "true"))
 	class UPrefabComponent* PrefabComponent;
+
 
 };
