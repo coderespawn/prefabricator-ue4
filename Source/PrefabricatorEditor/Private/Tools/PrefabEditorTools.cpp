@@ -150,6 +150,147 @@ void FPrefabEditorTools::SaveStateToPrefabAsset(APrefabActor* PrefabActor)
 	}
 }
 
+///////////////////////////////////
+/*
+* Houses base functionality shared between CPFUO archivers (FCPFUOWriter/FCPFUOReader)
+* Used to track whether tagged data is being processed (and whether we should be serializing it).
+*/
+struct FPrefabricatorBaseArchive
+{
+public:
+	FPrefabricatorBaseArchive(bool bIncludeUntaggedDataIn)
+		: bIncludeUntaggedData(bIncludeUntaggedDataIn)
+		, TaggedDataScope(0)
+	{}
+
+	FPrefabricatorBaseArchive(const FPrefabricatorBaseArchive& DataSrc)
+		: bIncludeUntaggedData(DataSrc.bIncludeUntaggedData)
+		, TaggedDataScope(0)
+	{}
+
+protected:
+	FORCEINLINE void OpenTaggedDataScope() { ++TaggedDataScope; }
+	FORCEINLINE void CloseTaggedDataScope() { --TaggedDataScope; }
+
+	FORCEINLINE bool IsSerializationEnabled()
+	{
+		return bIncludeUntaggedData || (TaggedDataScope > 0);
+	}
+
+	bool bIncludeUntaggedData;
+private:
+	int32 TaggedDataScope;
+};
+
+/* Serializes and stores property data from a specified 'source' object. Only stores data compatible with a target destination object. */
+struct FPrefabricatorWriter : public FObjectWriter, public FPrefabricatorBaseArchive
+{
+public:
+	FPrefabricatorWriter(UObject* SrcObject, TArray<uint8>& SavedPropertyData, const UEngine::FCopyPropertiesForUnrelatedObjectsParams& Params)
+		: FObjectWriter(SavedPropertyData)
+		// if the two objects don't share a common native base class, then they may have different
+		// serialization methods, which is dangerous (the data is not guaranteed to be homogeneous)
+		// in that case, we have to stick with tagged properties only
+		, FPrefabricatorBaseArchive(true)
+		, bSkipCompilerGeneratedDefaults(Params.bSkipCompilerGeneratedDefaults)
+	{
+		ArIgnoreArchetypeRef = true;
+		ArNoDelta = !Params.bDoDelta;
+		ArIgnoreClassRef = true;
+		ArPortFlags |= Params.bCopyDeprecatedProperties ? PPF_UseDeprecatedProperties : PPF_None;
+
+		SrcObject->Serialize(*this);
+	}
+
+	//~ Begin FArchive Interface
+	virtual void Serialize(void* Data, int64 Num) override
+	{
+		if (IsSerializationEnabled())
+		{
+			FObjectWriter::Serialize(Data, Num);
+		}
+	}
+
+	virtual void MarkScriptSerializationStart(const UObject* Object) override { OpenTaggedDataScope(); }
+	virtual void MarkScriptSerializationEnd(const UObject* Object) override { CloseTaggedDataScope(); }
+
+#if WITH_EDITOR
+	virtual bool ShouldSkipProperty(const class UProperty* InProperty) const override
+	{
+		static FName BlueprintCompilerGeneratedDefaultsName(TEXT("BlueprintCompilerGeneratedDefaults"));
+		return bSkipCompilerGeneratedDefaults && InProperty->HasMetaData(BlueprintCompilerGeneratedDefaultsName);
+	}
+#endif 
+	//~ End FArchive Interface
+
+private:
+	static UClass* FindNativeSuperClass(UObject* Object)
+	{
+		UClass* Class = Object->GetClass();
+		for (; Class; Class = Class->GetSuperClass())
+		{
+			if ((Class->ClassFlags & CLASS_Native) != 0)
+			{
+				break;
+			}
+		}
+		return Class;
+	}
+
+	bool bSkipCompilerGeneratedDefaults;
+};
+
+/* Responsible for applying the saved property data from a FCPFUOWriter to a specified object */
+struct FPrefabricatorReader : public FObjectReader, public FPrefabricatorBaseArchive
+{
+public:
+	FPrefabricatorReader(UObject* DstObject, TArray<uint8>& SavedPropertyData)
+		: FObjectReader(SavedPropertyData)
+		, FPrefabricatorBaseArchive(true)
+	{
+		ArIgnoreArchetypeRef = true;
+		ArIgnoreClassRef = true;
+
+#if USE_STABLE_LOCALIZATION_KEYS
+		if (GIsEditor && !(ArPortFlags & (PPF_DuplicateVerbatim | PPF_DuplicateForPIE)))
+		{
+			SetLocalizationNamespace(TextNamespaceUtil::EnsurePackageNamespace(DstObject));
+		}
+#endif // USE_STABLE_LOCALIZATION_KEYS
+
+		DstObject->Serialize(*this);
+	}
+
+	//~ Begin FArchive Interface
+	virtual void Serialize(void* Data, int64 Num) override
+	{
+		if (IsSerializationEnabled())
+		{
+			FObjectReader::Serialize(Data, Num);
+		}
+	}
+
+	virtual void MarkScriptSerializationStart(const UObject* Object) override { OpenTaggedDataScope(); }
+	virtual void MarkScriptSerializationEnd(const UObject* Object) override { CloseTaggedDataScope(); }
+	// ~End FArchive Interface
+};
+
+///////////////////////////////////
+
+namespace {
+	void DumpPropertyList(UObject* Obj) {
+		
+		for (TFieldIterator<UProperty> PropertyIterator(Obj->GetClass()); PropertyIterator; ++PropertyIterator)
+		{
+			UProperty* Property = *PropertyIterator;
+			if (Property) {
+				
+			}
+
+		}
+	}
+}
+
 void FPrefabEditorTools::SaveStateToPrefabAsset(AActor* InActor, const FTransform& InversePrefabTransform, FPrefabricatorActorData& OutActorData)
 {
 	FTransform LocalTransform = InActor->GetTransform() * InversePrefabTransform;
@@ -159,7 +300,9 @@ void FPrefabEditorTools::SaveStateToPrefabAsset(AActor* InActor, const FTransfor
 	for (UActorComponent* Component : InActor->GetComponents()) {
 		FPrefabricatorComponentData ComponentItemData;
 		ComponentItemData.ComponentName = Component->GetFName();
-		FObjectWriter(InActor, ComponentItemData.Data);
+
+		UEngine::FCopyPropertiesForUnrelatedObjectsParams CopyParams;
+		FPrefabricatorWriter Writer(Component, ComponentItemData.Data, CopyParams);
 		OutActorData.ComponentData.Add(ComponentItemData);
 	}
 }
@@ -222,7 +365,8 @@ void FPrefabEditorTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor)
 				FName ComponentName = Component->GetFName();
 				if (ComponentDataByName.Contains(ComponentName)) {
 					FPrefabricatorComponentData& ComponentData = *ComponentDataByName[ComponentName];
-					FObjectReader(Component, ComponentData.Data);
+					
+					FPrefabricatorReader(Component, ComponentData.Data);
 					Component->ReregisterComponent();
 				}
 			}
