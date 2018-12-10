@@ -2,7 +2,6 @@
 
 #pragma once
 #include "CoreMinimal.h"
-
 #include "AssetTypeCategories.h"
 #include "Modules/ModuleInterface.h"
 #include "Modules/ModuleManager.h"

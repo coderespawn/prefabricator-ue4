@@ -1,11 +1,12 @@
 //$ Copyright 2015-18, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
-#include "PrefabricatorActorFactory.h"
+#include "Asset/PrefabricatorActorFactory.h"
 
-#include "AssetData.h"
 #include "PrefabActor.h"
 #include "PrefabComponent.h"
 #include "PrefabricatorAsset.h"
+
+#include "AssetData.h"
 
 UPrefabricatorActorFactory::UPrefabricatorActorFactory(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer) 

@@ -1,7 +1,6 @@
 //$ Copyright 2015-18, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #pragma once
-
 #include "CoreMinimal.h"
 #include "Styling/SlateStyle.h"
 
@@ -23,3 +22,4 @@ private:
 private:
 	static TSharedPtr< class FSlateStyleSet > StyleInstance;
 };
+

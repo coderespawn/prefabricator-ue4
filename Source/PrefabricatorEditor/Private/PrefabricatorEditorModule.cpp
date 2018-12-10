@@ -2,17 +2,18 @@
 
 #include "PrefabricatorEditorModule.h"
 
+#include "Asset/PrefabricatorAssetBroker.h"
+#include "Asset/PrefabricatorAssetTypeActions.h"
+#include "PrefabEditorCommands.h"
+#include "PrefabEditorStyle.h"
+#include "Utils/PrefabEditorTools.h"
+
 #include "AssetToolsModule.h"
+#include "Framework/Commands/UICommandList.h"
+#include "Framework/MultiBox/MultiBoxBuilder.h"
+#include "Framework/MultiBox/MultiBoxExtender.h"
 #include "IAssetTools.h"
 #include "LevelEditor.h"
-#include "MultiBoxExtender.h"
-#include "MultiBoxBuilder.h"
-#include "PrefabEditorStyle.h"
-#include "PrefabEditorCommands.h"
-#include "UICommandList.h"
-#include "PrefabEditorTools.h"
-#include "PrefabricatorAssetTypeActions.h"
-#include "PrefabricatorAssetBroker.h"
 
 #define LOCTEXT_NAMESPACE "DungeonArchitectEditorModule" 
 

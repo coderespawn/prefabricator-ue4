@@ -2,8 +2,8 @@
 
 #pragma once
 #include "CoreMinimal.h"
-#include "Commands.h"
-#include "UICommandInfo.h"
+#include "Framework/Commands/Commands.h"
+#include "Framework/Commands/UICommandInfo.h"
 
 class PREFABRICATOREDITOR_API FPrefabricatorCommands : public TCommands<FPrefabricatorCommands>
 {

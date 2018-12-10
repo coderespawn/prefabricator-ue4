@@ -4,7 +4,6 @@
 #include "CoreMinimal.h"
 #include "PrefabricatorAssetUserData.generated.h"
 
-
 UCLASS()
 class PREFABRICATORRUNTIME_API UPrefabricatorAssetUserData : public UAssetUserData {
 	GENERATED_BODY()

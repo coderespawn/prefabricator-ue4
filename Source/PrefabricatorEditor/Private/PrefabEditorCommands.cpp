@@ -1,13 +1,14 @@
 //$ Copyright 2015-18, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #include "PrefabEditorCommands.h"
-#include "PrefabEditorStyle.h"
-#include "Commands.h"
-#include "UICommandList.h"
-#include "UIAction.h"
-#include "PrefabEditorTools.h"
-#include "Object.h"
 
+#include "PrefabEditorStyle.h"
+#include "Utils/PrefabEditorTools.h"
+
+#include "Framework/Commands/Commands.h"
+#include "Framework/Commands/UIAction.h"
+#include "Framework/Commands/UICommandList.h"
+#include "UObject/Object.h"
 
 #define LOCTEXT_NAMESPACE "ContentBrowser"
 

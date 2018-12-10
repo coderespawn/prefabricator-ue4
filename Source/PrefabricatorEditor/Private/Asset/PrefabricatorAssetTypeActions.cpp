@@ -1,10 +1,11 @@
 //$ Copyright 2015-18, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
-#include "PrefabricatorAssetTypeActions.h"
+#include "Asset/PrefabricatorAssetTypeActions.h"
+
+#include "PrefabricatorAsset.h"
 
 #include "AssetToolsModule.h"
 #include "ContentBrowserModule.h"
-#include "PrefabricatorAsset.h"
 
 #define LOCTEXT_NAMESPACE "AssetTypeActions"
 

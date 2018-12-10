@@ -1,8 +1,8 @@
 //$ Copyright 2015-18, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #include "PrefabricatorAsset.h"
-#include "GameFramework/Actor.h"
 
+#include "GameFramework/Actor.h"
 
 UPrefabricatorAsset::UPrefabricatorAsset(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer) {
 

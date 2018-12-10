@@ -2,10 +2,10 @@
 
 #pragma once
 #include "CoreMinimal.h"
+#include "PrefabComponent.h"
+#include "PrefabricatorAsset.h"
 
 #include "ComponentAssetBroker.h"
-#include "PrefabricatorAsset.h"
-#include "PrefabComponent.h"
 
 class FPrefabricatorAssetBroker : public IComponentAssetBroker
 {
