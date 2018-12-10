@@ -12,11 +12,12 @@ class PREFABRICATORRUNTIME_API APrefabActor : public AActor {
 	GENERATED_UCLASS_BODY()
 public:
 
-	UPROPERTY(Category = Prefabricator, VisibleAnywhere, BlueprintReadOnly, meta = (ExposeFunctionCategories = "Prefabricator", AllowPrivateAccess = "true"))
+	UPROPERTY()
 	class UBillboardComponent* Sprite;
 
 	UPROPERTY(Category = Prefabricator, VisibleAnywhere, BlueprintReadOnly, meta = (ExposeFunctionCategories = "Prefabricator", AllowPrivateAccess = "true"))
 	class UPrefabComponent* PrefabComponent;
+
 
 
 };

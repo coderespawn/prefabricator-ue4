@@ -7,6 +7,7 @@
 #include "PrefabricatorAsset.h"
 
 #include "AssetData.h"
+#include "PrefabEditorTools.h"
 
 UPrefabricatorActorFactory::UPrefabricatorActorFactory(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer) 
@@ -27,6 +28,7 @@ AActor* UPrefabricatorActorFactory::SpawnActor(UObject* Asset, ULevel* InLevel, 
 	APrefabActor* PrefabActor = Cast<APrefabActor>(Actor);
 	if (PrefabActor) {
 		PrefabActor->PrefabComponent->PrefabAsset = Cast<UPrefabricatorAsset>(Asset);
+		//FPrefabEditorTools::LoadStateFromPrefabAsset(PrefabActor);
 	}
 	return Actor;
 }
@@ -36,6 +38,7 @@ void UPrefabricatorActorFactory::PostSpawnActor(UObject* Asset, AActor* NewActor
 	APrefabActor* PrefabActor = Cast<APrefabActor>(NewActor);
 	if (PrefabActor && PrefabActor->PrefabComponent) {
 		PrefabActor->PrefabComponent->PrefabAsset = Cast<UPrefabricatorAsset>(Asset);
+		FPrefabEditorTools::LoadStateFromPrefabAsset(PrefabActor);
 	}
 }
 
@@ -44,6 +47,7 @@ void UPrefabricatorActorFactory::PostCreateBlueprint(UObject* Asset, AActor* CDO
 	APrefabActor* PrefabActor = Cast<APrefabActor>(CDO);
 	if (PrefabActor && PrefabActor->PrefabComponent) {
 		PrefabActor->PrefabComponent->PrefabAsset = Cast<UPrefabricatorAsset>(Asset);
+		FPrefabEditorTools::LoadStateFromPrefabAsset(PrefabActor);
 	}
 }
 

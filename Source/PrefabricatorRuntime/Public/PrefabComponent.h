@@ -16,4 +16,5 @@ public:
 	UPROPERTY()
 	TArray<TWeakObjectPtr<AActor>> SpawnedActors;
 
+
 };

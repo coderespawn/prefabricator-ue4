@@ -6,17 +6,28 @@
 #include "PrefabricatorAsset.generated.h"
 
 USTRUCT()
+struct PREFABRICATORRUNTIME_API FPrefabricatorComponentData {
+	GENERATED_USTRUCT_BODY()
+
+	UPROPERTY()
+	FName ComponentName;
+
+	UPROPERTY()
+	TArray<uint8> Data;
+};
+
+USTRUCT()
 struct PREFABRICATORRUNTIME_API FPrefabricatorActorData {
 	GENERATED_USTRUCT_BODY()
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY()
 	FTransform RelativeTransform;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY()
 	UClass* ActorClass;
 
 	UPROPERTY()
-	TArray<uint8> ActorData;
+	TArray<FPrefabricatorComponentData> ComponentData;
 };
 
 
@@ -24,16 +35,14 @@ UCLASS(Blueprintable)
 class PREFABRICATORRUNTIME_API UPrefabricatorAsset : public UObject {
 	GENERATED_UCLASS_BODY()
 public:
-
-
+	UPROPERTY()
+	TArray<FPrefabricatorActorData> ActorData;
 };
-
 
 
 class PREFABRICATORRUNTIME_API FPrefabricatorAssetUtils {
 public:
 	static FVector FindPivot(const TArray<AActor*>& InActors);
 	static EComponentMobility::Type FindMobility(const TArray<AActor*>& InActors);
-	static void SaveActorData(AActor* InActor, const FVector& InPrefabPivot, FPrefabricatorActorData& OutActorData);
 	
 };

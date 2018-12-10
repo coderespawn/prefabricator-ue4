@@ -5,6 +5,8 @@
 
 class AActor;
 class APrefabActor;
+class UPrefabricatorAsset;
+struct FPrefabricatorActorData;
 
 class PREFABRICATOREDITOR_API FPrefabEditorTools {
 public:
@@ -12,5 +14,13 @@ public:
 	static void CreatePrefab();
 	static void CreatePrefabFromActors(const TArray<AActor*>& Actors);
 	static void GetSelectedActors(TArray<AActor*>& OutActors);
-	static void AddAssetUserData(AActor* InActor, APrefabActor* Prefab);
+	static void AssignAssetUserData(AActor* InActor, APrefabActor* Prefab);
+	static UPrefabricatorAsset* CreatePrefabAsset();
+
+	static void SaveStateToPrefabAsset(APrefabActor* PrefabActor);
+	static void LoadStateFromPrefabAsset(APrefabActor* PrefabActor);
+	static void SaveStateToPrefabAsset(AActor* InActor, const FTransform& InversePrefabTransform, FPrefabricatorActorData& OutActorData);
+
+	static void GetActorChildren(AActor* InParent, TArray<AActor*>& OutChildren);
+
 };

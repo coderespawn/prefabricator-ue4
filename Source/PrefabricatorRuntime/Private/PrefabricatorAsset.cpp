@@ -47,9 +47,3 @@ EComponentMobility::Type FPrefabricatorAssetUtils::FindMobility(const TArray<AAc
 
 	return Mobility;
 }
-
-void FPrefabricatorAssetUtils::SaveActorData(AActor* InActor, const FVector& InPrefabPivot, FPrefabricatorActorData& OutActorData)
-{
-
-}
-
