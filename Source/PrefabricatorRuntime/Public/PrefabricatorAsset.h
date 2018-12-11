@@ -95,6 +95,9 @@ class PREFABRICATORRUNTIME_API UPrefabricatorAsset : public UObject {
 public:
 	UPROPERTY()
 	TArray<FPrefabricatorActorData> ActorData;
+
+	UPROPERTY()
+	TEnumAsByte<EComponentMobility::Type> PrefabMobility;
 };
 
 

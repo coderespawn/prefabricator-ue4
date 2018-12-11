@@ -17,3 +17,33 @@ APrefabActor::APrefabActor(const FObjectInitializer& ObjectInitializer)
 	Sprite->SetupAttachment(RootComponent);
 }
 
+void APrefabActor::Destroyed()
+{
+	Super::Destroyed();
+
+	// Destroy all attached actors
+	{
+		TArray<AActor*> AttachedActors;
+		GetAttachedActors(AttachedActors);
+		for (AActor* AttachedActor : AttachedActors) {
+			AttachedActor->Destroy();
+		}
+	}
+}
+
+#if WITH_EDITOR
+void APrefabActor::PostEditChangeProperty(struct FPropertyChangedEvent& e)
+{
+	Super::PostEditChangeProperty(e);
+
+}
+
+void APrefabActor::PostDuplicate(EDuplicateMode::Type DuplicateMode)
+{
+	Super::PostDuplicate(DuplicateMode);
+
+}
+
+#endif // WITH_EDITOR
+
+

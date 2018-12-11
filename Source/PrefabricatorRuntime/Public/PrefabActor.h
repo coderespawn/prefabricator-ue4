@@ -18,7 +18,14 @@ public:
 	UPROPERTY(Category = Prefabricator, VisibleAnywhere, BlueprintReadOnly, meta = (ExposeFunctionCategories = "Prefabricator", AllowPrivateAccess = "true"))
 	class UPrefabComponent* PrefabComponent;
 
-
+public:
+	/// AActor Interface 
+	virtual void Destroyed() override;
+#if WITH_EDITOR
+	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& e) override;
+	virtual void PostDuplicate(EDuplicateMode::Type DuplicateMode) override;
+#endif // WITH_EDITOR
+	/// End of AActor Interface 
 
 };
 

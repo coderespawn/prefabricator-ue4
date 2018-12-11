@@ -137,6 +137,8 @@ void FPrefabEditorTools::SaveStateToPrefabAsset(APrefabActor* PrefabActor)
 		return;
 	}
 
+	PrefabAsset->PrefabMobility = PrefabActor->GetRootComponent()->Mobility;
+
 	PrefabAsset->ActorData.Reset();
 
 	TArray<AActor*> Children;
@@ -419,8 +421,9 @@ void FPrefabEditorTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor)
 		return;
 	}
 
-	TMap<UClass*, TArray<AActor*>> ExistingActorPool;
+	PrefabActor->GetRootComponent()->SetMobility(PrefabAsset->PrefabMobility);
 
+	TMap<UClass*, TArray<AActor*>> ExistingActorPool;
 	TArray<AActor*> Children;
 	GetActorChildren(PrefabActor, Children);
 
@@ -447,7 +450,7 @@ void FPrefabEditorTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor)
 
 		// Load the saved data into the actor
 		LoadStateFromPrefabAsset(ChildActor, PrefabActor, ActorItemData);
-
+		
 		GEditor->ParentActors(PrefabActor, ChildActor, NAME_None);
 		AssignAssetUserData(ChildActor, PrefabActor);
 

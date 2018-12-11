@@ -28,7 +28,7 @@ AActor* UPrefabricatorActorFactory::SpawnActor(UObject* Asset, ULevel* InLevel, 
 	APrefabActor* PrefabActor = Cast<APrefabActor>(Actor);
 	if (PrefabActor) {
 		PrefabActor->PrefabComponent->PrefabAsset = Cast<UPrefabricatorAsset>(Asset);
-		//FPrefabEditorTools::LoadStateFromPrefabAsset(PrefabActor);
+		FPrefabEditorTools::LoadStateFromPrefabAsset(PrefabActor);
 	}
 	return Actor;
 }
