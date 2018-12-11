@@ -13,7 +13,6 @@ public:
 	static bool CanCreatePrefab();
 	static void CreatePrefab();
 	static void CreatePrefabFromActors(const TArray<AActor*>& Actors);
-	static void GetSelectedActors(TArray<AActor*>& OutActors);
 	static void AssignAssetUserData(AActor* InActor, APrefabActor* Prefab);
 	static UPrefabricatorAsset* CreatePrefabAsset();
 
@@ -25,4 +24,9 @@ public:
 
 	static void GetActorChildren(AActor* InParent, TArray<AActor*>& OutChildren);
 
+
+	static void ParentActors(AActor* ParentActor, AActor* ChildActor);
+	static void SelectPrefabActor(AActor* PrefabActor);
+	static void GetSelectedActors(TArray<AActor*>& OutActors);
+	static int GetNumSelectedActors();
 };

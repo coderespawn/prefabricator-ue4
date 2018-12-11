@@ -22,14 +22,49 @@
 
 DEFINE_LOG_CATEGORY_STATIC(LogPrefabEditorTools, Log, All);
 
+void FPrefabEditorTools::GetSelectedActors(TArray<AActor*>& OutActors)
+{
+	if (GEditor) {
+		USelection* SelectedActors = GEditor->GetSelectedActors();
+		for (FSelectionIterator Iter(*SelectedActors); Iter; ++Iter)
+		{
+			// We only care about actors that are referenced in the world for literals, and also in the same level as this blueprint
+			AActor* Actor = Cast<AActor>(*Iter);
+			if (Actor)
+			{
+				OutActors.Add(Actor);
+			}
+		}
+	}
+}
+
+
+int FPrefabEditorTools::GetNumSelectedActors()
+{
+	if (GEditor) {
+		return GEditor->GetSelectedActorCount();
+	}
+	return 0;
+}
+
+void FPrefabEditorTools::ParentActors(AActor* ParentActor, AActor* ChildActor)
+{
+	if (GEditor) {
+		GEditor->ParentActors(ParentActor, ChildActor, NAME_None);
+	}
+}
+
+void FPrefabEditorTools::SelectPrefabActor(AActor* PrefabActor)
+{
+	if (GEditor) {
+		GEditor->SelectNone(true, true);
+		GEditor->SelectActor(PrefabActor, true, true);
+	}
+}
+
 bool FPrefabEditorTools::CanCreatePrefab()
 {
-	if (!GEditor) {
-		return false;
-	}
-
-	int32 NumSelected = GEditor->GetSelectedActorCount();
-	return NumSelected > 0;
+	return GetNumSelectedActors() > 0;
 }
 
 void FPrefabEditorTools::CreatePrefab()
@@ -59,38 +94,16 @@ void FPrefabEditorTools::CreatePrefabFromActors(const TArray<AActor*>& Actors)
 	PrefabActor->PrefabComponent->PrefabAsset = PrefabAsset;
 
 	// Attach the actors to the prefab
-	if (GEditor) {
-		for (AActor* Actor : Actors) {
-			if (Actor->GetRootComponent()) {
-				Actor->GetRootComponent()->SetMobility(Mobility);
-			}
-
-			GEditor->ParentActors(PrefabActor, Actor, NAME_None);
+	for (AActor* Actor : Actors) {
+		if (Actor->GetRootComponent()) {
+			Actor->GetRootComponent()->SetMobility(Mobility);
 		}
+		ParentActors(PrefabActor, Actor);
 	}
 
 	SaveStateToPrefabAsset(PrefabActor);
 
-	if (GEditor) {
-		GEditor->SelectNone(true, true);
-		GEditor->SelectActor(PrefabActor, true, true);
-	}
-}
-
-void FPrefabEditorTools::GetSelectedActors(TArray<AActor*>& OutActors)
-{
-	if (GEditor) {
-		USelection* SelectedActors = GEditor->GetSelectedActors();
-		for (FSelectionIterator Iter(*SelectedActors); Iter; ++Iter)
-		{
-			// We only care about actors that are referenced in the world for literals, and also in the same level as this blueprint
-			AActor* Actor = Cast<AActor>(*Iter);
-			if (Actor) 
-			{
-				OutActors.Add(Actor);
-			}
-		}
-	}
+	SelectPrefabActor(PrefabActor);
 }
 
 void FPrefabEditorTools::AssignAssetUserData(AActor* InActor, APrefabActor* Prefab)
@@ -451,7 +464,7 @@ void FPrefabEditorTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor)
 		// Load the saved data into the actor
 		LoadStateFromPrefabAsset(ChildActor, PrefabActor, ActorItemData);
 		
-		GEditor->ParentActors(PrefabActor, ChildActor, NAME_None);
+		ParentActors(PrefabActor, ChildActor);
 		AssignAssetUserData(ChildActor, PrefabActor);
 
 		// Set the transform
