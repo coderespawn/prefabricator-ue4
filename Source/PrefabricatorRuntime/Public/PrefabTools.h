@@ -8,7 +8,7 @@ class APrefabActor;
 class UPrefabricatorAsset;
 struct FPrefabricatorActorData;
 
-class PREFABRICATOREDITOR_API FPrefabEditorTools {
+class PREFABRICATORRUNTIME_API FPrefabTools {
 public:
 	static bool CanCreatePrefab();
 	static void CreatePrefab();

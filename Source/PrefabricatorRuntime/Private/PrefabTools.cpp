@@ -1,6 +1,6 @@
 //$ Copyright 2015-18, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
-#include "Tools/PrefabEditorTools.h"
+#include "PrefabTools.h"
 
 #include "PrefabActor.h"
 #include "PrefabricatorAsset.h"
@@ -20,10 +20,15 @@
 #include "ObjectReader.h"
 #include "UnrealMemory.h"
 
-DEFINE_LOG_CATEGORY_STATIC(LogPrefabEditorTools, Log, All);
+DEFINE_LOG_CATEGORY_STATIC(LogPrefabTools, Log, All);
 
-void FPrefabEditorTools::GetSelectedActors(TArray<AActor*>& OutActors)
+#if WITH_EDITOR
+extern UNREALED_API UEditorEngine* GEditor;
+#endif // WITH_EDITOR
+
+void FPrefabTools::GetSelectedActors(TArray<AActor*>& OutActors)
 {
+#if WITH_EDITOR
 	if (GEditor) {
 		USelection* SelectedActors = GEditor->GetSelectedActors();
 		for (FSelectionIterator Iter(*SelectedActors); Iter; ++Iter)
@@ -36,38 +41,47 @@ void FPrefabEditorTools::GetSelectedActors(TArray<AActor*>& OutActors)
 			}
 		}
 	}
+#endif // WITH_EDITOR
 }
 
 
-int FPrefabEditorTools::GetNumSelectedActors()
+int FPrefabTools::GetNumSelectedActors()
 {
+#if WITH_EDITOR
 	if (GEditor) {
 		return GEditor->GetSelectedActorCount();
 	}
+#endif // WITH_EDITOR
 	return 0;
 }
 
-void FPrefabEditorTools::ParentActors(AActor* ParentActor, AActor* ChildActor)
+void FPrefabTools::ParentActors(AActor* ParentActor, AActor* ChildActor)
 {
+#if WITH_EDITOR
 	if (GEditor) {
 		GEditor->ParentActors(ParentActor, ChildActor, NAME_None);
 	}
+#else  // WITH_EDITOR
+	ChildActor->AttachToActor(ParentActor, FAttachmentTransformRules(EAttachmentRule::KeepWorld));
+#endif // WITH_EDITOR
 }
 
-void FPrefabEditorTools::SelectPrefabActor(AActor* PrefabActor)
+void FPrefabTools::SelectPrefabActor(AActor* PrefabActor)
 {
+#if WITH_EDITOR
 	if (GEditor) {
 		GEditor->SelectNone(true, true);
 		GEditor->SelectActor(PrefabActor, true, true);
 	}
+#endif // WITH_EDITOR
 }
 
-bool FPrefabEditorTools::CanCreatePrefab()
+bool FPrefabTools::CanCreatePrefab()
 {
 	return GetNumSelectedActors() > 0;
 }
 
-void FPrefabEditorTools::CreatePrefab()
+void FPrefabTools::CreatePrefab()
 {
 	TArray<AActor*> SelectedActors;
 	GetSelectedActors(SelectedActors);
@@ -75,7 +89,7 @@ void FPrefabEditorTools::CreatePrefab()
 	CreatePrefabFromActors(SelectedActors);
 }
 
-void FPrefabEditorTools::CreatePrefabFromActors(const TArray<AActor*>& Actors)
+void FPrefabTools::CreatePrefabFromActors(const TArray<AActor*>& Actors)
 {
 	if (Actors.Num() == 0) {
 		return;
@@ -106,7 +120,7 @@ void FPrefabEditorTools::CreatePrefabFromActors(const TArray<AActor*>& Actors)
 	SelectPrefabActor(PrefabActor);
 }
 
-void FPrefabEditorTools::AssignAssetUserData(AActor* InActor, APrefabActor* Prefab)
+void FPrefabTools::AssignAssetUserData(AActor* InActor, APrefabActor* Prefab)
 {
 	if (!InActor || !InActor->GetRootComponent()) {
 		return;
@@ -117,7 +131,7 @@ void FPrefabEditorTools::AssignAssetUserData(AActor* InActor, APrefabActor* Pref
 	InActor->GetRootComponent()->AddAssetUserData(PrefabUserData);
 }
 
-UPrefabricatorAsset* FPrefabEditorTools::CreatePrefabAsset()
+UPrefabricatorAsset* FPrefabTools::CreatePrefabAsset()
 {
 	IContentBrowserSingleton& ContentBrowserSingleton = FModuleManager::LoadModuleChecked<FContentBrowserModule>("ContentBrowser").Get();
 	TArray<FString> SelectedFolders;
@@ -137,16 +151,16 @@ UPrefabricatorAsset* FPrefabEditorTools::CreatePrefabAsset()
 
 
 
-void FPrefabEditorTools::SaveStateToPrefabAsset(APrefabActor* PrefabActor)
+void FPrefabTools::SaveStateToPrefabAsset(APrefabActor* PrefabActor)
 {
 	if (!PrefabActor) {
-		UE_LOG(LogPrefabEditorTools, Error, TEXT("Invalid prefab actor reference"));
+		UE_LOG(LogPrefabTools, Error, TEXT("Invalid prefab actor reference"));
 		return;
 	}
 
 	UPrefabricatorAsset* PrefabAsset = PrefabActor->PrefabComponent->PrefabAsset;
 	if (!PrefabAsset) {
-		UE_LOG(LogPrefabEditorTools, Error, TEXT("Prefab asset is not assigned correctly"));
+		UE_LOG(LogPrefabTools, Error, TEXT("Prefab asset is not assigned correctly"));
 		return;
 	}
 
@@ -191,7 +205,7 @@ namespace {
 			UObject* PropertyObjectValue = ObjProperty->GetObjectPropertyValue_InContainer(ObjToSerialize);
 			if (ContainsOuterParent(PropertyObjectValue, ObjToSerialize) ||
 				ContainsOuterParent(PropertyObjectValue, PrefabActor)) {
-				UE_LOG(LogPrefabEditorTools, Warning, TEXT("Skipping Property: %s"), *Property->GetName());
+				UE_LOG(LogPrefabTools, Warning, TEXT("Skipping Property: %s"), *Property->GetName());
 				return true;
 			}
 		}
@@ -332,24 +346,24 @@ namespace {
 	void DumpSerializedProperties(const TArray<UPrefabricatorPropertyBase*>& InProperties) {
 		for (UPrefabricatorPropertyBase* Property : InProperties) {
 			if (UPrefabricatorAtomProperty* Atom = Cast<UPrefabricatorAtomProperty>(Property)) {
-				UE_LOG(LogPrefabEditorTools, Log, TEXT("%s: %s"), *Atom->PropertyName, *Atom->ExportedValue);
+				UE_LOG(LogPrefabTools, Log, TEXT("%s: %s"), *Atom->PropertyName, *Atom->ExportedValue);
 			}
 			else if (UPrefabricatorArrayProperty* Array = Cast<UPrefabricatorArrayProperty>(Property)) {
-				UE_LOG(LogPrefabEditorTools, Log, TEXT("%s: Array[%d]"), *Array->PropertyName, Array->ExportedValues.Num());
+				UE_LOG(LogPrefabTools, Log, TEXT("%s: Array[%d]"), *Array->PropertyName, Array->ExportedValues.Num());
 				for (int i = 0; i < Array->ExportedValues.Num(); i++) {
-					UE_LOG(LogPrefabEditorTools, Log, TEXT("\t%s"), *Array->ExportedValues[i]);
+					UE_LOG(LogPrefabTools, Log, TEXT("\t%s"), *Array->ExportedValues[i]);
 				}
 			}
 			else if (UPrefabricatorSetProperty* Set = Cast<UPrefabricatorSetProperty>(Property)) {
-				UE_LOG(LogPrefabEditorTools, Log, TEXT("%s: Set[%d]"), *Set->PropertyName, Set->ExportedValues.Num());
+				UE_LOG(LogPrefabTools, Log, TEXT("%s: Set[%d]"), *Set->PropertyName, Set->ExportedValues.Num());
 				for (int i = 0; i < Set->ExportedValues.Num(); i++) {
-					UE_LOG(LogPrefabEditorTools, Log, TEXT("\t%s"), *Set->ExportedValues[i]);
+					UE_LOG(LogPrefabTools, Log, TEXT("\t%s"), *Set->ExportedValues[i]);
 				}
 			}
 			else if (UPrefabricatorMapProperty* Map = Cast<UPrefabricatorMapProperty>(Property)) {
-				UE_LOG(LogPrefabEditorTools, Log, TEXT("%s: Map[%d]"), *Map->PropertyName, Map->ExportedEntries.Num());
+				UE_LOG(LogPrefabTools, Log, TEXT("%s: Map[%d]"), *Map->PropertyName, Map->ExportedEntries.Num());
 				for (int i = 0; i < Map->ExportedEntries.Num(); i++) {
-					UE_LOG(LogPrefabEditorTools, Log, TEXT("\t%s <=> %s"), *Map->ExportedEntries[i].ExportedKey, *Map->ExportedEntries[i].ExportedValue);
+					UE_LOG(LogPrefabTools, Log, TEXT("\t%s <=> %s"), *Map->ExportedEntries[i].ExportedKey, *Map->ExportedEntries[i].ExportedValue);
 				}
 			}
 		}
@@ -357,20 +371,20 @@ namespace {
 	}
 
 	void DumpSerializedData(const FPrefabricatorActorData& InActorData) {
-		UE_LOG(LogPrefabEditorTools, Log, TEXT("Actor Properties: %s"), *InActorData.ClassPath);
-		UE_LOG(LogPrefabEditorTools, Log, TEXT("================="));
+		UE_LOG(LogPrefabTools, Log, TEXT("Actor Properties: %s"), *InActorData.ClassPath);
+		UE_LOG(LogPrefabTools, Log, TEXT("================="));
 		DumpSerializedProperties(InActorData.Properties);
 
 		for (const FPrefabricatorComponentData& ComponentData : InActorData.Components) {
-			UE_LOG(LogPrefabEditorTools, Log, TEXT(""));
-			UE_LOG(LogPrefabEditorTools, Log, TEXT("Component Properties: %s"), *ComponentData.ComponentName);
-			UE_LOG(LogPrefabEditorTools, Log, TEXT("================="));
+			UE_LOG(LogPrefabTools, Log, TEXT(""));
+			UE_LOG(LogPrefabTools, Log, TEXT("Component Properties: %s"), *ComponentData.ComponentName);
+			UE_LOG(LogPrefabTools, Log, TEXT("================="));
 			DumpSerializedProperties(ComponentData.Properties);
 		}
 	}
 }
 
-void FPrefabEditorTools::SaveStateToPrefabAsset(AActor* InActor, APrefabActor* PrefabActor, FPrefabricatorActorData& OutActorData)
+void FPrefabTools::SaveStateToPrefabAsset(AActor* InActor, APrefabActor* PrefabActor, FPrefabricatorActorData& OutActorData)
 {
 	FTransform InversePrefabTransform = PrefabActor->GetTransform().Inverse();
 	FTransform LocalTransform = InActor->GetTransform() * InversePrefabTransform;
@@ -398,7 +412,7 @@ void FPrefabEditorTools::SaveStateToPrefabAsset(AActor* InActor, APrefabActor* P
 	DumpSerializedData(OutActorData);
 }
 
-void FPrefabEditorTools::LoadStateFromPrefabAsset(AActor* InActor, APrefabActor* PrefabActor, const FPrefabricatorActorData& InActorData)
+void FPrefabTools::LoadStateFromPrefabAsset(AActor* InActor, APrefabActor* PrefabActor, const FPrefabricatorActorData& InActorData)
 {
 	DeserializeFields(InActor, InActorData.Properties);
 
@@ -416,21 +430,21 @@ void FPrefabEditorTools::LoadStateFromPrefabAsset(AActor* InActor, APrefabActor*
 	}
 }
 
-void FPrefabEditorTools::GetActorChildren(AActor* InParent, TArray<AActor*>& OutChildren)
+void FPrefabTools::GetActorChildren(AActor* InParent, TArray<AActor*>& OutChildren)
 {
 	InParent->GetAttachedActors(OutChildren);
 }
 
-void FPrefabEditorTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor)
+void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor)
 {
 	if (!PrefabActor) {
-		UE_LOG(LogPrefabEditorTools, Error, TEXT("Invalid prefab actor reference"));
+		UE_LOG(LogPrefabTools, Error, TEXT("Invalid prefab actor reference"));
 		return;
 	}
 
 	UPrefabricatorAsset* PrefabAsset = PrefabActor->PrefabComponent->PrefabAsset;
 	if (!PrefabAsset) {
-		UE_LOG(LogPrefabEditorTools, Error, TEXT("Prefab asset is not assigned correctly"));
+		UE_LOG(LogPrefabTools, Error, TEXT("Prefab asset is not assigned correctly"));
 		return;
 	}
 

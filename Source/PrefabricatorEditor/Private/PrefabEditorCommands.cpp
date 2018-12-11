@@ -3,7 +3,7 @@
 #include "PrefabEditorCommands.h"
 
 #include "PrefabEditorStyle.h"
-#include "Tools/PrefabEditorTools.h"
+#include "PrefabTools.h"
 
 #include "Framework/Commands/Commands.h"
 #include "Framework/Commands/UIAction.h"
@@ -27,8 +27,8 @@ void FPrefabricatorCommands::RegisterCommands() {
 
 	LevelMenuActionList->MapAction(
 		CreatePrefab,
-		FExecuteAction::CreateStatic(&FPrefabEditorTools::CreatePrefab),
-		FCanExecuteAction::CreateStatic(&FPrefabEditorTools::CanCreatePrefab)
+		FExecuteAction::CreateStatic(&FPrefabTools::CreatePrefab),
+		FCanExecuteAction::CreateStatic(&FPrefabTools::CanCreatePrefab)
 	);
 }
 

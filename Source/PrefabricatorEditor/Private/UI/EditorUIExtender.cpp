@@ -4,7 +4,7 @@
 
 #include "PrefabEditorCommands.h"
 #include "PrefabEditorStyle.h"
-#include "Tools/PrefabEditorTools.h"
+#include "PrefabTools.h"
 
 #include "AssetToolsModule.h"
 #include "Framework/Commands/UICommandList.h"
@@ -42,7 +42,7 @@ void FEditorUIExtender::Extend()
 				FSlateIcon(FPrefabEditorStyle::Get().GetStyleSetName(), "Prefabricator.ContextMenu.Icon"),
 				FUIAction
 				(
-					FExecuteAction::CreateStatic(&FPrefabEditorTools::CreatePrefab)
+					FExecuteAction::CreateStatic(&FPrefabTools::CreatePrefab)
 				)
 			);
 		}
@@ -51,8 +51,8 @@ void FEditorUIExtender::Extend()
 			// Add a button to open a TimecodeSynchronizer Editor
 			ToolbarBuilder.AddToolBarButton(
 				FUIAction(
-					FExecuteAction::CreateStatic(&FPrefabEditorTools::CreatePrefab),
-					FCanExecuteAction::CreateStatic(&FPrefabEditorTools::CanCreatePrefab)
+					FExecuteAction::CreateStatic(&FPrefabTools::CreatePrefab),
+					FCanExecuteAction::CreateStatic(&FPrefabTools::CanCreatePrefab)
 				),
 				NAME_None,
 				LOCTEXT("PrefabToolbarButtonText", "Create Prefab"),
