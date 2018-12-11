@@ -19,7 +19,9 @@ public:
 
 	static void SaveStateToPrefabAsset(APrefabActor* PrefabActor);
 	static void LoadStateFromPrefabAsset(APrefabActor* PrefabActor);
-	static void SaveStateToPrefabAsset(AActor* InActor, AActor* PrefabActor, FPrefabricatorActorData& OutActorData);
+
+	static void SaveStateToPrefabAsset(AActor* InActor, APrefabActor* PrefabActor, FPrefabricatorActorData& OutActorData);
+	static void LoadStateFromPrefabAsset(AActor* InActor, APrefabActor* PrefabActor, const FPrefabricatorActorData& InActorData);
 
 	static void GetActorChildren(AActor* InParent, TArray<AActor*>& OutChildren);
 

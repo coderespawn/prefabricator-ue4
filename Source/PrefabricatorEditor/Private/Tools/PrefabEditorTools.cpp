@@ -150,130 +150,10 @@ void FPrefabEditorTools::SaveStateToPrefabAsset(APrefabActor* PrefabActor)
 	}
 }
 
-///////////////////////////////////
-/*
-* Houses base functionality shared between CPFUO archivers (FCPFUOWriter/FCPFUOReader)
-* Used to track whether tagged data is being processed (and whether we should be serializing it).
-*/
-struct FPrefabricatorBaseArchive
-{
-public:
-	FPrefabricatorBaseArchive(bool bIncludeUntaggedDataIn)
-		: bIncludeUntaggedData(bIncludeUntaggedDataIn)
-		, TaggedDataScope(0)
-	{}
-
-	FPrefabricatorBaseArchive(const FPrefabricatorBaseArchive& DataSrc)
-		: bIncludeUntaggedData(DataSrc.bIncludeUntaggedData)
-		, TaggedDataScope(0)
-	{}
-
-protected:
-	FORCEINLINE void OpenTaggedDataScope() { ++TaggedDataScope; }
-	FORCEINLINE void CloseTaggedDataScope() { --TaggedDataScope; }
-
-	FORCEINLINE bool IsSerializationEnabled()
-	{
-		return bIncludeUntaggedData || (TaggedDataScope > 0);
-	}
-
-	bool bIncludeUntaggedData;
-private:
-	int32 TaggedDataScope;
-};
-
-/* Serializes and stores property data from a specified 'source' object. Only stores data compatible with a target destination object. */
-struct FPrefabricatorWriter : public FObjectWriter, public FPrefabricatorBaseArchive
-{
-public:
-	FPrefabricatorWriter(UObject* SrcObject, TArray<uint8>& SavedPropertyData, const UEngine::FCopyPropertiesForUnrelatedObjectsParams& Params)
-		: FObjectWriter(SavedPropertyData)
-		// if the two objects don't share a common native base class, then they may have different
-		// serialization methods, which is dangerous (the data is not guaranteed to be homogeneous)
-		// in that case, we have to stick with tagged properties only
-		, FPrefabricatorBaseArchive(true)
-		, bSkipCompilerGeneratedDefaults(Params.bSkipCompilerGeneratedDefaults)
-	{
-		ArIgnoreArchetypeRef = true;
-		ArNoDelta = !Params.bDoDelta;
-		ArIgnoreClassRef = true;
-		ArPortFlags |= Params.bCopyDeprecatedProperties ? PPF_UseDeprecatedProperties : PPF_None;
-
-		SrcObject->Serialize(*this);
-	}
-
-	//~ Begin FArchive Interface
-	virtual void Serialize(void* Data, int64 Num) override
-	{
-		if (IsSerializationEnabled())
-		{
-			FObjectWriter::Serialize(Data, Num);
-		}
-	}
-
-	virtual void MarkScriptSerializationStart(const UObject* Object) override { OpenTaggedDataScope(); }
-	virtual void MarkScriptSerializationEnd(const UObject* Object) override { CloseTaggedDataScope(); }
-
-#if WITH_EDITOR
-	virtual bool ShouldSkipProperty(const class UProperty* InProperty) const override
-	{
-		static FName BlueprintCompilerGeneratedDefaultsName(TEXT("BlueprintCompilerGeneratedDefaults"));
-		return bSkipCompilerGeneratedDefaults && InProperty->HasMetaData(BlueprintCompilerGeneratedDefaultsName);
-	}
-#endif 
-	//~ End FArchive Interface
-
-private:
-
-	bool bSkipCompilerGeneratedDefaults;
-};
-
-/* Responsible for applying the saved property data from a FCPFUOWriter to a specified object */
-struct FPrefabricatorReader : public FObjectReader, public FPrefabricatorBaseArchive
-{
-public:
-	FPrefabricatorReader(UObject* DstObject, TArray<uint8>& SavedPropertyData)
-		: FObjectReader(SavedPropertyData)
-		, FPrefabricatorBaseArchive(true)
-	{
-		ArIgnoreArchetypeRef = true;
-		ArIgnoreClassRef = true;
-
-#if USE_STABLE_LOCALIZATION_KEYS
-		if (GIsEditor && !(ArPortFlags & (PPF_DuplicateVerbatim | PPF_DuplicateForPIE)))
-		{
-			SetLocalizationNamespace(TextNamespaceUtil::EnsurePackageNamespace(DstObject));
-		}
-#endif // USE_STABLE_LOCALIZATION_KEYS
-
-		DstObject->Serialize(*this);
-	}
-
-	//~ Begin FArchive Interface
-	virtual void Serialize(void* Data, int64 Num) override
-	{
-		if (IsSerializationEnabled())
-		{
-			FObjectReader::Serialize(Data, Num);
-		}
-	}
-
-	virtual void MarkScriptSerializationStart(const UObject* Object) override { OpenTaggedDataScope(); }
-	virtual void MarkScriptSerializationEnd(const UObject* Object) override { CloseTaggedDataScope(); }
-	// ~End FArchive Interface
-};
-
-///////////////////////////////////
-
 namespace {
 
-	void GetPropertyData(UProperty* Property, UObject* Obj, TArray<uint8>& OutPropertyData) {
-		if (Property) {
-			int32 Size = Property->GetSize();
-			uint8* SrcData = Property->ContainerPtrToValuePtr<uint8>(Obj);
-			OutPropertyData.AddUninitialized(Size);
-			FMemory::Memcpy(OutPropertyData.GetData(), SrcData, Size);
-		}
+	void GetPropertyData(UProperty* Property, UObject* Obj, FString& OutPropertyData) {
+		Property->ExportTextItem(OutPropertyData, Property->ContainerPtrToValuePtr<void>(Obj), nullptr, Obj, PPF_None);
 	}
 
 	bool ContainsOuterParent(UObject* ObjectToTest, UObject* Outer) {
@@ -284,43 +164,241 @@ namespace {
 		return false;
 	}
 
-	void SerializeFields(UObject* ObjToSerialize, AActor* PrefabActor, TArray<FPrefabricatorFieldData>& OutFields) {
+	bool HasDefaultValue(UProperty* Property, UObject* ObjToSerialize) {
+		FString PropertyData, TemplatePropertyData;
+		GetPropertyData(Property, ObjToSerialize, PropertyData);
+		GetPropertyData(Property, ObjToSerialize->GetArchetype(), TemplatePropertyData);
+		return (PropertyData == TemplatePropertyData);
+	}
+
+	bool ShouldSkipSerialization(UProperty* Property, UObject* ObjToSerialize, APrefabActor* PrefabActor) {
+		if (UObjectProperty* ObjProperty = Cast<UObjectProperty>(Property)) {
+			UObject* PropertyObjectValue = ObjProperty->GetObjectPropertyValue_InContainer(ObjToSerialize);
+			if (ContainsOuterParent(PropertyObjectValue, ObjToSerialize) ||
+				ContainsOuterParent(PropertyObjectValue, PrefabActor)) {
+				UE_LOG(LogPrefabEditorTools, Warning, TEXT("Skipping Property: %s"), *Property->GetName());
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	void DeserializeFields(UObject* InObjToDeserialize, const TArray<UPrefabricatorPropertyBase*>& InProperties) {
+		TMap<FString, UPrefabricatorPropertyBase*> PropertiesByName;
+		for (UPrefabricatorPropertyBase* Property : InProperties) {
+			PropertiesByName.Add(Property->PropertyName, Property);
+		}
+
+		for (TFieldIterator<UProperty> PropertyIterator(InObjToDeserialize->GetClass()); PropertyIterator; ++PropertyIterator) {
+			UProperty* Property = *PropertyIterator;
+			if (!Property) continue;
+			UPrefabricatorPropertyBase** SearchResult = PropertiesByName.Find(Property->GetName());
+			if (!SearchResult) continue;
+			UPrefabricatorPropertyBase* PrefabProperty = *SearchResult;
+
+			if (UPrefabricatorAtomProperty* Atom = Cast<UPrefabricatorAtomProperty>(PrefabProperty)) {
+				Property->ImportText(*Atom->ExportedValue, Property->ContainerPtrToValuePtr<void>(InObjToDeserialize), PPF_None, InObjToDeserialize);
+			}
+			else if (UPrefabricatorArrayProperty* Array = Cast<UPrefabricatorArrayProperty>(PrefabProperty)) {
+				// ...
+			}
+			else if (UPrefabricatorSetProperty* Set = Cast<UPrefabricatorSetProperty>(PrefabProperty)) {
+				// ...
+			}
+			else if (UPrefabricatorMapProperty* Map = Cast<UPrefabricatorMapProperty>(PrefabProperty)) {
+				// ...
+			}
+		}
+	}
+
+	void SerializeFields(UObject* ObjToSerialize, APrefabActor* PrefabActor, TArray<UPrefabricatorPropertyBase*>& OutProperties) {
+		UPrefabricatorAsset* PrefabAsset = PrefabActor->PrefabComponent->PrefabAsset;
+		if (!PrefabAsset) {
+			return;
+		}
+
 		for (TFieldIterator<UProperty> PropertyIterator(ObjToSerialize->GetClass()); PropertyIterator; ++PropertyIterator) {
 			UProperty* Property = *PropertyIterator;
-			int32 Size = Property->GetSize();
-			TArray<uint8> PropertyData, TemplatePropertyData;
-			GetPropertyData(Property, ObjToSerialize, PropertyData);
-			GetPropertyData(Property, ObjToSerialize->GetArchetype(), TemplatePropertyData);
-			bool bDefaultValue = FMemory::Memcmp(PropertyData.GetData(), TemplatePropertyData.GetData(), Size) == 0;
 
-			if (UObjectProperty* ObjProperty = Cast<UObjectProperty>(Property)) {
-				UObject* PropertyObjectValue = ObjProperty->GetObjectPropertyValue_InContainer(ObjToSerialize);
-				if (ContainsOuterParent(PropertyObjectValue, ObjToSerialize) ||
-					ContainsOuterParent(PropertyObjectValue, PrefabActor)) {
-					UE_LOG(LogPrefabEditorTools, Warning, TEXT("Skipping Property: %s,  Size: %d"), *Property->GetName(), Size);
+			UPrefabricatorPropertyBase* PrefabProperty = nullptr;
+			FString PropertyName = Property->GetName();
+
+			if (UArrayProperty* ArrayProperty = Cast<UArrayProperty>(Property)) {
+				UPrefabricatorArrayProperty* ArrayPrefabProperty = NewObject<UPrefabricatorArrayProperty>(PrefabAsset);
+				ArrayPrefabProperty->PropertyName = PropertyName;
+
+				FScriptArrayHelper ArrayHelper(ArrayProperty, ArrayProperty->ContainerPtrToValuePtr<void>(ObjToSerialize));
+				UProperty* ArrayItemProperty = ArrayProperty->Inner;
+
+				for (int i = 0; i < ArrayHelper.Num(); i++) {
+					void* ArrayItemData = ArrayHelper.GetRawPtr(i);
+					FString ItemValue;
+					ArrayItemProperty->ExportTextItem(ItemValue, ArrayItemData, nullptr, ObjToSerialize, PPF_None);
+					ArrayPrefabProperty->ExportedValues.Add(ItemValue);
+				}
+
+				PrefabProperty = ArrayPrefabProperty;
+			}
+			else if (USetProperty* SetProperty = Cast<USetProperty>(Property)) {
+				UPrefabricatorSetProperty* SetPrefabProperty = NewObject<UPrefabricatorSetProperty>(PrefabAsset);
+				SetPrefabProperty->PropertyName = PropertyName;
+
+				FScriptSetHelper SetHelper(SetProperty, SetProperty->ContainerPtrToValuePtr<void>(ObjToSerialize));
+				UProperty* SetItemProperty = SetProperty->ElementProp;
+
+				for (int i = 0; i < SetHelper.Num(); i++) {
+					void* SetItemData = SetHelper.GetElementPtr(i);
+					FString ItemValue;
+					SetItemProperty->ExportTextItem(ItemValue, SetItemData, nullptr, ObjToSerialize, PPF_None);
+					SetPrefabProperty->ExportedValues.Add(ItemValue);
+				}
+
+				PrefabProperty = SetPrefabProperty;
+			}
+			else if (UMapProperty* MapProperty = Cast<UMapProperty>(Property)) {
+				UPrefabricatorMapProperty* MapPrefabProperty = NewObject<UPrefabricatorMapProperty>(PrefabAsset);
+				MapPrefabProperty->PropertyName = PropertyName;
+
+				FScriptMapHelper MapHelper(MapProperty, MapProperty->ContainerPtrToValuePtr<void>(ObjToSerialize));
+				UProperty* MapKeyProperty = MapProperty->KeyProp;
+				UProperty* MapValueProperty = MapProperty->ValueProp;
+				
+				for (int i = 0; i < MapHelper.Num(); i++) {
+					void* KeyData = MapHelper.GetKeyPtr(i);
+					void* ValueData = MapHelper.GetValuePtr(i);
+					
+					int32 EntryIdx = MapPrefabProperty->ExportedEntries.AddDefaulted();
+					FPrefabricatorMapPropertyEntry& Entry = MapPrefabProperty->ExportedEntries[EntryIdx];
+					MapKeyProperty->ExportTextItem(Entry.ExportedKey, KeyData, nullptr, ObjToSerialize, PPF_None);
+					MapValueProperty->ExportTextItem(Entry.ExportedValue, ValueData, nullptr, ObjToSerialize, PPF_None);
+				}
+
+				PrefabProperty = MapPrefabProperty;
+			}
+			else {
+				if (HasDefaultValue(Property, ObjToSerialize) || ShouldSkipSerialization(Property, ObjToSerialize, PrefabActor)) {
 					continue;
 				}
+
+				FString PropertyValue;
+				Property->ExportTextItem(PropertyValue, Property->ContainerPtrToValuePtr<void>(ObjToSerialize), nullptr, ObjToSerialize, PPF_None);
+
+				UPrefabricatorAtomProperty* AtomPrefabProperty = NewObject<UPrefabricatorAtomProperty>(PrefabAsset);
+				AtomPrefabProperty->PropertyName = PropertyName;
+				AtomPrefabProperty->ExportedValue = PropertyValue;
+
+				PrefabProperty = AtomPrefabProperty;
+				
 			}
 
-			if (bDefaultValue) {
-				continue;
+			if (PrefabProperty) {
+				OutProperties.Add(PrefabProperty);
 			}
+		}
+	}
 
-			
-			UE_LOG(LogPrefabEditorTools, Error, TEXT("Property: %s,  Size: %d"), *Property->GetName(), Size);
+	void CollectAllSubobjects(UObject* Object, TArray<UObject*>& OutSubobjectArray)
+	{
+		const bool bIncludedNestedObjects = true;
+		GetObjectsWithOuter(Object, OutSubobjectArray, bIncludedNestedObjects);
 
+		// Remove contained objects that are not subobjects.
+		for (int32 ComponentIndex = 0; ComponentIndex < OutSubobjectArray.Num(); ComponentIndex++)
+		{
+			UObject* PotentialComponent = OutSubobjectArray[ComponentIndex];
+			if (!PotentialComponent->IsDefaultSubobject() && !PotentialComponent->HasAnyFlags(RF_DefaultSubObject))
+			{
+				OutSubobjectArray.RemoveAtSwap(ComponentIndex--);
+			}
+		}
+	}
+
+	void DumpSerializedProperties(const TArray<UPrefabricatorPropertyBase*>& InProperties) {
+		for (UPrefabricatorPropertyBase* Property : InProperties) {
+			if (UPrefabricatorAtomProperty* Atom = Cast<UPrefabricatorAtomProperty>(Property)) {
+				UE_LOG(LogPrefabEditorTools, Log, TEXT("%s: %s"), *Atom->PropertyName, *Atom->ExportedValue);
+			}
+			else if (UPrefabricatorArrayProperty* Array = Cast<UPrefabricatorArrayProperty>(Property)) {
+				UE_LOG(LogPrefabEditorTools, Log, TEXT("%s: Array[%d]"), *Array->PropertyName, Array->ExportedValues.Num());
+				for (int i = 0; i < Array->ExportedValues.Num(); i++) {
+					UE_LOG(LogPrefabEditorTools, Log, TEXT("\t%s"), *Array->ExportedValues[i]);
+				}
+			}
+			else if (UPrefabricatorSetProperty* Set = Cast<UPrefabricatorSetProperty>(Property)) {
+				UE_LOG(LogPrefabEditorTools, Log, TEXT("%s: Set[%d]"), *Set->PropertyName, Set->ExportedValues.Num());
+				for (int i = 0; i < Set->ExportedValues.Num(); i++) {
+					UE_LOG(LogPrefabEditorTools, Log, TEXT("\t%s"), *Set->ExportedValues[i]);
+				}
+			}
+			else if (UPrefabricatorMapProperty* Map = Cast<UPrefabricatorMapProperty>(Property)) {
+				UE_LOG(LogPrefabEditorTools, Log, TEXT("%s: Map[%d]"), *Map->PropertyName, Map->ExportedEntries.Num());
+				for (int i = 0; i < Map->ExportedEntries.Num(); i++) {
+					UE_LOG(LogPrefabEditorTools, Log, TEXT("\t%s <=> %s"), *Map->ExportedEntries[i].ExportedKey, *Map->ExportedEntries[i].ExportedValue);
+				}
+			}
+		}
+
+	}
+
+	void DumpSerializedData(const FPrefabricatorActorData& InActorData) {
+		UE_LOG(LogPrefabEditorTools, Log, TEXT("Actor Properties: %s"), *InActorData.ClassPath);
+		UE_LOG(LogPrefabEditorTools, Log, TEXT("================="));
+		DumpSerializedProperties(InActorData.Properties);
+
+		for (const FPrefabricatorComponentData& ComponentData : InActorData.Components) {
+			UE_LOG(LogPrefabEditorTools, Log, TEXT(""));
+			UE_LOG(LogPrefabEditorTools, Log, TEXT("Component Properties: %s"), *ComponentData.ComponentName);
+			UE_LOG(LogPrefabEditorTools, Log, TEXT("================="));
+			DumpSerializedProperties(ComponentData.Properties);
 		}
 	}
 }
 
-void FPrefabEditorTools::SaveStateToPrefabAsset(AActor* InActor, AActor* PrefabActor, FPrefabricatorActorData& OutActorData)
+void FPrefabEditorTools::SaveStateToPrefabAsset(AActor* InActor, APrefabActor* PrefabActor, FPrefabricatorActorData& OutActorData)
 {
 	FTransform InversePrefabTransform = PrefabActor->GetTransform().Inverse();
 	FTransform LocalTransform = InActor->GetTransform() * InversePrefabTransform;
 	OutActorData.RelativeTransform = LocalTransform;
-	OutActorData.ActorClass = InActor->GetClass();
-	
-	SerializeFields(InActor->GetRootComponent(), PrefabActor, OutActorData.Fields);
+	OutActorData.ClassPath = InActor->GetClass()->GetPathName();
+
+	SerializeFields(InActor, PrefabActor, OutActorData.Properties);
+
+	TArray<UActorComponent*> Components;
+	InActor->GetComponents(Components);
+
+	for (UActorComponent* Component : Components) {
+		int32 ComponentDataIdx = OutActorData.Components.AddDefaulted();
+		FPrefabricatorComponentData& ComponentData = OutActorData.Components[ComponentDataIdx];
+		ComponentData.ComponentName = Component->GetPathName(InActor);
+		if (USceneComponent* SceneComponent = Cast<USceneComponent>(Component)) {
+			ComponentData.RelativeTransform = SceneComponent->GetComponentTransform();
+		}
+		else {
+			ComponentData.RelativeTransform = FTransform::Identity;
+		}
+		SerializeFields(Component, PrefabActor, ComponentData.Properties);
+	}
+
+	DumpSerializedData(OutActorData);
+}
+
+void FPrefabEditorTools::LoadStateFromPrefabAsset(AActor* InActor, APrefabActor* PrefabActor, const FPrefabricatorActorData& InActorData)
+{
+	DeserializeFields(InActor, InActorData.Properties);
+
+	TMap<FString, UActorComponent*> ComponentsByName;
+	for (UActorComponent* Component : InActor->GetComponents()) {
+		FString ComponentPath = Component->GetPathName(InActor);
+		ComponentsByName.Add(ComponentPath, Component);
+	}
+
+	for (const FPrefabricatorComponentData& ComponentData : InActorData.Components) {
+		if (UActorComponent** SearchResult = ComponentsByName.Find(ComponentData.ComponentName)) {
+			UActorComponent* Component = *SearchResult;
+			DeserializeFields(Component, ComponentData.Properties);
+		}
+	}
 }
 
 void FPrefabEditorTools::GetActorChildren(AActor* InParent, TArray<AActor*>& OutChildren)
@@ -352,35 +430,25 @@ void FPrefabEditorTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor)
 	}
 
 	for (FPrefabricatorActorData& ActorItemData : PrefabAsset->ActorData) {
-		if (!ActorItemData.ActorClass) return;
+		UClass* ActorClass = LoadObject<UClass>(nullptr, *ActorItemData.ClassPath);
+		if (!ActorClass) return;
 
 		UWorld* World = PrefabActor->GetWorld();
 		AActor* ChildActor = nullptr;
-		TArray<AActor*>& ActorPoolByClass = ExistingActorPool.FindOrAdd(ActorItemData.ActorClass);
+		TArray<AActor*>& ActorPoolByClass = ExistingActorPool.FindOrAdd(ActorClass);
 		if (ActorPoolByClass.Num() > 0) {
 			ChildActor = ActorPoolByClass[0];
 			ActorPoolByClass.RemoveAt(0);
 		}
 		else {
 			// The pool is exhausted for this class type. Spawn a new actor
-			ChildActor = World->SpawnActor<AActor>(ActorItemData.ActorClass);
-			GEditor->ParentActors(PrefabActor, ChildActor, NAME_None);
+			ChildActor = World->SpawnActor<AActor>(ActorClass);
 		}
-
 
 		// Load the saved data into the actor
-		{
-			TMap<FName, FPrefabricatorComponentData*> ComponentDataByName;
-			for (FPrefabricatorComponentData& ComponentData : ActorItemData.Components) {
-				if (!ComponentDataByName.Contains(ComponentData.ComponentName)) {
-					ComponentDataByName.Add(ComponentData.ComponentName, &ComponentData);
-				}
-			}
+		LoadStateFromPrefabAsset(ChildActor, PrefabActor, ActorItemData);
 
-			// TODO: ..
-		}
-
-
+		GEditor->ParentActors(PrefabActor, ChildActor, NAME_None);
 		AssignAssetUserData(ChildActor, PrefabActor);
 
 		// Set the transform
@@ -401,6 +469,5 @@ void FPrefabEditorTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor)
 		}
 	}
 	ExistingActorPool.Reset();
-
 }
 

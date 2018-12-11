@@ -5,15 +5,56 @@
 #include "Engine/EngineTypes.h"
 #include "PrefabricatorAsset.generated.h"
 
+
+UCLASS()
+class PREFABRICATORRUNTIME_API UPrefabricatorPropertyBase : public UObject {
+	GENERATED_BODY()
+public:
+	UPROPERTY()
+	FString PropertyName;
+};
+
+UCLASS()
+class PREFABRICATORRUNTIME_API UPrefabricatorAtomProperty : public UPrefabricatorPropertyBase {
+	GENERATED_BODY()
+public:
+	UPROPERTY()
+	FString ExportedValue;
+};
+
+UCLASS()
+class PREFABRICATORRUNTIME_API UPrefabricatorArrayProperty : public UPrefabricatorPropertyBase {
+	GENERATED_BODY()
+public:
+	UPROPERTY()
+	TArray<FString> ExportedValues;
+};
+
+UCLASS()
+class PREFABRICATORRUNTIME_API UPrefabricatorSetProperty : public UPrefabricatorPropertyBase {
+	GENERATED_BODY()
+public:
+	UPROPERTY()
+	TArray<FString> ExportedValues;
+};
+
 USTRUCT()
-struct PREFABRICATORRUNTIME_API FPrefabricatorFieldData {
+struct PREFABRICATORRUNTIME_API FPrefabricatorMapPropertyEntry {
 	GENERATED_USTRUCT_BODY()
 
-	UPROPERTY()
-	FName FieldName;
+	USTRUCT()
+	FString ExportedKey;
 
+	USTRUCT()
+	FString ExportedValue;
+};
+
+UCLASS()
+class PREFABRICATORRUNTIME_API UPrefabricatorMapProperty : public UPrefabricatorPropertyBase {
+	GENERATED_BODY()
+public:
 	UPROPERTY()
-	TArray<uint8> Data;
+	TArray<FPrefabricatorMapPropertyEntry> ExportedEntries;
 };
 
 USTRUCT()
@@ -21,10 +62,13 @@ struct PREFABRICATORRUNTIME_API FPrefabricatorComponentData {
 	GENERATED_USTRUCT_BODY()
 
 	UPROPERTY()
-	FName ComponentName;
+	FTransform RelativeTransform;
 
 	UPROPERTY()
-	TArray<FPrefabricatorFieldData> Fields;
+	FString ComponentName;
+
+	UPROPERTY()
+	TArray<UPrefabricatorPropertyBase*> Properties;
 };
 
 USTRUCT()
@@ -35,10 +79,10 @@ struct PREFABRICATORRUNTIME_API FPrefabricatorActorData {
 	FTransform RelativeTransform;
 
 	UPROPERTY()
-	UClass* ActorClass;
+	FString ClassPath;
 
 	UPROPERTY()
-	TArray<FPrefabricatorFieldData> Fields;
+	TArray<UPrefabricatorPropertyBase*> Properties;
 
 	UPROPERTY()
 	TArray<FPrefabricatorComponentData> Components;
