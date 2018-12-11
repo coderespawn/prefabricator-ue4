@@ -139,7 +139,6 @@ void FPrefabEditorTools::SaveStateToPrefabAsset(APrefabActor* PrefabActor)
 
 	PrefabAsset->ActorData.Reset();
 
-	FTransform InvPrefabTransform = PrefabActor->GetTransform().Inverse();
 	TArray<AActor*> Children;
 	GetActorChildren(PrefabActor, Children);
 
@@ -147,7 +146,7 @@ void FPrefabEditorTools::SaveStateToPrefabAsset(APrefabActor* PrefabActor)
 		AssignAssetUserData(ChildActor, PrefabActor);
 		int32 NewItemIndex = PrefabAsset->ActorData.AddDefaulted();
 		FPrefabricatorActorData& ActorData = PrefabAsset->ActorData[NewItemIndex];
-		SaveStateToPrefabAsset(ChildActor, InvPrefabTransform, ActorData);
+		SaveStateToPrefabAsset(ChildActor, PrefabActor, ActorData);
 	}
 }
 
@@ -277,18 +276,28 @@ namespace {
 		}
 	}
 
-	void SerializeFields(UObject* Obj, TArray<FPrefabricatorFieldData>& OutFields) {
-		for (TFieldIterator<UProperty> PropertyIterator(Obj->GetClass()); PropertyIterator; ++PropertyIterator) {
+	bool ContainsOuterParent(UObject* ObjectToTest, UObject* Outer) {
+		while (ObjectToTest) {
+			if (ObjectToTest == Outer) return true;
+			ObjectToTest = ObjectToTest->GetOuter();
+		}
+		return false;
+	}
+
+	void SerializeFields(UObject* ObjToSerialize, AActor* PrefabActor, TArray<FPrefabricatorFieldData>& OutFields) {
+		for (TFieldIterator<UProperty> PropertyIterator(ObjToSerialize->GetClass()); PropertyIterator; ++PropertyIterator) {
 			UProperty* Property = *PropertyIterator;
 			int32 Size = Property->GetSize();
 			TArray<uint8> PropertyData, TemplatePropertyData;
-			GetPropertyData(Property, Obj, PropertyData);
-			GetPropertyData(Property, Obj->GetArchetype(), TemplatePropertyData);
+			GetPropertyData(Property, ObjToSerialize, PropertyData);
+			GetPropertyData(Property, ObjToSerialize->GetArchetype(), TemplatePropertyData);
 			bool bDefaultValue = FMemory::Memcmp(PropertyData.GetData(), TemplatePropertyData.GetData(), Size) == 0;
 
 			if (UObjectProperty* ObjProperty = Cast<UObjectProperty>(Property)) {
-				UObject* PropertyObject = ObjProperty->GetObjectPropertyValue(Property->ContainerPtrToValuePtr<UObject*>(Obj));
-				if (PropertyObject && (PropertyObject->IsA<AActor>() || PropertyObject->IsA<UActorComponent>())) {
+				UObject* PropertyObjectValue = ObjProperty->GetObjectPropertyValue_InContainer(ObjToSerialize);
+				if (ContainsOuterParent(PropertyObjectValue, ObjToSerialize) ||
+					ContainsOuterParent(PropertyObjectValue, PrefabActor)) {
+					UE_LOG(LogPrefabEditorTools, Warning, TEXT("Skipping Property: %s,  Size: %d"), *Property->GetName(), Size);
 					continue;
 				}
 			}
@@ -297,19 +306,21 @@ namespace {
 				continue;
 			}
 
+			
 			UE_LOG(LogPrefabEditorTools, Error, TEXT("Property: %s,  Size: %d"), *Property->GetName(), Size);
 
 		}
 	}
 }
 
-void FPrefabEditorTools::SaveStateToPrefabAsset(AActor* InActor, const FTransform& InversePrefabTransform, FPrefabricatorActorData& OutActorData)
+void FPrefabEditorTools::SaveStateToPrefabAsset(AActor* InActor, AActor* PrefabActor, FPrefabricatorActorData& OutActorData)
 {
+	FTransform InversePrefabTransform = PrefabActor->GetTransform().Inverse();
 	FTransform LocalTransform = InActor->GetTransform() * InversePrefabTransform;
 	OutActorData.RelativeTransform = LocalTransform;
 	OutActorData.ActorClass = InActor->GetClass();
 	
-	DumpPropertyList(InActor->GetRootComponent());
+	SerializeFields(InActor->GetRootComponent(), PrefabActor, OutActorData.Fields);
 }
 
 void FPrefabEditorTools::GetActorChildren(AActor* InParent, TArray<AActor*>& OutChildren)
@@ -360,7 +371,7 @@ void FPrefabEditorTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor)
 		// Load the saved data into the actor
 		{
 			TMap<FName, FPrefabricatorComponentData*> ComponentDataByName;
-			for (FPrefabricatorComponentData& ComponentData : ActorItemData.ComponentData) {
+			for (FPrefabricatorComponentData& ComponentData : ActorItemData.Components) {
 				if (!ComponentDataByName.Contains(ComponentData.ComponentName)) {
 					ComponentDataByName.Add(ComponentData.ComponentName, &ComponentData);
 				}
