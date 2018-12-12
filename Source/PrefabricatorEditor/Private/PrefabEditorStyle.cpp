@@ -67,6 +67,7 @@ TSharedRef< class FSlateStyleSet > FPrefabEditorStyle::Create()
 		Style.Set("Prefabricator.ContextMenu.Icon", new IMAGE_PLUGIN_BRUSH("PrefabTool/Icons/Icon_Prefab_16", Icon16x16));
 		Style.Set("Prefabricator.CreatePrefab", new IMAGE_PLUGIN_BRUSH("PrefabTool/Icons/Icon_Prefab_48", Icon48x48));
 
+		Style.Set("ClassIcon.PrefabActor", new IMAGE_PLUGIN_BRUSH("PrefabTool/Icons/Icon_Prefab_16", Icon16x16));
 	}
 
 

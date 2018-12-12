@@ -20,6 +20,7 @@ public:
 #if WITH_EDITOR
 	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& e) override;
 	virtual void PostDuplicate(EDuplicateMode::Type DuplicateMode) override;
+	virtual FName GetCustomIconName() const override;
 #endif // WITH_EDITOR
 	/// End of AActor Interface 
 

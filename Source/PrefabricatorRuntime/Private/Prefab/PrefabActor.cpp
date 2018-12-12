@@ -43,6 +43,12 @@ void APrefabActor::PostDuplicate(EDuplicateMode::Type DuplicateMode)
 	FPrefabTools::LoadStateFromPrefabAsset(this);
 }
 
+FName APrefabActor::GetCustomIconName() const
+{
+	static const FName PrefabIconName("ClassIcon.PrefabActor");
+	return PrefabIconName;
+}
+
 #endif // WITH_EDITOR
 
 
