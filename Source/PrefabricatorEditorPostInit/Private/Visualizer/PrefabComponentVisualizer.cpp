@@ -1,6 +1,6 @@
 //$ Copyright 2015-18, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
-#include "Utils/PrefabComponentVisualizer.h"
+#include "Visualizers/PrefabComponentVisualizer.h"
 #include "PrefabComponent.h"
 #include "GameFramework/Actor.h"
 #include "SceneManagement.h"

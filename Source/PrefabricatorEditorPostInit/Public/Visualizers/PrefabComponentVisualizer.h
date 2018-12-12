@@ -7,7 +7,7 @@
 class FPrimitiveDrawInterface;
 class FSceneView;
 
-class PREFABRICATOREDITOR_API FPrefabComponentVisualizer : public FComponentVisualizer
+class PREFABRICATOREDITORPOSTINIT_API FPrefabComponentVisualizer : public FComponentVisualizer
 {
 public:
 	//~ Begin FComponentVisualizer Interface

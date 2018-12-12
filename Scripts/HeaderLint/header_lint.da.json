@@ -2,7 +2,8 @@
 	"plugin_source_dir": "D:/gamedev/ue4/DungeonRite/Plugins/Prefabricator/Source",
 	"plugin_modules": [
 		"PrefabricatorRuntime", 
-		"PrefabricatorEditor"
+		"PrefabricatorEditor",
+		"PrefabricatorEditorPostInit"
 	],
 	"engine_version": "4.21"
 }

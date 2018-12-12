@@ -21,6 +21,11 @@
 		{
 			"Name" : "PrefabricatorEditor",
 			"Type" : "Editor",
+			"LoadingPhase" : "Default"
+		},
+		{
+			"Name" : "PrefabricatorEditorPostInit",
+			"Type" : "Editor",
 			"LoadingPhase" : "PostEngineInit"
 		}
 	],
