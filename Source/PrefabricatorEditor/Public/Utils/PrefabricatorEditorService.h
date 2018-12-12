@@ -2,7 +2,7 @@
 
 #pragma once
 #include "CoreMinimal.h"
-#include "PrefabricatorService.h"
+#include "Utils/PrefabricatorService.h"
 
 class PREFABRICATOREDITOR_API FPrefabricatorEditorService : public IPrefabricatorService {
 public:

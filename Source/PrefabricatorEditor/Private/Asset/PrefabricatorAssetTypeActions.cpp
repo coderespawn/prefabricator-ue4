@@ -2,7 +2,7 @@
 
 #include "Asset/PrefabricatorAssetTypeActions.h"
 
-#include "PrefabricatorAsset.h"
+#include "Asset/PrefabricatorAsset.h"
 
 #include "AssetToolsModule.h"
 #include "ContentBrowserModule.h"

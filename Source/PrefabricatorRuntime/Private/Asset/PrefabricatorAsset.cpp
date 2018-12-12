@@ -1,6 +1,6 @@
 //$ Copyright 2015-18, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
-#include "PrefabricatorAsset.h"
+#include "Asset/PrefabricatorAsset.h"
 
 #include "GameFramework/Actor.h"
 
@@ -47,3 +47,4 @@ EComponentMobility::Type FPrefabricatorAssetUtils::FindMobility(const TArray<AAc
 
 	return Mobility;
 }
+

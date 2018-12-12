@@ -1,12 +1,12 @@
 //$ Copyright 2015-18, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
-#include "PrefabActor.h"
+#include "Prefab/PrefabActor.h"
 
-#include "PrefabComponent.h"
+#include "Prefab/PrefabComponent.h"
+#include "Prefab/PrefabTools.h"
 
 #include "Components/BillboardComponent.h"
 #include "Engine/PointLight.h"
-#include "PrefabTools.h"
 
 APrefabActor::APrefabActor(const FObjectInitializer& ObjectInitializer) 
 	: Super(ObjectInitializer)

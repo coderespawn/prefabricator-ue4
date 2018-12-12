@@ -2,12 +2,12 @@
 
 #include "Asset/PrefabricatorActorFactory.h"
 
-#include "PrefabActor.h"
-#include "PrefabComponent.h"
-#include "PrefabricatorAsset.h"
+#include "Asset/PrefabricatorAsset.h"
+#include "Prefab/PrefabActor.h"
+#include "Prefab/PrefabComponent.h"
+#include "Prefab/PrefabTools.h"
 
 #include "AssetData.h"
-#include "Prefab/PrefabTools.h"
 
 UPrefabricatorActorFactory::UPrefabricatorActorFactory(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer) 

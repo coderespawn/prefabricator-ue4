@@ -8,11 +8,11 @@
 #include "PrefabEditorStyle.h"
 #include "Tools/SelectionHook.h"
 #include "UI/EditorUIExtender.h"
+#include "Utils/PrefabricatorEditorService.h"
 
 #include "AssetToolsModule.h"
 #include "IAssetTools.h"
 #include "LevelEditor.h"
-#include "PrefabricatorEditorService.h"
 
 #define LOCTEXT_NAMESPACE "DungeonArchitectEditorModule" 
 

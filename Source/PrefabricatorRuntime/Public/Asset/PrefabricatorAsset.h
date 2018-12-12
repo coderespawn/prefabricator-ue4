@@ -5,7 +5,6 @@
 #include "Engine/EngineTypes.h"
 #include "PrefabricatorAsset.generated.h"
 
-
 UCLASS()
 class PREFABRICATORRUNTIME_API UPrefabricatorPropertyBase : public UObject {
 	GENERATED_BODY()
@@ -107,3 +106,4 @@ public:
 	static EComponentMobility::Type FindMobility(const TArray<AActor*>& InActors);
 	
 };
+

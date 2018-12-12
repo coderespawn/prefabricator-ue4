@@ -2,8 +2,8 @@
 
 #include "PrefabEditorCommands.h"
 
+#include "Prefab/PrefabTools.h"
 #include "PrefabEditorStyle.h"
-#include "PrefabTools.h"
 
 #include "Framework/Commands/Commands.h"
 #include "Framework/Commands/UIAction.h"

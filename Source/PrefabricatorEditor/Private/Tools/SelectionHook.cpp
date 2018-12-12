@@ -2,8 +2,8 @@
 
 #include "Tools/SelectionHook.h"
 
-#include "PrefabActor.h"
-#include "PrefabricatorAssetUserData.h"
+#include "Asset/PrefabricatorAssetUserData.h"
+#include "Prefab/PrefabActor.h"
 
 #include "Engine/Selection.h"
 #include "GameFramework/Actor.h"

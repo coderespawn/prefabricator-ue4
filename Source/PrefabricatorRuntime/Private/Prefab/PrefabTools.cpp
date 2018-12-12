@@ -1,25 +1,25 @@
 //$ Copyright 2015-18, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
-#include "PrefabTools.h"
+#include "Prefab/PrefabTools.h"
 
-#include "PrefabActor.h"
-#include "PrefabricatorAsset.h"
-#include "PrefabricatorAssetUserData.h"
+#include "Asset/PrefabricatorAsset.h"
+#include "Asset/PrefabricatorAssetUserData.h"
+#include "Prefab/PrefabActor.h"
+#include "Prefab/PrefabComponent.h"
+#include "Utils/PrefabricatorService.h"
 
-#include "Editor/EditorEngine.h"
-#include "Engine/Selection.h"
-#include "GameFramework/Actor.h"
 #include "AssetToolsModule.h"
 #include "ContentBrowserModule.h"
-#include "IContentBrowserSingleton.h"
-#include "PrefabComponent.h"
-#include "MemoryReader.h"
-#include "ObjectAndNameAsStringProxyArchive.h"
+#include "Editor/EditorEngine.h"
+#include "Engine/Selection.h"
 #include "EngineUtils.h"
-#include "ObjectWriter.h"
-#include "ObjectReader.h"
-#include "UnrealMemory.h"
-#include "PrefabricatorService.h"
+#include "GameFramework/Actor.h"
+#include "HAL/UnrealMemory.h"
+#include "IContentBrowserSingleton.h"
+#include "Serialization/MemoryReader.h"
+#include "Serialization/ObjectAndNameAsStringProxyArchive.h"
+#include "Serialization/ObjectReader.h"
+#include "Serialization/ObjectWriter.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogPrefabTools, Log, All);
 

@@ -2,8 +2,8 @@
 
 #pragma once
 #include "CoreMinimal.h"
-#include "PrefabComponent.h"
-#include "PrefabricatorAsset.h"
+#include "Asset/PrefabricatorAsset.h"
+#include "Prefab/PrefabComponent.h"
 
 #include "ComponentAssetBroker.h"
 

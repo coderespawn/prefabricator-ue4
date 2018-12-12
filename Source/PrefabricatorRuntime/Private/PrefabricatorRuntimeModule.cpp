@@ -1,8 +1,8 @@
 //$ Copyright 2015-18, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #include "PrefabricatorRuntimeModule.h"
-#include "PrefabricatorService.h"
 
+#include "Utils/PrefabricatorService.h"
 
 class FPrefabricatorRuntime : public IPrefabricatorRuntime
 {

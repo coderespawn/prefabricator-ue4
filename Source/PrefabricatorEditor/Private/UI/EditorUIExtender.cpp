@@ -2,9 +2,9 @@
 
 #include "UI/EditorUIExtender.h"
 
+#include "Prefab/PrefabTools.h"
 #include "PrefabEditorCommands.h"
 #include "PrefabEditorStyle.h"
-#include "PrefabTools.h"
 
 #include "AssetToolsModule.h"
 #include "Framework/Commands/UICommandList.h"

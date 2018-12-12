@@ -2,7 +2,7 @@
 
 #include "Asset/PrefabricatorAssetFactory.h"
 
-#include "PrefabricatorAsset.h"
+#include "Asset/PrefabricatorAsset.h"
 
 UPrefabricatorAssetFactory::UPrefabricatorAssetFactory(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer) {
 	SupportedClass = UPrefabricatorAsset::StaticClass();

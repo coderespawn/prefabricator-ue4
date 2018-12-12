@@ -1,6 +1,7 @@
 //$ Copyright 2015-18, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
-#include "PrefabricatorService.h"
+#include "Utils/PrefabricatorService.h"
+
 #include "Engine/EngineTypes.h"
 
 /////////////////////////// FPrefabricatorService /////////////////////////// 
@@ -39,3 +40,4 @@ int FPrefabricatorRuntimeService::GetNumSelectedActors()
 	// Not supported in runtime builds (and not necessary)
 	return 0;
 }
+
