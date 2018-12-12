@@ -8,14 +8,10 @@
 #include "Prefab/PrefabComponent.h"
 #include "Utils/PrefabricatorService.h"
 
-#include "AssetToolsModule.h"
-#include "ContentBrowserModule.h"
-#include "Editor/EditorEngine.h"
 #include "Engine/Selection.h"
 #include "EngineUtils.h"
 #include "GameFramework/Actor.h"
 #include "HAL/UnrealMemory.h"
-#include "IContentBrowserSingleton.h"
 #include "Serialization/MemoryReader.h"
 #include "Serialization/ObjectAndNameAsStringProxyArchive.h"
 #include "Serialization/ObjectReader.h"
@@ -54,6 +50,20 @@ void FPrefabTools::SelectPrefabActor(AActor* PrefabActor)
 	}
 }
 
+UPrefabricatorAsset* FPrefabTools::CreatePrefabAsset()
+{
+	TSharedPtr<IPrefabricatorService> Service = FPrefabricatorService::Get();
+	return Service.IsValid() ? Service->CreatePrefabAsset() : nullptr;
+}
+
+void FPrefabTools::UpdatePrefabThumbnail(UPrefabricatorAsset* PrefabAsset)
+{
+	TSharedPtr<IPrefabricatorService> Service = FPrefabricatorService::Get();
+	if (Service.IsValid()) {
+		Service->UpdateThumbnail(PrefabAsset);
+	}
+}
+
 bool FPrefabTools::CanCreatePrefab()
 {
 	return GetNumSelectedActors() > 0;
@@ -73,6 +83,11 @@ void FPrefabTools::CreatePrefabFromActors(const TArray<AActor*>& Actors)
 		return;
 	}
 
+	UPrefabricatorAsset* PrefabAsset = CreatePrefabAsset();
+	if (!PrefabAsset) {
+		return;
+	}
+
 	UWorld* World = Actors[0]->GetWorld();
 
 	FVector Pivot = FPrefabricatorAssetUtils::FindPivot(Actors);
@@ -82,9 +97,7 @@ void FPrefabTools::CreatePrefabFromActors(const TArray<AActor*>& Actors)
 	EComponentMobility::Type Mobility = FPrefabricatorAssetUtils::FindMobility(Actors);
 	PrefabActor->GetRootComponent()->SetMobility(Mobility);
 
-	UPrefabricatorAsset* PrefabAsset = CreatePrefabAsset();
 	PrefabActor->PrefabComponent->PrefabAsset = PrefabAsset;
-
 	// Attach the actors to the prefab
 	for (AActor* Actor : Actors) {
 		if (Actor->GetRootComponent()) {
@@ -108,25 +121,6 @@ void FPrefabTools::AssignAssetUserData(AActor* InActor, APrefabActor* Prefab)
 	PrefabUserData->PrefabActor = Prefab;
 	InActor->GetRootComponent()->AddAssetUserData(PrefabUserData);
 }
-
-UPrefabricatorAsset* FPrefabTools::CreatePrefabAsset()
-{
-	IContentBrowserSingleton& ContentBrowserSingleton = FModuleManager::LoadModuleChecked<FContentBrowserModule>("ContentBrowser").Get();
-	TArray<FString> SelectedFolders;
-	ContentBrowserSingleton.GetSelectedPathViewFolders(SelectedFolders);
-	FString PrefabFolder = SelectedFolders.Num() > 0 ? SelectedFolders[0] : "/Game";
-	FString PrefabPath = PrefabFolder + "/Prefab";
-
-	FString PackageName, AssetName;
-	IAssetTools& AssetTools = FModuleManager::Get().LoadModuleChecked<FAssetToolsModule>("AssetTools").Get();
-	AssetTools.CreateUniqueAssetName(*PrefabPath, TEXT(""), PackageName, AssetName);
-	UPrefabricatorAsset* PrefabAsset = Cast<UPrefabricatorAsset>(AssetTools.CreateAsset(AssetName, PrefabFolder, UPrefabricatorAsset::StaticClass(), nullptr));
-
-	ContentBrowserSingleton.SyncBrowserToAssets(TArray<UObject*>({ PrefabAsset }));
-
-	return PrefabAsset;
-}
-
 
 
 void FPrefabTools::SaveStateToPrefabAsset(APrefabActor* PrefabActor)

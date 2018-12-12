@@ -6,6 +6,7 @@
 
 #include "AssetToolsModule.h"
 #include "ContentBrowserModule.h"
+#include "ThumbnailRendering/SceneThumbnailInfo.h"
 
 #define LOCTEXT_NAMESPACE "AssetTypeActions"
 
@@ -47,7 +48,6 @@ uint32 FPrefabricatorAssetTypeActions::GetCategories()
 void FPrefabricatorAssetTypeActions::GetActions(const TArray<UObject*>& InObjects, FMenuBuilder& MenuBuilder)
 {
 }
-
 
 #undef LOCTEXT_NAMESPACE
 

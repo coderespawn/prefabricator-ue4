@@ -14,7 +14,6 @@ public:
 	static void CreatePrefab();
 	static void CreatePrefabFromActors(const TArray<AActor*>& Actors);
 	static void AssignAssetUserData(AActor* InActor, APrefabActor* Prefab);
-	static UPrefabricatorAsset* CreatePrefabAsset();
 
 	static void SaveStateToPrefabAsset(APrefabActor* PrefabActor);
 	static void LoadStateFromPrefabAsset(APrefabActor* PrefabActor);
@@ -29,4 +28,6 @@ public:
 	static void SelectPrefabActor(AActor* PrefabActor);
 	static void GetSelectedActors(TArray<AActor*>& OutActors);
 	static int GetNumSelectedActors();
+	static UPrefabricatorAsset* CreatePrefabAsset();
+	static void UpdatePrefabThumbnail(UPrefabricatorAsset* PrefabAsset);
 };

@@ -5,6 +5,8 @@
 #include "GameFramework/Info.h"
 
 class IPrefabricatorService;
+class UPrefabricatorAsset;
+class APrefabActor;
 
 /** This service allows the library to access editor code from the runtime module if we are running on Unreal Editor or
     fallback to the runtime service if we are on the standalone build
@@ -30,6 +32,8 @@ public:
 	virtual void SelectPrefabActor(AActor* PrefabActor) = 0;
 	virtual void GetSelectedActors(TArray<AActor*>& OutActors) = 0;
 	virtual int GetNumSelectedActors() = 0;
+	virtual UPrefabricatorAsset* CreatePrefabAsset() = 0;
+	virtual void UpdateThumbnail(UPrefabricatorAsset* PrefabAsset) = 0;
 };
 
 class PREFABRICATORRUNTIME_API FPrefabricatorRuntimeService : public IPrefabricatorService {
@@ -38,5 +42,7 @@ public:
 	virtual void SelectPrefabActor(AActor* PrefabActor) override;
 	virtual void GetSelectedActors(TArray<AActor*>& OutActors) override;
 	virtual int GetNumSelectedActors() override;
+	virtual UPrefabricatorAsset* CreatePrefabAsset() override;
+	virtual void UpdateThumbnail(UPrefabricatorAsset* PrefabAsset) override;
 };
 
