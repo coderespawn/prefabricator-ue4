@@ -83,3 +83,21 @@ void FPrefabricatorEditorService::UpdateThumbnail(UPrefabricatorAsset* PrefabAss
 	}
 }
 
+FVector FPrefabricatorEditorService::SnapToGrid(const FVector& InLocation)
+{
+	auto& Settings = GetDefault<ULevelEditorViewportSettings>()->SnapToSurface;
+	if (GEditor) {
+		float GridSize = GEditor->GetGridSize();
+#define SNAP_TO_GRID(X) FMath::RoundToInt((X) / GridSize) * GridSize
+		FVector SnappedLocation(
+			SNAP_TO_GRID(InLocation.X),
+			SNAP_TO_GRID(InLocation.Y),
+			SNAP_TO_GRID(InLocation.Z));
+#undef SNAP_TO_GRID
+		return SnappedLocation;
+	}
+	else {
+		return InLocation;
+	}
+}
+

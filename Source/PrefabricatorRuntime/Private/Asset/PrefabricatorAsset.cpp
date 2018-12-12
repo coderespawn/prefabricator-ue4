@@ -3,6 +3,7 @@
 #include "Asset/PrefabricatorAsset.h"
 
 #include "GameFramework/Actor.h"
+#include "PrefabricatorService.h"
 
 UPrefabricatorAsset::UPrefabricatorAsset(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer) {
 
@@ -25,6 +26,12 @@ FVector FPrefabricatorAssetUtils::FindPivot(const TArray<AActor*>& InActors)
 		Pivot /= InActors.Num();
 		Pivot.Z = LowestZ;
 	}
+
+	TSharedPtr<IPrefabricatorService> Service = FPrefabricatorService::Get();
+	if (Service.IsValid()) {
+		Pivot = Service->SnapToGrid(Pivot);
+	}
+
 	return Pivot;
 }
 
