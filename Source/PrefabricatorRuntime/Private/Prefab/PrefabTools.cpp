@@ -78,8 +78,38 @@ void FPrefabTools::CreatePrefab()
 	CreatePrefabFromActors(SelectedActors);
 }
 
-void FPrefabTools::CreatePrefabFromActors(const TArray<AActor*>& Actors)
+namespace {
+
+	void SanitizePrefabActorsForCreation(const TArray<AActor*>& InActors, TArray<AActor*>& OutActors) {
+		// Find all the selected prefab actors
+		TArray<APrefabActor*> PrefabActors;
+		for (AActor* Actor : InActors) {
+			if (APrefabActor* PrefabActor = Cast<APrefabActor>(Actor)) {
+				PrefabActors.Add(PrefabActor);
+			}
+		}
+
+		// Make sure we do not include any actors that belong to these prefabs
+		for (AActor* Actor : InActors) {
+			bool bValid = true;
+			if (APrefabActor* ParentPrefab = Cast<APrefabActor>(Actor->GetAttachParentActor())) {
+				if (PrefabActors.Contains(ParentPrefab)) {
+					bValid = false;
+				}
+			}
+
+			if (bValid) {
+				OutActors.Add(Actor);
+			}
+		}
+	}
+
+}
+void FPrefabTools::CreatePrefabFromActors(const TArray<AActor*>& InActors)
 {
+	TArray<AActor*> Actors;
+	SanitizePrefabActorsForCreation(InActors, Actors);
+
 	if (Actors.Num() == 0) {
 		return;
 	}
@@ -397,7 +427,7 @@ void FPrefabTools::SaveStateToPrefabAsset(AActor* InActor, APrefabActor* PrefabA
 		SerializeFields(Component, PrefabActor, ComponentData.Properties);
 	}
 
-	DumpSerializedData(OutActorData);
+	//DumpSerializedData(OutActorData);
 }
 
 void FPrefabTools::LoadStateFromPrefabAsset(AActor* InActor, APrefabActor* PrefabActor, const FPrefabricatorActorData& InActorData)
@@ -481,6 +511,10 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor)
 		// Set the transform
 		FTransform WorldTransform = ActorItemData.RelativeTransform * PrefabActor->GetTransform();
 		ChildActor->SetActorTransform(WorldTransform);
+
+		if (APrefabActor* ChildPrefab = Cast<APrefabActor>(ChildActor)) {
+			FPrefabTools::LoadStateFromPrefabAsset(ChildPrefab);
+		}
 	}
 
 	// Destroy the unused actors from the pool
