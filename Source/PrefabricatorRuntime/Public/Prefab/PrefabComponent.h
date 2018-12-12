@@ -13,8 +13,9 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Prefabricator")
 	class UPrefabricatorAsset* PrefabAsset;
 
+	virtual void OnRegister() override;
+
+private:
 	UPROPERTY()
-	TArray<TWeakObjectPtr<AActor>> SpawnedActors;
-
-
+	UTexture2D* EditorSpriteTexture;
 };

@@ -13,9 +13,6 @@ APrefabActor::APrefabActor(const FObjectInitializer& ObjectInitializer)
 {
 	PrefabComponent = ObjectInitializer.CreateDefaultSubobject<UPrefabComponent>(this, "PrefabComponent");
 	RootComponent = PrefabComponent;
-
-	Sprite = ObjectInitializer.CreateDefaultSubobject<UBillboardComponent>(this, "Sprite");
-	Sprite->SetupAttachment(RootComponent);
 }
 
 void APrefabActor::Destroyed()
