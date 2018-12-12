@@ -22,8 +22,6 @@ void FPrefabricatorSelectionHook::Release()
 
 void FPrefabricatorSelectionHook::OnObjectSelected(UObject* Object)
 {
-	//UE_LOG(LogPrefabricatorSelectionHook, Log, TEXT("Object Selection Changed: %s"), (Object ? *Object->GetName() : TEXT("None")));
-
 	if (Object->IsA<APrefabActor>()) {
 
 	}
@@ -32,8 +30,14 @@ void FPrefabricatorSelectionHook::OnObjectSelected(UObject* Object)
 		if (Actor && Actor->GetRootComponent()) {
 			UPrefabricatorAssetUserData* PrefabUserData = Actor->GetRootComponent()->GetAssetUserData<UPrefabricatorAssetUserData>();
 			if (PrefabUserData && PrefabUserData->PrefabActor.IsValid()) {
-				GEditor->SelectActor(Actor, false, true);
-				GEditor->SelectActor(PrefabUserData->PrefabActor.Get(), true, true);
+				// Make sure we are attached to this actor
+				APrefabActor* PrefabActor = PrefabUserData->PrefabActor.Get();
+				TArray<AActor*> AttachedPrefabActors;
+				PrefabActor->GetAttachedActors(AttachedPrefabActors);
+				if (AttachedPrefabActors.Contains(Actor)) {
+					GEditor->SelectActor(Actor, false, true);
+					GEditor->SelectActor(PrefabUserData->PrefabActor.Get(), true, true);
+				}
 			}
 		}
 	}
