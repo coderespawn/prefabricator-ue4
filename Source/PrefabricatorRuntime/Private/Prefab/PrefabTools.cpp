@@ -19,61 +19,39 @@
 #include "ObjectWriter.h"
 #include "ObjectReader.h"
 #include "UnrealMemory.h"
+#include "PrefabricatorService.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogPrefabTools, Log, All);
 
-#if WITH_EDITOR
-extern UNREALED_API UEditorEngine* GEditor;
-#endif // WITH_EDITOR
-
 void FPrefabTools::GetSelectedActors(TArray<AActor*>& OutActors)
 {
-#if WITH_EDITOR
-	if (GEditor) {
-		USelection* SelectedActors = GEditor->GetSelectedActors();
-		for (FSelectionIterator Iter(*SelectedActors); Iter; ++Iter)
-		{
-			// We only care about actors that are referenced in the world for literals, and also in the same level as this blueprint
-			AActor* Actor = Cast<AActor>(*Iter);
-			if (Actor)
-			{
-				OutActors.Add(Actor);
-			}
-		}
+	TSharedPtr<IPrefabricatorService> Service = FPrefabricatorService::Get();
+	if (Service.IsValid()) {
+		Service->GetSelectedActors(OutActors);
 	}
-#endif // WITH_EDITOR
 }
 
 
 int FPrefabTools::GetNumSelectedActors()
 {
-#if WITH_EDITOR
-	if (GEditor) {
-		return GEditor->GetSelectedActorCount();
-	}
-#endif // WITH_EDITOR
-	return 0;
+	TSharedPtr<IPrefabricatorService> Service = FPrefabricatorService::Get();
+	return Service.IsValid() ? Service->GetNumSelectedActors() : 0;
 }
 
 void FPrefabTools::ParentActors(AActor* ParentActor, AActor* ChildActor)
 {
-#if WITH_EDITOR
-	if (GEditor) {
-		GEditor->ParentActors(ParentActor, ChildActor, NAME_None);
+	TSharedPtr<IPrefabricatorService> Service = FPrefabricatorService::Get();
+	if (Service.IsValid()) {
+		Service->ParentActors(ParentActor, ChildActor);
 	}
-#else  // WITH_EDITOR
-	ChildActor->AttachToActor(ParentActor, FAttachmentTransformRules(EAttachmentRule::KeepWorld));
-#endif // WITH_EDITOR
 }
 
 void FPrefabTools::SelectPrefabActor(AActor* PrefabActor)
 {
-#if WITH_EDITOR
-	if (GEditor) {
-		GEditor->SelectNone(true, true);
-		GEditor->SelectActor(PrefabActor, true, true);
+	TSharedPtr<IPrefabricatorService> Service = FPrefabricatorService::Get();
+	if (Service.IsValid()) {
+		Service->SelectPrefabActor(PrefabActor);
 	}
-#endif // WITH_EDITOR
 }
 
 bool FPrefabTools::CanCreatePrefab()
@@ -253,6 +231,7 @@ namespace {
 			UPrefabricatorPropertyBase* PrefabProperty = nullptr;
 			FString PropertyName = Property->GetName();
 
+			/*
 			if (UArrayProperty* ArrayProperty = Cast<UArrayProperty>(Property)) {
 				UPrefabricatorArrayProperty* ArrayPrefabProperty = NewObject<UPrefabricatorArrayProperty>(PrefabAsset);
 				ArrayPrefabProperty->PropertyName = PropertyName;
@@ -305,7 +284,9 @@ namespace {
 
 				PrefabProperty = MapPrefabProperty;
 			}
-			else {
+			else 
+			*/
+			{
 				if (HasDefaultValue(Property, ObjToSerialize) || ShouldSkipSerialization(Property, ObjToSerialize, PrefabActor)) {
 					continue;
 				}
@@ -450,13 +431,17 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor)
 
 	PrefabActor->GetRootComponent()->SetMobility(PrefabAsset->PrefabMobility);
 
-	TMap<UClass*, TArray<AActor*>> ExistingActorPool;
 	TArray<AActor*> Children;
 	GetActorChildren(PrefabActor, Children);
 
+	// Delete existing child actors that belong to this prefab
 	for (AActor* ChildActor : Children) {
-		TArray<AActor*>& ActorsByClass = ExistingActorPool.FindOrAdd(ChildActor->GetClass());
-		ActorsByClass.Add(ChildActor);
+		if (ChildActor && ChildActor->GetRootComponent()) {
+			UPrefabricatorAssetUserData* PrefabUserData = ChildActor->GetRootComponent()->GetAssetUserData<UPrefabricatorAssetUserData>();
+			if (PrefabUserData && PrefabUserData->PrefabActor == PrefabActor) {
+				ChildActor->Destroy();
+			}
+		}
 	}
 
 	for (FPrefabricatorActorData& ActorItemData : PrefabAsset->ActorData) {
@@ -464,16 +449,7 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor)
 		if (!ActorClass) return;
 
 		UWorld* World = PrefabActor->GetWorld();
-		AActor* ChildActor = nullptr;
-		TArray<AActor*>& ActorPoolByClass = ExistingActorPool.FindOrAdd(ActorClass);
-		if (ActorPoolByClass.Num() > 0) {
-			ChildActor = ActorPoolByClass[0];
-			ActorPoolByClass.RemoveAt(0);
-		}
-		else {
-			// The pool is exhausted for this class type. Spawn a new actor
-			ChildActor = World->SpawnActor<AActor>(ActorClass);
-		}
+		AActor* ChildActor = World->SpawnActor<AActor>(ActorClass);
 
 		// Load the saved data into the actor
 		LoadStateFromPrefabAsset(ChildActor, PrefabActor, ActorItemData);
@@ -485,19 +461,5 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor)
 		FTransform WorldTransform = ActorItemData.RelativeTransform * PrefabActor->GetTransform();
 		ChildActor->SetActorTransform(WorldTransform);
 	}
-
-	// Delete the unused actors from the pool
-	for (auto& Entry : ExistingActorPool) {
-		TArray<AActor*>& ActorsByClass = Entry.Value;
-		for (AActor* Actor : ActorsByClass) {
-			if (Actor && Actor->GetRootComponent()) {
-				UPrefabricatorAssetUserData* PrefabUserData = Actor->GetRootComponent()->GetAssetUserData<UPrefabricatorAssetUserData>();
-				if (PrefabUserData && PrefabUserData->PrefabActor == PrefabActor) {
-					Actor->Destroy();
-				}
-			}
-		}
-	}
-	ExistingActorPool.Reset();
 }
 

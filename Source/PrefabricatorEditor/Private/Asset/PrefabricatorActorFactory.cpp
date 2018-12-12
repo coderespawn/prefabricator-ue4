@@ -7,7 +7,7 @@
 #include "PrefabricatorAsset.h"
 
 #include "AssetData.h"
-#include "PrefabEditorTools.h"
+#include "Prefab/PrefabTools.h"
 
 UPrefabricatorActorFactory::UPrefabricatorActorFactory(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer) 

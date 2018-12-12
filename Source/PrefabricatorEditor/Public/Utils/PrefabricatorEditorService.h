@@ -1,0 +1,14 @@
+//$ Copyright 2015-18, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
+
+#pragma once
+#include "CoreMinimal.h"
+#include "PrefabricatorService.h"
+
+class PREFABRICATOREDITOR_API FPrefabricatorEditorService : public IPrefabricatorService {
+public:
+	virtual void ParentActors(AActor* ParentActor, AActor* ChildActor) override;
+	virtual void SelectPrefabActor(AActor* PrefabActor) override;
+	virtual void GetSelectedActors(TArray<AActor*>& OutActors) override;
+	virtual int GetNumSelectedActors() override;
+};
+

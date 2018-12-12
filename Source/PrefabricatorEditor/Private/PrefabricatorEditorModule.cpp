@@ -12,6 +12,7 @@
 #include "AssetToolsModule.h"
 #include "IAssetTools.h"
 #include "LevelEditor.h"
+#include "PrefabricatorEditorService.h"
 
 #define LOCTEXT_NAMESPACE "DungeonArchitectEditorModule" 
 
@@ -35,6 +36,9 @@ class FPrefabricatorEditorModule : public IPrefabricatorEditorModule
 		// Register the asset brokers (used for asset to component mapping)
 		PrefabAssetBroker = MakeShareable(new FPrefabricatorAssetBroker);
 		FComponentAssetBrokerage::RegisterBroker(PrefabAssetBroker, UPrefabComponent::StaticClass(), true, true);
+
+		// Override the prefabricator service with the editor version, so the runtime module can access it
+		FPrefabricatorService::Set(MakeShareable(new FPrefabricatorEditorService));
 	}
 
 	virtual void ShutdownModule() override {
