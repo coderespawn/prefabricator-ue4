@@ -6,7 +6,7 @@
 #include "Asset/PrefabricatorAssetTypeActions.h"
 #include "PrefabEditorCommands.h"
 #include "PrefabEditorStyle.h"
-#include "Tools/SelectionHook.h"
+#include "Utils/SelectionHook.h"
 #include "UI/EditorUIExtender.h"
 #include "Utils/PrefabricatorEditorService.h"
 
@@ -15,6 +15,9 @@
 #include "LevelEditor.h"
 #include "PropertyEditorModule.h"
 #include "PrefabCustomization.h"
+#include "UnrealEdGlobals.h"
+#include "PrefabComponentVisualizer.h"
+#include "Editor/UnrealEdEngine.h"
 
 #define LOCTEXT_NAMESPACE "DungeonArchitectEditorModule" 
 
@@ -45,9 +48,15 @@ class FPrefabricatorEditorModule : public IPrefabricatorEditorModule
 
 		// Override the prefabricator service with the editor version, so the runtime module can access it
 		FPrefabricatorService::Set(MakeShareable(new FPrefabricatorEditorService));
+
+		// Register component visualizers
+		RegisterComponentVisualizers();
+
 	}
 
 	virtual void ShutdownModule() override {
+		UnregisterComponentVisualizers();
+
 		// Unregister the prefabricator asset broker
 		if (PrefabAssetBroker.IsValid()) {
 			FComponentAssetBrokerage::UnregisterBroker(PrefabAssetBroker);
@@ -78,10 +87,30 @@ private:
 		CreatedAssetTypeActions.Add(Action);
 	}
 
+	void RegisterComponentVisualizers() {
+		if (GUnrealEd) {
+			PrefabComponentClassName = UPrefabComponent::StaticClass()->GetFName();
+			RegisterVisualizer(*GUnrealEd, PrefabComponentClassName, MakeShared<FPrefabComponentVisualizer>());
+		}
+	}
+
+	void RegisterVisualizer(UUnrealEdEngine& UnrealEdEngine, const FName& ComponentClassName, const TSharedRef<FComponentVisualizer>& Visualizer)
+	{
+		UnrealEdEngine.RegisterComponentVisualizer(ComponentClassName, Visualizer);
+		Visualizer->OnRegister();
+	}
+
+	void UnregisterComponentVisualizers() {
+		if (GUnrealEd) {
+			GUnrealEd->UnregisterComponentVisualizer(PrefabComponentClassName);
+		}
+	}
+
 	FEditorUIExtender UIExtender;
 	FPrefabricatorSelectionHook SelectionHook;
 	TSharedPtr<IComponentAssetBroker> PrefabAssetBroker;
 	TArray< TSharedPtr<IAssetTypeActions> > CreatedAssetTypeActions;
+	FName PrefabComponentClassName;
 };
 
 IMPLEMENT_MODULE(FPrefabricatorEditorModule, PrefabricatorEditor)

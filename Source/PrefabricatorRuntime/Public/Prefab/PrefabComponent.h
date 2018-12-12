@@ -19,3 +19,4 @@ private:
 	UPROPERTY()
 	UTexture2D* EditorSpriteTexture;
 };
+
