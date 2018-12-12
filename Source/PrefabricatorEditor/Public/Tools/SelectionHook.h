@@ -13,4 +13,6 @@ private:
 
 private:
 	FDelegateHandle CallbackHandle;
+	TWeakObjectPtr<UObject> LastSelectedObject;
+	bool bSelectionGuard = false;
 };

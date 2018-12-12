@@ -58,6 +58,7 @@ UPrefabricatorAsset* FPrefabTools::CreatePrefabAsset()
 
 void FPrefabTools::UpdatePrefabThumbnail(UPrefabricatorAsset* PrefabAsset)
 {
+	if (!PrefabAsset) return;
 	TSharedPtr<IPrefabricatorService> Service = FPrefabricatorService::Get();
 	if (Service.IsValid()) {
 		Service->UpdateThumbnail(PrefabAsset);

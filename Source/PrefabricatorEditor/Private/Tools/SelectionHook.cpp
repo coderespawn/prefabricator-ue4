@@ -22,6 +22,9 @@ void FPrefabricatorSelectionHook::Release()
 
 void FPrefabricatorSelectionHook::OnObjectSelected(UObject* Object)
 {
+	if (bSelectionGuard) return;
+
+
 	if (Object->IsA<APrefabActor>()) {
 
 	}
@@ -32,14 +35,28 @@ void FPrefabricatorSelectionHook::OnObjectSelected(UObject* Object)
 			if (PrefabUserData && PrefabUserData->PrefabActor.IsValid()) {
 				// Make sure we are attached to this actor
 				APrefabActor* PrefabActor = PrefabUserData->PrefabActor.Get();
-				TArray<AActor*> AttachedPrefabActors;
-				PrefabActor->GetAttachedActors(AttachedPrefabActors);
-				if (AttachedPrefabActors.Contains(Actor)) {
-					GEditor->SelectActor(Actor, false, true);
-					GEditor->SelectActor(PrefabUserData->PrefabActor.Get(), true, true);
+				
+				bool bPrefabSelected = PrefabActor && (PrefabActor == LastSelectedObject);
+
+				// If the prefab actor is not already selected, then select it instead
+				// This allows toggling the selection between the selections
+				if (!bPrefabSelected) {
+					TArray<AActor*> AttachedPrefabActors;
+					PrefabActor->GetAttachedActors(AttachedPrefabActors);
+					if (AttachedPrefabActors.Contains(Actor)) {
+						bSelectionGuard = true;
+						GEditor->SelectActor(Actor, false, true);
+						GEditor->SelectActor(PrefabActor, true, true);
+						bSelectionGuard = false;
+
+						LastSelectedObject = PrefabActor;
+						return;
+					}
 				}
 			}
 		}
 	}
+	LastSelectedObject = Object;
+
 }
 

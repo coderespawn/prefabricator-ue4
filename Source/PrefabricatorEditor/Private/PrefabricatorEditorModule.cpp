@@ -13,6 +13,8 @@
 #include "AssetToolsModule.h"
 #include "IAssetTools.h"
 #include "LevelEditor.h"
+#include "PropertyEditorModule.h"
+#include "PrefabCustomization.h"
 
 #define LOCTEXT_NAMESPACE "DungeonArchitectEditorModule" 
 
@@ -32,6 +34,10 @@ class FPrefabricatorEditorModule : public IPrefabricatorEditorModule
 		// Register asset types
 		IAssetTools& AssetTools = FModuleManager::LoadModuleChecked<FAssetToolsModule>("AssetTools").Get();
 		RegisterAssetTypeAction(AssetTools, MakeShareable(new FPrefabricatorAssetTypeActions));
+
+		// Register the details customization
+		FPropertyEditorModule& PropertyEditorModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>("PropertyEditor");
+		PropertyEditorModule.RegisterCustomClassLayout("PrefabActor", FOnGetDetailCustomizationInstance::CreateStatic(&FPrefabActorCustomization::MakeInstance));
 
 		// Register the asset brokers (used for asset to component mapping)
 		PrefabAssetBroker = MakeShareable(new FPrefabricatorAssetBroker);
