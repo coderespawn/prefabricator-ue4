@@ -6,6 +6,7 @@
 
 #include "Components/BillboardComponent.h"
 #include "Engine/PointLight.h"
+#include "PrefabTools.h"
 
 APrefabActor::APrefabActor(const FObjectInitializer& ObjectInitializer) 
 	: Super(ObjectInitializer)
@@ -42,6 +43,7 @@ void APrefabActor::PostDuplicate(EDuplicateMode::Type DuplicateMode)
 {
 	Super::PostDuplicate(DuplicateMode);
 
+	FPrefabTools::LoadStateFromPrefabAsset(this);
 }
 
 #endif // WITH_EDITOR
