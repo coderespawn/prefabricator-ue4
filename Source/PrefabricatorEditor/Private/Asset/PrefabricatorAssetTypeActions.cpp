@@ -3,12 +3,12 @@
 #include "Asset/PrefabricatorAssetTypeActions.h"
 
 #include "Asset/PrefabricatorAsset.h"
+#include "Prefab/PrefabTools.h"
 
 #include "AssetToolsModule.h"
 #include "ContentBrowserModule.h"
+#include "Framework/MultiBox/MultiBoxBuilder.h"
 #include "ThumbnailRendering/SceneThumbnailInfo.h"
-#include "MultiBoxBuilder.h"
-#include "PrefabTools.h"
 
 #define LOCTEXT_NAMESPACE "AssetTypeActions"
 

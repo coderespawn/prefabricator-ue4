@@ -1,13 +1,14 @@
 //$ Copyright 2015-18, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #include "PrefabricatorEditorPostInitModule.h"
+
+#include "Prefab/PrefabComponent.h"
+#include "Visualizers/PrefabComponentVisualizer.h"
+
+#include "Editor/UnrealEdEngine.h"
 #include "IAssetTools.h"
 #include "IAssetTypeActions.h"
-#include "PrefabComponent.h"
-#include "PrefabComponentVisualizer.h"
-#include "Editor/UnrealEdEngine.h"
 #include "UnrealEdGlobals.h"
-
 
 #define LOCTEXT_NAMESPACE "DungeonArchitectEditorModule" 
 

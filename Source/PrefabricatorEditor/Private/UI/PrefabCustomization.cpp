@@ -1,13 +1,15 @@
 //$ Copyright 2015-18, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #include "UI/PrefabCustomization.h"
-#include "SBoxPanel.h"
+
+#include "Prefab/PrefabActor.h"
+#include "Prefab/PrefabComponent.h"
+#include "Prefab/PrefabTools.h"
+
 #include "DetailCategoryBuilder.h"
 #include "DetailLayoutBuilder.h"
 #include "DetailWidgetRow.h"
-#include "PrefabActor.h"
-#include "PrefabTools.h"
-#include "PrefabComponent.h"
+#include "Widgets/SBoxPanel.h"
 
 #define LOCTEXT_NAMESPACE "PrefabActorCustomization" 
 
@@ -80,3 +82,4 @@ FReply FPrefabActorCustomization::HandleLoadFromAsset(IDetailLayoutBuilder* Deta
 }
 
 #undef LOCTEXT_NAMESPACE 
+

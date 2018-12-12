@@ -1,7 +1,9 @@
 //$ Copyright 2015-18, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #include "Visualizers/PrefabComponentVisualizer.h"
-#include "PrefabComponent.h"
+
+#include "Prefab/PrefabComponent.h"
+
 #include "GameFramework/Actor.h"
 #include "SceneManagement.h"
 
@@ -26,3 +28,4 @@ void FPrefabComponentVisualizer::DrawVisualization(const UActorComponent* Compon
 	const FMatrix LocalToWorld = FMatrix::Identity;
 	DrawWireBox(PDI, LocalToWorld, Bounds, FLinearColor::Green, SDPG_World);
 }
+

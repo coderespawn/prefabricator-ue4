@@ -3,9 +3,10 @@
 #include "Prefab/PrefabComponent.h"
 
 #include "Prefab/PrefabActor.h"
+
 #include "Components/BillboardComponent.h"
 #include "Engine/Texture2D.h"
-#include "ConstructorHelpers.h"
+#include "UObject/ConstructorHelpers.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogPrefabComponent, Log, All);
 

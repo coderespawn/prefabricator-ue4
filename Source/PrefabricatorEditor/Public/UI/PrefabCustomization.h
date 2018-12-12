@@ -4,8 +4,6 @@
 #include "CoreMinimal.h"
 #include "IDetailCustomization.h"
 
-
-
 class FPrefabActorCustomization : public IDetailCustomization {
 public:
 	// IDetailCustomization interface
@@ -17,3 +15,4 @@ public:
 	static FReply HandleSaveToAsset(IDetailLayoutBuilder* DetailBuilder);
 	static FReply HandleLoadFromAsset(IDetailLayoutBuilder* DetailBuilder);
 };
+

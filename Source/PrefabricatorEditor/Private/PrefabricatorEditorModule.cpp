@@ -6,17 +6,17 @@
 #include "Asset/PrefabricatorAssetTypeActions.h"
 #include "PrefabEditorCommands.h"
 #include "PrefabEditorStyle.h"
-#include "Utils/SelectionHook.h"
 #include "UI/EditorUIExtender.h"
+#include "UI/PrefabCustomization.h"
 #include "Utils/PrefabricatorEditorService.h"
+#include "Utils/SelectionHook.h"
 
 #include "AssetToolsModule.h"
+#include "Editor/UnrealEdEngine.h"
 #include "IAssetTools.h"
 #include "LevelEditor.h"
 #include "PropertyEditorModule.h"
-#include "PrefabCustomization.h"
 #include "UnrealEdGlobals.h"
-#include "Editor/UnrealEdEngine.h"
 
 #define LOCTEXT_NAMESPACE "DungeonArchitectEditorModule" 
 

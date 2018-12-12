@@ -2,20 +2,21 @@
 
 #include "Utils/PrefabricatorEditorService.h"
 
-#include "Editor/EditorEngine.h"
-#include "Engine/Selection.h"
+#include "Asset/PrefabricatorAsset.h"
+#include "Asset/PrefabricatorAsset.h"
+#include "Prefab/PrefabActor.h"
+#include "Prefab/PrefabComponent.h"
+
 #include "AssetToolsModule.h"
-#include "IContentBrowserSingleton.h"
-#include "PrefabricatorAsset.h"
 #include "ContentBrowserModule.h"
-#include "ThumbnailRendering/SceneThumbnailInfo.h"
-#include "PrefabActor.h"
-#include "PrefabComponent.h"
-#include "PrefabricatorAsset.h"
-#include "LevelEditor.h"
 #include "Editor.h"
+#include "Editor/EditorEngine.h"
 #include "EditorViewportClient.h"
+#include "Engine/Selection.h"
+#include "IContentBrowserSingleton.h"
+#include "LevelEditor.h"
 #include "LevelEditorViewport.h"
+#include "ThumbnailRendering/SceneThumbnailInfo.h"
 
 void FPrefabricatorEditorService::ParentActors(AActor* ParentActor, AActor* ChildActor)
 {
