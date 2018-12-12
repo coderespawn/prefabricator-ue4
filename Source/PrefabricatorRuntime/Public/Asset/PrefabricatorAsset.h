@@ -75,6 +75,9 @@ struct PREFABRICATORRUNTIME_API FPrefabricatorActorData {
 	GENERATED_USTRUCT_BODY()
 
 	UPROPERTY()
+	FGuid PrefabItemID;
+
+	UPROPERTY()
 	FTransform RelativeTransform;
 
 	UPROPERTY()

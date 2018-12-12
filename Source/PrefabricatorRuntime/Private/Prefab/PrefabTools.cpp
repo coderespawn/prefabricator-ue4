@@ -112,7 +112,7 @@ void FPrefabTools::CreatePrefabFromActors(const TArray<AActor*>& Actors)
 	SelectPrefabActor(PrefabActor);
 }
 
-void FPrefabTools::AssignAssetUserData(AActor* InActor, APrefabActor* Prefab)
+void FPrefabTools::AssignAssetUserData(AActor* InActor, const FGuid& InItemID, APrefabActor* Prefab)
 {
 	if (!InActor || !InActor->GetRootComponent()) {
 		return;
@@ -120,6 +120,7 @@ void FPrefabTools::AssignAssetUserData(AActor* InActor, APrefabActor* Prefab)
 	
 	UPrefabricatorAssetUserData* PrefabUserData = NewObject<UPrefabricatorAssetUserData>(InActor->GetRootComponent());
 	PrefabUserData->PrefabActor = Prefab;
+	PrefabUserData->ItemID = InItemID;
 	InActor->GetRootComponent()->AddAssetUserData(PrefabUserData);
 }
 
@@ -145,15 +146,26 @@ void FPrefabTools::SaveStateToPrefabAsset(APrefabActor* PrefabActor)
 	GetActorChildren(PrefabActor, Children);
 
 	for (AActor* ChildActor : Children) {
-		AssignAssetUserData(ChildActor, PrefabActor);
-		int32 NewItemIndex = PrefabAsset->ActorData.AddDefaulted();
-		FPrefabricatorActorData& ActorData = PrefabAsset->ActorData[NewItemIndex];
-		SaveStateToPrefabAsset(ChildActor, PrefabActor, ActorData);
+		if (ChildActor && ChildActor->GetRootComponent()) {
+			UPrefabricatorAssetUserData* ChildUserData = ChildActor->GetRootComponent()->GetAssetUserData<UPrefabricatorAssetUserData>();
+			FGuid ItemID;
+			if (ChildUserData && ChildUserData->PrefabActor == PrefabActor) {
+				ItemID = ChildUserData->ItemID;
+			}
+			else {
+				ItemID = FGuid::NewGuid();
+			}
+			
+			AssignAssetUserData(ChildActor, ItemID, PrefabActor);
+			int32 NewItemIndex = PrefabAsset->ActorData.AddDefaulted();
+			FPrefabricatorActorData& ActorData = PrefabAsset->ActorData[NewItemIndex];
+			ActorData.PrefabItemID = ItemID;
+			SaveStateToPrefabAsset(ChildActor, PrefabActor, ActorData);
+		}
 	}
 }
 
 namespace {
-
 	void GetPropertyData(UProperty* Property, UObject* Obj, FString& OutPropertyData) {
 		Property->ExportTextItem(OutPropertyData, Property->ContainerPtrToValuePtr<void>(Obj), nullptr, Obj, PPF_None);
 	}
@@ -426,15 +438,16 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor)
 
 	PrefabActor->GetRootComponent()->SetMobility(PrefabAsset->PrefabMobility);
 
-	TArray<AActor*> Children;
-	GetActorChildren(PrefabActor, Children);
+	TArray<AActor*> ExistingActorPool;
+	GetActorChildren(PrefabActor, ExistingActorPool);
+	TMap<FGuid, AActor*> ActorByItemID;
 
 	// Delete existing child actors that belong to this prefab
-	for (AActor* ChildActor : Children) {
-		if (ChildActor && ChildActor->GetRootComponent()) {
-			UPrefabricatorAssetUserData* PrefabUserData = ChildActor->GetRootComponent()->GetAssetUserData<UPrefabricatorAssetUserData>();
+	for (AActor* ExistingActor : ExistingActorPool) {
+		if (ExistingActor && ExistingActor->GetRootComponent()) {
+			UPrefabricatorAssetUserData* PrefabUserData = ExistingActor->GetRootComponent()->GetAssetUserData<UPrefabricatorAssetUserData>();
 			if (PrefabUserData && PrefabUserData->PrefabActor == PrefabActor) {
-				ChildActor->Destroy();
+				ActorByItemID.Add(PrefabUserData->ItemID, ExistingActor);
 			}
 		}
 	}
@@ -444,17 +457,35 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor)
 		if (!ActorClass) return;
 
 		UWorld* World = PrefabActor->GetWorld();
-		AActor* ChildActor = World->SpawnActor<AActor>(ActorClass);
+		AActor* ChildActor = nullptr;
+		if (AActor** SearchResult = ActorByItemID.Find(ActorItemData.PrefabItemID)) {
+			ChildActor = *SearchResult;
+			FString ExistingClassName = ChildActor->GetClass()->GetPathName();
+			FString RequiredClassName = ActorItemData.ClassPath;
+			if (ExistingClassName == RequiredClassName) {
+				// We can reuse this actor
+				ExistingActorPool.Remove(ChildActor);
+			}
+		}
+
+		if (!ChildActor) {
+			ChildActor = World->SpawnActor<AActor>(ActorClass);
+		}
 
 		// Load the saved data into the actor
 		LoadStateFromPrefabAsset(ChildActor, PrefabActor, ActorItemData);
 		
 		ParentActors(PrefabActor, ChildActor);
-		AssignAssetUserData(ChildActor, PrefabActor);
+		AssignAssetUserData(ChildActor, ActorItemData.PrefabItemID, PrefabActor);
 
 		// Set the transform
 		FTransform WorldTransform = ActorItemData.RelativeTransform * PrefabActor->GetTransform();
 		ChildActor->SetActorTransform(WorldTransform);
+	}
+
+	// Destroy the unused actors from the pool
+	for (AActor* UnusedActor : ExistingActorPool) {
+		UnusedActor->Destroy();
 	}
 }
 

@@ -12,5 +12,8 @@ class PREFABRICATORRUNTIME_API UPrefabricatorAssetUserData : public UAssetUserDa
 public:
 	UPROPERTY(VisibleAnywhere, Category = "Prefabricator")
 	TWeakObjectPtr<class APrefabActor> PrefabActor;
+
+	UPROPERTY(VisibleAnywhere, Category = "Prefabricator")
+	FGuid ItemID;
 };
 

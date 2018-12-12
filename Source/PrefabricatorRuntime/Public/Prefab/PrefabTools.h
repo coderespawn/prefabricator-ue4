@@ -13,7 +13,7 @@ public:
 	static bool CanCreatePrefab();
 	static void CreatePrefab();
 	static void CreatePrefabFromActors(const TArray<AActor*>& Actors);
-	static void AssignAssetUserData(AActor* InActor, APrefabActor* Prefab);
+	static void AssignAssetUserData(AActor* InActor, const FGuid& InItemID, APrefabActor* Prefab);
 
 	static void SaveStateToPrefabAsset(APrefabActor* PrefabActor);
 	static void LoadStateFromPrefabAsset(APrefabActor* PrefabActor);
