@@ -18,12 +18,12 @@ void FPrefabComponentVisualizer::DrawVisualization(const UActorComponent* Compon
 	TArray<AActor*> AttachedActors;
 	Parent->GetAttachedActors(AttachedActors);
 
-	FBox Bounds = Parent->GetComponentsBoundingBox(true);
+	FBox Bounds(EForceInit::ForceInit); // = Parent->GetComponentsBoundingBox(true);
 	for (AActor* AttachedActor : AttachedActors) {
 		Bounds += AttachedActor->GetComponentsBoundingBox(true);
 	}
 
-	Bounds = Bounds.ExpandBy(10);
+	Bounds = Bounds.ExpandBy(2);
 
 	const FMatrix LocalToWorld = FMatrix::Identity;
 	DrawWireBox(PDI, LocalToWorld, Bounds, FLinearColor::Green, SDPG_World);

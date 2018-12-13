@@ -36,9 +36,12 @@ int FPrefabTools::GetNumSelectedActors()
 
 void FPrefabTools::ParentActors(AActor* ParentActor, AActor* ChildActor)
 {
-	TSharedPtr<IPrefabricatorService> Service = FPrefabricatorService::Get();
-	if (Service.IsValid()) {
-		Service->ParentActors(ParentActor, ChildActor);
+	if (ChildActor && ParentActor) {
+		ChildActor->DetachFromActor(FDetachmentTransformRules(EDetachmentRule::KeepWorld, true));
+		TSharedPtr<IPrefabricatorService> Service = FPrefabricatorService::Get();
+		if (Service.IsValid()) {
+			Service->ParentActors(ParentActor, ChildActor);
+		}
 	}
 }
 
