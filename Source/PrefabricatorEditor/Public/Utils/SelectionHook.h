@@ -2,6 +2,7 @@
 
 #pragma once
 #include "CoreMinimal.h"
+#include "GameFramework/Actor.h"
 
 class FPrefabricatorSelectionHook {
 public:
@@ -13,6 +14,6 @@ private:
 
 private:
 	FDelegateHandle CallbackHandle;
-	TWeakObjectPtr<UObject> LastSelectedObject;
+	TWeakObjectPtr<AActor> LastSelectedObject;
 	bool bSelectionGuard = false;
 };

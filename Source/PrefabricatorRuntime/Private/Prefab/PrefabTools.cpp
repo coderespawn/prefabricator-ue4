@@ -223,7 +223,7 @@ namespace {
 			UObject* PropertyObjectValue = ObjProperty->GetObjectPropertyValue_InContainer(ObjToSerialize);
 			if (ContainsOuterParent(PropertyObjectValue, ObjToSerialize) ||
 				ContainsOuterParent(PropertyObjectValue, PrefabActor)) {
-				UE_LOG(LogPrefabTools, Warning, TEXT("Skipping Property: %s"), *Property->GetName());
+				//UE_LOG(LogPrefabTools, Log, TEXT("Skipping Property: %s"), *Property->GetName());
 				return true;
 			}
 		}
