@@ -18,7 +18,7 @@ void FPrefabComponentVisualizer::DrawVisualization(const UActorComponent* Compon
 	TArray<AActor*> AttachedActors;
 	Parent->GetAttachedActors(AttachedActors);
 
-	FBox Bounds(EForceInit::ForceInit); // = Parent->GetComponentsBoundingBox(true);
+	FBox Bounds(EForceInit::ForceInit);
 	for (AActor* AttachedActor : AttachedActors) {
 		Bounds += AttachedActor->GetComponentsBoundingBox(true);
 	}
