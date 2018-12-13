@@ -569,7 +569,7 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 		ChildActor->SetActorTransform(WorldTransform);
 
 		if (APrefabActor* ChildPrefab = Cast<APrefabActor>(ChildActor)) {
-			FPrefabTools::LoadStateFromPrefabAsset(ChildPrefab);
+			FPrefabTools::LoadStateFromPrefabAsset(ChildPrefab, InSettings);
 		}
 	}
 
