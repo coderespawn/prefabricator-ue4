@@ -8,6 +8,7 @@
 #include "Components/BillboardComponent.h"
 #include "Engine/PointLight.h"
 #include "PrefabricatorAssetUserData.h"
+#include "PrefabricatorAsset.h"
 
 APrefabActor::APrefabActor(const FObjectInitializer& ObjectInitializer) 
 	: Super(ObjectInitializer)
@@ -53,6 +54,24 @@ void APrefabActor::Destroyed()
 	}
 }
 
+void APrefabActor::PostLoad()
+{
+	Super::PostLoad();
+
+	if (IsPrefabOutdated()) {
+		LoadPrefab();
+	}
+}
+
+void APrefabActor::PostActorCreated()
+{
+	Super::PostActorCreated();
+
+	if (IsPrefabOutdated()) {
+		LoadPrefab();
+	}
+}
+
 #if WITH_EDITOR
 void APrefabActor::PostEditChangeProperty(struct FPropertyChangedEvent& e)
 {
@@ -64,13 +83,32 @@ void APrefabActor::PostDuplicate(EDuplicateMode::Type DuplicateMode)
 {
 	Super::PostDuplicate(DuplicateMode);
 
-	FPrefabTools::LoadStateFromPrefabAsset(this);
+	LoadPrefab();
 }
 
 FName APrefabActor::GetCustomIconName() const
 {
 	static const FName PrefabIconName("ClassIcon.PrefabActor");
 	return PrefabIconName;
+}
+
+void APrefabActor::LoadPrefab()
+{
+	FPrefabTools::LoadStateFromPrefabAsset(this);
+}
+
+void APrefabActor::SavePrefab()
+{
+	FPrefabTools::SaveStateToPrefabAsset(this);
+}
+
+bool APrefabActor::IsPrefabOutdated()
+{
+	if (!PrefabComponent->PrefabAsset) {
+		return false;
+	}
+
+	return PrefabComponent->PrefabAsset->LastUpdateID != LastUpdateID;
 }
 
 #endif // WITH_EDITOR

@@ -16,5 +16,7 @@ class PREFABRICATOREDITOR_API UPrefabricatorActorFactory : public UActorFactory 
 	virtual void PostCreateBlueprint(UObject* Asset, AActor* CDO);
 	virtual bool CanCreateActorFrom(const FAssetData& AssetData, FText& OutErrorMsg);
 	// End of UActorFactory interface
+
+	void LoadPrefabActorState(class APrefabActor* PrefabActor);
 };
 

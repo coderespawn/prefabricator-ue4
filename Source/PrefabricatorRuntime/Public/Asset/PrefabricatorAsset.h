@@ -100,6 +100,11 @@ public:
 
 	UPROPERTY()
 	TEnumAsByte<EComponentMobility::Type> PrefabMobility;
+
+	// The ID that is regenerated on every update
+	// This allows prefab actors to test against their own LastUpdateID and determine if a refresh is needed
+	UPROPERTY()
+	FGuid LastUpdateID;
 };
 
 

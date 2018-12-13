@@ -196,6 +196,10 @@ void FPrefabTools::SaveStateToPrefabAsset(APrefabActor* PrefabActor)
 			SaveStateToPrefabAsset(ChildActor, PrefabActor, ActorData);
 		}
 	}
+
+	// Regenerate a new update id for the prefab asset
+	PrefabAsset->LastUpdateID = FGuid::NewGuid();
+	PrefabActor->LastUpdateID = PrefabAsset->LastUpdateID;
 }
 
 namespace {
@@ -265,17 +269,10 @@ namespace {
 			return;
 		}
 
-		static const TSet<FName> IgnoredFields = { 
-			"AttachParent", 
-			"AttachSocketName",
-			"AttachChildren",
-			"ClientAttachedChildren"
-		};
-
 		for (TFieldIterator<UProperty> PropertyIterator(ObjToSerialize->GetClass()); PropertyIterator; ++PropertyIterator) {
 			UProperty* Property = *PropertyIterator;
 			if (!Property) continue;
-			if (IgnoredFields.Contains(Property->GetFName())) {
+			if (FPrefabTools::ShouldIgnorePropertySerialization(Property->GetFName())) {
 				continue;
 			}
 
@@ -416,6 +413,20 @@ namespace {
 	}
 }
 
+bool FPrefabTools::ShouldIgnorePropertySerialization(const FName& InPropertyName)
+{
+	static const TSet<FName> IgnoredFields = {
+		"AttachParent",
+		"AttachSocketName",
+		"AttachChildren",
+		"ClientAttachedChildren",
+		"bIsEditorPreviewActor",
+		"bIsEditorOnlyActor"
+	};
+
+	return IgnoredFields.Contains(InPropertyName);
+}
+
 void FPrefabTools::SaveStateToPrefabAsset(AActor* InActor, APrefabActor* PrefabActor, FPrefabricatorActorData& OutActorData)
 {
 	FTransform InversePrefabTransform = PrefabActor->GetTransform().Inverse();
@@ -444,7 +455,7 @@ void FPrefabTools::SaveStateToPrefabAsset(AActor* InActor, APrefabActor* PrefabA
 	//DumpSerializedData(OutActorData);
 }
 
-void FPrefabTools::LoadStateFromPrefabAsset(AActor* InActor, APrefabActor* PrefabActor, const FPrefabricatorActorData& InActorData)
+void FPrefabTools::LoadStateFromPrefabAsset(AActor* InActor, APrefabActor* PrefabActor, const FPrefabricatorActorData& InActorData, const FPrefabLoadSettings& InSettings)
 {
 	DeserializeFields(InActor, InActorData.Properties);
 
@@ -457,7 +468,16 @@ void FPrefabTools::LoadStateFromPrefabAsset(AActor* InActor, APrefabActor* Prefa
 	for (const FPrefabricatorComponentData& ComponentData : InActorData.Components) {
 		if (UActorComponent** SearchResult = ComponentsByName.Find(ComponentData.ComponentName)) {
 			UActorComponent* Component = *SearchResult;
+			bool bPreviouslyRegister = Component->IsRegistered();
+			if (InSettings.bUnregisterComponentsBeforeLoading && bPreviouslyRegister) {
+				Component->UnregisterComponent();
+			}
+
 			DeserializeFields(Component, ComponentData.Properties);
+
+			if (InSettings.bUnregisterComponentsBeforeLoading && bPreviouslyRegister) {
+				Component->RegisterComponent();
+			}
 		}
 	}
 }
@@ -488,8 +508,9 @@ FBox FPrefabTools::GetPrefabBounds(AActor* PrefabActor)
 	return Result;
 }
 
-void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor)
+void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPrefabLoadSettings& InSettings)
 {
+	UE_LOG(LogPrefabTools, Warning, TEXT("LOADING PREFAB ACTOR STATE"));
 	if (!PrefabActor) {
 		UE_LOG(LogPrefabTools, Error, TEXT("Invalid prefab actor reference"));
 		return;
@@ -519,7 +540,7 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor)
 
 	for (FPrefabricatorActorData& ActorItemData : PrefabAsset->ActorData) {
 		UClass* ActorClass = LoadObject<UClass>(nullptr, *ActorItemData.ClassPath);
-		if (!ActorClass) return;
+		if (!ActorClass) continue;
 
 		UWorld* World = PrefabActor->GetWorld();
 		AActor* ChildActor = nullptr;
@@ -538,7 +559,7 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor)
 		}
 
 		// Load the saved data into the actor
-		LoadStateFromPrefabAsset(ChildActor, PrefabActor, ActorItemData);
+		LoadStateFromPrefabAsset(ChildActor, PrefabActor, ActorItemData, InSettings);
 		
 		ParentActors(PrefabActor, ChildActor);
 		AssignAssetUserData(ChildActor, ActorItemData.PrefabItemID, PrefabActor);
@@ -556,5 +577,7 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor)
 	for (AActor* UnusedActor : ExistingActorPool) {
 		UnusedActor->Destroy();
 	}
+
+	PrefabActor->LastUpdateID = PrefabAsset->LastUpdateID;
 }
 

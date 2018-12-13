@@ -9,6 +9,8 @@
 
 #include "AssetData.h"
 
+DEFINE_LOG_CATEGORY_STATIC(LogPrefabricatorActorFactory, Log, All);
+
 UPrefabricatorActorFactory::UPrefabricatorActorFactory(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer) 
 {
@@ -28,18 +30,31 @@ AActor* UPrefabricatorActorFactory::SpawnActor(UObject* Asset, ULevel* InLevel, 
 	APrefabActor* PrefabActor = Cast<APrefabActor>(Actor);
 	if (PrefabActor) {
 		PrefabActor->PrefabComponent->PrefabAsset = Cast<UPrefabricatorAsset>(Asset);
-		//FPrefabTools::LoadStateFromPrefabAsset(PrefabActor);
 	}
 	return Actor;
+}
+
+void UPrefabricatorActorFactory::LoadPrefabActorState(APrefabActor* PrefabActor)
+{
+	if (PrefabActor) {
+		bool bIsPreviewActor  = (PrefabActor->GetFlags() & RF_Transient) > 0;
+
+		FPrefabLoadSettings LoadSettings;
+		LoadSettings.bUnregisterComponentsBeforeLoading = !bIsPreviewActor;
+		FPrefabTools::LoadStateFromPrefabAsset(PrefabActor, LoadSettings);
+	}
 }
 
 void UPrefabricatorActorFactory::PostSpawnActor(UObject* Asset, AActor* NewActor)
 {
 	APrefabActor* PrefabActor = Cast<APrefabActor>(NewActor);
+
 	if (PrefabActor && PrefabActor->PrefabComponent) {
 		PrefabActor->PrefabComponent->PrefabAsset = Cast<UPrefabricatorAsset>(Asset);
-		FPrefabTools::LoadStateFromPrefabAsset(PrefabActor);
+		
+		LoadPrefabActorState(PrefabActor);
 	}
+
 }
 
 void UPrefabricatorActorFactory::PostCreateBlueprint(UObject* Asset, AActor* CDO)
@@ -47,8 +62,10 @@ void UPrefabricatorActorFactory::PostCreateBlueprint(UObject* Asset, AActor* CDO
 	APrefabActor* PrefabActor = Cast<APrefabActor>(CDO);
 	if (PrefabActor && PrefabActor->PrefabComponent) {
 		PrefabActor->PrefabComponent->PrefabAsset = Cast<UPrefabricatorAsset>(Asset);
-		FPrefabTools::LoadStateFromPrefabAsset(PrefabActor);
+
+		LoadPrefabActorState(PrefabActor);
 	}
+	UE_LOG(LogPrefabricatorActorFactory, Log, TEXT("Call: UPrefabricatorActorFactory::PostCreateBlueprint"));
 }
 
 bool UPrefabricatorActorFactory::CanCreateActorFrom(const FAssetData& AssetData, FText& OutErrorMsg)

@@ -17,6 +17,9 @@ public:
 public:
 	/// AActor Interface 
 	virtual void Destroyed() override;
+	virtual void PostLoad() override;
+	virtual void PostActorCreated() override;
+
 #if WITH_EDITOR
 	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& e) override;
 	virtual void PostDuplicate(EDuplicateMode::Type DuplicateMode) override;
@@ -24,10 +27,19 @@ public:
 #endif // WITH_EDITOR
 	/// End of AActor Interface 
 
+	UFUNCTION(BlueprintCallable)
+	void LoadPrefab();
+
+	UFUNCTION(BlueprintCallable)
+	void SavePrefab();
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	bool IsPrefabOutdated();
 
 public:
 	// The ID of the prefab asset when the prefab was last created
 	// This is used to test if the prefab has changed since we last recreated it
+	UPROPERTY()
 	FGuid LastUpdateID;
 };
 

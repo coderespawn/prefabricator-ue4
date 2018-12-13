@@ -8,6 +8,10 @@ class APrefabActor;
 class UPrefabricatorAsset;
 struct FPrefabricatorActorData;
 
+struct PREFABRICATORRUNTIME_API FPrefabLoadSettings {
+	bool bUnregisterComponentsBeforeLoading = true;
+};
+
 class PREFABRICATORRUNTIME_API FPrefabTools {
 public:
 	static bool CanCreatePrefab();
@@ -16,14 +20,15 @@ public:
 	static void AssignAssetUserData(AActor* InActor, const FGuid& InItemID, APrefabActor* Prefab);
 
 	static void SaveStateToPrefabAsset(APrefabActor* PrefabActor);
-	static void LoadStateFromPrefabAsset(APrefabActor* PrefabActor);
+	static void LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPrefabLoadSettings& InSettings = FPrefabLoadSettings());
 
 	static void SaveStateToPrefabAsset(AActor* InActor, APrefabActor* PrefabActor, FPrefabricatorActorData& OutActorData);
-	static void LoadStateFromPrefabAsset(AActor* InActor, APrefabActor* PrefabActor, const FPrefabricatorActorData& InActorData);
+	static void LoadStateFromPrefabAsset(AActor* InActor, APrefabActor* PrefabActor, const FPrefabricatorActorData& InActorData, const FPrefabLoadSettings& InSettings);
 
 	static void GetActorChildren(AActor* InParent, TArray<AActor*>& OutChildren);
 
 	static FBox GetPrefabBounds(AActor* PrefabActor);
+	static bool ShouldIgnorePropertySerialization(const FName& PropertyName);
 
 	static void ParentActors(AActor* ParentActor, AActor* ChildActor);
 	static void SelectPrefabActor(AActor* PrefabActor);
