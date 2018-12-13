@@ -17,6 +17,7 @@
 #include "LevelEditor.h"
 #include "PropertyEditorModule.h"
 #include "UnrealEdGlobals.h"
+#include "MapChangeHook.h"
 
 #define LOCTEXT_NAMESPACE "DungeonArchitectEditorModule" 
 
@@ -32,6 +33,7 @@ class FPrefabricatorEditorModule : public IPrefabricatorEditorModule
 		// Extend the editor menu and toolbar
 		UIExtender.Extend();
 		SelectionHook.Initialize();
+		MapChangeHook.Initialize();
 
 		// Register asset types
 		IAssetTools& AssetTools = FModuleManager::LoadModuleChecked<FAssetToolsModule>("AssetTools").Get();
@@ -68,6 +70,7 @@ class FPrefabricatorEditorModule : public IPrefabricatorEditorModule
 		}
 		CreatedAssetTypeActions.Empty();
 
+		MapChangeHook.Release();
 		SelectionHook.Release();
 		UIExtender.Release();
 
@@ -84,6 +87,7 @@ private:
 	
 	FEditorUIExtender UIExtender;
 	FPrefabricatorSelectionHook SelectionHook;
+	FMapChangeHook MapChangeHook;
 	TSharedPtr<IComponentAssetBroker> PrefabAssetBroker;
 	TArray< TSharedPtr<IAssetTypeActions> > CreatedAssetTypeActions;
 };

@@ -10,6 +10,7 @@
 #include "DetailLayoutBuilder.h"
 #include "DetailWidgetRow.h"
 #include "Widgets/SBoxPanel.h"
+#include "PrefabEditorTools.h"
 
 #define LOCTEXT_NAMESPACE "PrefabActorCustomization" 
 
@@ -68,6 +69,12 @@ FReply FPrefabActorCustomization::HandleSaveToAsset(IDetailLayoutBuilder* Detail
 	if (PrefabActor) {
 		FPrefabTools::SaveStateToPrefabAsset(PrefabActor);
 		FPrefabTools::UpdatePrefabThumbnail(PrefabActor->PrefabComponent->PrefabAsset);
+
+		UPrefabricatorAsset* PrefabAsset = PrefabActor->PrefabComponent->PrefabAsset;
+		if (PrefabAsset) {
+			// Refresh all the existing prefabs in the level
+			FPrefabEditorTools::ReloadPrefabsInLevel(PrefabActor->GetWorld(), PrefabAsset);
+		}
 	}
 	return FReply::Handled();
 }

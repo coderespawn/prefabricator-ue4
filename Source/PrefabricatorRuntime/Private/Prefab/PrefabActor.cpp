@@ -58,18 +58,12 @@ void APrefabActor::PostLoad()
 {
 	Super::PostLoad();
 
-	if (IsPrefabOutdated()) {
-		LoadPrefab();
-	}
 }
 
 void APrefabActor::PostActorCreated()
 {
 	Super::PostActorCreated();
 
-	if (IsPrefabOutdated()) {
-		LoadPrefab();
-	}
 }
 
 #if WITH_EDITOR
@@ -92,6 +86,8 @@ FName APrefabActor::GetCustomIconName() const
 	return PrefabIconName;
 }
 
+#endif // WITH_EDITOR
+
 void APrefabActor::LoadPrefab()
 {
 	FPrefabTools::LoadStateFromPrefabAsset(this);
@@ -110,7 +106,3 @@ bool APrefabActor::IsPrefabOutdated()
 
 	return PrefabComponent->PrefabAsset->LastUpdateID != LastUpdateID;
 }
-
-#endif // WITH_EDITOR
-
-
