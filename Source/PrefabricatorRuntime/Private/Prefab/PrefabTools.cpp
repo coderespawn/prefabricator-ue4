@@ -510,7 +510,6 @@ FBox FPrefabTools::GetPrefabBounds(AActor* PrefabActor)
 
 void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPrefabLoadSettings& InSettings)
 {
-	UE_LOG(LogPrefabTools, Warning, TEXT("LOADING PREFAB ACTOR STATE"));
 	if (!PrefabActor) {
 		UE_LOG(LogPrefabTools, Error, TEXT("Invalid prefab actor reference"));
 		return;
