@@ -7,6 +7,7 @@
 
 #include "Components/BillboardComponent.h"
 #include "Engine/PointLight.h"
+#include "PrefabricatorAssetUserData.h"
 
 APrefabActor::APrefabActor(const FObjectInitializer& ObjectInitializer) 
 	: Super(ObjectInitializer)
@@ -15,16 +16,39 @@ APrefabActor::APrefabActor(const FObjectInitializer& ObjectInitializer)
 	RootComponent = PrefabComponent;
 }
 
+namespace {
+	void DestroyAttachedActorsRecursive(AActor* ActorToDestroy, TSet<AActor*>& Visited) {
+		if (!ActorToDestroy || !ActorToDestroy->GetRootComponent()) return;
+
+		if (Visited.Contains(ActorToDestroy)) return;
+		Visited.Add(ActorToDestroy);
+
+		UPrefabricatorAssetUserData* PrefabUserData = ActorToDestroy->GetRootComponent()->GetAssetUserData<UPrefabricatorAssetUserData>();
+		if (!PrefabUserData) return;
+
+		UWorld* World = ActorToDestroy->GetWorld();
+		if (!World) return;
+
+		TArray<AActor*> AttachedActors;
+		ActorToDestroy->GetAttachedActors(AttachedActors);
+		for (AActor* AttachedActor : AttachedActors) {
+			DestroyAttachedActorsRecursive(AttachedActor, Visited);
+		}
+		ActorToDestroy->Destroy();
+	}
+}
+
 void APrefabActor::Destroyed()
 {
 	Super::Destroyed();
 
 	// Destroy all attached actors
 	{
+		TSet<AActor*> Visited;
 		TArray<AActor*> AttachedActors;
 		GetAttachedActors(AttachedActors);
 		for (AActor* AttachedActor : AttachedActors) {
-			AttachedActor->Destroy();
+			DestroyAttachedActorsRecursive(AttachedActor, Visited);
 		}
 	}
 }

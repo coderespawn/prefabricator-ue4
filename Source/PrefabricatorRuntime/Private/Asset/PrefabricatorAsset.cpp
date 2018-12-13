@@ -4,6 +4,7 @@
 
 #include "GameFramework/Actor.h"
 #include "PrefabricatorService.h"
+#include "PrefabTools.h"
 
 UPrefabricatorAsset::UPrefabricatorAsset(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer) {
 
@@ -15,16 +16,13 @@ FVector FPrefabricatorAssetUtils::FindPivot(const TArray<AActor*>& InActors)
 	FVector Pivot = FVector::ZeroVector;
 	if (InActors.Num() > 0) {
 		float LowestZ = MAX_flt;
-		FVector BoundsOrigin, BoundsExtent;
+		FBox Bounds(EForceInit::ForceInit);
 		for (AActor* Actor : InActors) {
-			Actor->GetActorBounds(false, BoundsOrigin, BoundsExtent);
-			FVector Min = BoundsOrigin - BoundsExtent;
-			LowestZ = FMath::Min(LowestZ, Min.Z);
-
-			Pivot += BoundsOrigin;
+			FBox ActorBounds = FPrefabTools::GetPrefabBounds(Actor);
+			Bounds += ActorBounds;
 		}
-		Pivot /= InActors.Num();
-		Pivot.Z = LowestZ;
+		Pivot = Bounds.GetCenter();
+		Pivot.Z = Bounds.Min.Z;
 	}
 
 	TSharedPtr<IPrefabricatorService> Service = FPrefabricatorService::Get();

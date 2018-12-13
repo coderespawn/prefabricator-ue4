@@ -23,6 +23,7 @@ public:
 
 	static void GetActorChildren(AActor* InParent, TArray<AActor*>& OutChildren);
 
+	static FBox GetPrefabBounds(AActor* PrefabActor);
 
 	static void ParentActors(AActor* ParentActor, AActor* ChildActor);
 	static void SelectPrefabActor(AActor* PrefabActor);

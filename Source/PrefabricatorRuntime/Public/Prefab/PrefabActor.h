@@ -24,5 +24,10 @@ public:
 #endif // WITH_EDITOR
 	/// End of AActor Interface 
 
+
+public:
+	// The ID of the prefab asset when the prefab was last created
+	// This is used to test if the prefab has changed since we last recreated it
+	FGuid LastUpdateID;
 };
 

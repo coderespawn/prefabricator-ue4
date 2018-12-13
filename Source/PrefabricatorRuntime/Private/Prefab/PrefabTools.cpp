@@ -265,8 +265,19 @@ namespace {
 			return;
 		}
 
+		static const TSet<FName> IgnoredFields = { 
+			"AttachParent", 
+			"AttachSocketName",
+			"AttachChildren",
+			"ClientAttachedChildren"
+		};
+
 		for (TFieldIterator<UProperty> PropertyIterator(ObjToSerialize->GetClass()); PropertyIterator; ++PropertyIterator) {
 			UProperty* Property = *PropertyIterator;
+			if (!Property) continue;
+			if (IgnoredFields.Contains(Property->GetFName())) {
+				continue;
+			}
 
 			UPrefabricatorPropertyBase* PrefabProperty = nullptr;
 			FString PropertyName = Property->GetName();
@@ -454,6 +465,27 @@ void FPrefabTools::LoadStateFromPrefabAsset(AActor* InActor, APrefabActor* Prefa
 void FPrefabTools::GetActorChildren(AActor* InParent, TArray<AActor*>& OutChildren)
 {
 	InParent->GetAttachedActors(OutChildren);
+}
+
+namespace {
+	void GetPrefabBoundsRecursive(AActor* InActor, FBox& OutBounds) {
+		if (!InActor->IsA<APrefabActor>()) {
+			OutBounds += InActor->GetComponentsBoundingBox(true);
+		}
+
+		TArray<AActor*> AttachedActors;
+		InActor->GetAttachedActors(AttachedActors);
+		for (AActor* AttachedActor : AttachedActors) {
+			GetPrefabBoundsRecursive(AttachedActor, OutBounds);
+		}
+	}
+}
+
+FBox FPrefabTools::GetPrefabBounds(AActor* PrefabActor)
+{
+	FBox Result(EForceInit::ForceInit);
+	GetPrefabBoundsRecursive(PrefabActor, Result);
+	return Result;
 }
 
 void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor)

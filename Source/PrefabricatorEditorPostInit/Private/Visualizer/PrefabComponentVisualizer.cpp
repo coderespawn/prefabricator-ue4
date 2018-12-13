@@ -6,6 +6,7 @@
 
 #include "GameFramework/Actor.h"
 #include "SceneManagement.h"
+#include "PrefabTools.h"
 
 void FPrefabComponentVisualizer::DrawVisualization(const UActorComponent* Component, const FSceneView* View, FPrimitiveDrawInterface* PDI)
 {
@@ -15,14 +16,7 @@ void FPrefabComponentVisualizer::DrawVisualization(const UActorComponent* Compon
 	AActor* Parent = PrefabComponent->GetOwner();
 	if (!Parent) return;
 
-	TArray<AActor*> AttachedActors;
-	Parent->GetAttachedActors(AttachedActors);
-
-	FBox Bounds(EForceInit::ForceInit);
-	for (AActor* AttachedActor : AttachedActors) {
-		Bounds += AttachedActor->GetComponentsBoundingBox(true);
-	}
-
+	FBox Bounds = FPrefabTools::GetPrefabBounds(Parent);
 	Bounds = Bounds.ExpandBy(2);
 
 	const FMatrix LocalToWorld = FMatrix::Identity;
