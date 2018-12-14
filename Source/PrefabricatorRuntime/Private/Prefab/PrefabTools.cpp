@@ -16,6 +16,7 @@
 #include "Serialization/ObjectAndNameAsStringProxyArchive.h"
 #include "Serialization/ObjectReader.h"
 #include "Serialization/ObjectWriter.h"
+#include "PropertyPathHelpers.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogPrefabTools, Log, All);
 
@@ -251,7 +252,7 @@ namespace {
 			UPrefabricatorPropertyBase* PrefabProperty = *SearchResult;
 
 			if (UPrefabricatorAtomProperty* PrefabAtomProperty = Cast<UPrefabricatorAtomProperty>(PrefabProperty)) {
-				Property->ImportText(*PrefabAtomProperty->ExportedValue, Property->ContainerPtrToValuePtr<void>(InObjToDeserialize), PPF_None, InObjToDeserialize);
+				PropertyPathHelpers::SetPropertyValueFromString(InObjToDeserialize, PrefabAtomProperty->PropertyName, PrefabAtomProperty->ExportedValue);
 			}
 			else if (UPrefabricatorArrayProperty* PrefabArrayProperty = Cast<UPrefabricatorArrayProperty>(PrefabProperty)) {
 				if (UArrayProperty* ArrayProperty = Cast<UArrayProperty>(Property)) {
@@ -288,7 +289,7 @@ namespace {
 			}
 
 			UPrefabricatorPropertyBase* PrefabProperty = nullptr;
-			FString PropertyName = Property->GetName();
+			FString PropertyName = Property->GetPathName(ObjToSerialize->GetClass());
 
 			if (UArrayProperty* ArrayProperty = Cast<UArrayProperty>(Property)) {
 				UPrefabricatorArrayProperty* ArrayPrefabProperty = NewObject<UPrefabricatorArrayProperty>(PrefabAsset);
@@ -300,6 +301,7 @@ namespace {
 				for (int i = 0; i < ArrayHelper.Num(); i++) {
 					void* ArrayItemData = ArrayHelper.GetRawPtr(i);
 					FString ItemValue;
+					//PropertyPathHelpers::GetPropertyValueAsString(ArrayItemData, PropertyName, ItemValue);
 					ArrayItemProperty->ExportTextItem(ItemValue, ArrayItemData, nullptr, ObjToSerialize, PPF_None);
 					ArrayPrefabProperty->ExportedValues.Add(ItemValue);
 				}
@@ -307,6 +309,7 @@ namespace {
 				PrefabProperty = ArrayPrefabProperty;
 			}
 			else if (USetProperty* SetProperty = Cast<USetProperty>(Property)) {
+				/*
 				UPrefabricatorSetProperty* SetPrefabProperty = NewObject<UPrefabricatorSetProperty>(PrefabAsset);
 				SetPrefabProperty->PropertyName = PropertyName;
 
@@ -321,8 +324,10 @@ namespace {
 				}
 
 				PrefabProperty = SetPrefabProperty;
+				*/
 			}
 			else if (UMapProperty* MapProperty = Cast<UMapProperty>(Property)) {
+				/*
 				UPrefabricatorMapProperty* MapPrefabProperty = NewObject<UPrefabricatorMapProperty>(PrefabAsset);
 				MapPrefabProperty->PropertyName = PropertyName;
 
@@ -341,6 +346,7 @@ namespace {
 				}
 
 				PrefabProperty = MapPrefabProperty;
+				*/
 			}
 			else 
 			{
@@ -348,15 +354,11 @@ namespace {
 					continue;
 				}
 
-				FString PropertyValue;
-				Property->ExportTextItem(PropertyValue, Property->ContainerPtrToValuePtr<void>(ObjToSerialize), nullptr, ObjToSerialize, PPF_None);
-
 				UPrefabricatorAtomProperty* AtomPrefabProperty = NewObject<UPrefabricatorAtomProperty>(PrefabAsset);
 				AtomPrefabProperty->PropertyName = PropertyName;
-				AtomPrefabProperty->ExportedValue = PropertyValue;
-
-				PrefabProperty = AtomPrefabProperty;
+				PropertyPathHelpers::GetPropertyValueAsString(ObjToSerialize, PropertyName, AtomPrefabProperty->ExportedValue);
 				
+				PrefabProperty = AtomPrefabProperty;
 			}
 
 			if (PrefabProperty) {
@@ -438,11 +440,12 @@ bool FPrefabTools::ShouldIgnorePropertySerialization(const FName& InPropertyName
 
 void FPrefabTools::SaveStateToPrefabAsset(AActor* InActor, APrefabActor* PrefabActor, FPrefabricatorActorData& OutActorData)
 {
+	if (!InActor) return;
+
 	FTransform InversePrefabTransform = PrefabActor->GetTransform().Inverse();
 	FTransform LocalTransform = InActor->GetTransform() * InversePrefabTransform;
 	OutActorData.RelativeTransform = LocalTransform;
 	OutActorData.ClassPath = InActor->GetClass()->GetPathName();
-
 	SerializeFields(InActor, PrefabActor, OutActorData.Properties);
 
 	TArray<UActorComponent*> Components;
