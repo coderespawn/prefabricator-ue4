@@ -502,7 +502,11 @@ void FPrefabTools::GetActorChildren(AActor* InParent, TArray<AActor*>& OutChildr
 namespace {
 	void GetPrefabBoundsRecursive(AActor* InActor, FBox& OutBounds) {
 		if (!InActor->IsA<APrefabActor>()) {
-			OutBounds += InActor->GetComponentsBoundingBox(false);
+			FBox ActorBounds = InActor->GetComponentsBoundingBox(false);
+			if (ActorBounds.GetExtent() == FVector::ZeroVector) {
+				ActorBounds = FBox({ InActor->GetActorLocation() });
+			}
+			OutBounds += ActorBounds;
 		}
 
 		TArray<AActor*> AttachedActors;

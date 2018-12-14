@@ -10,6 +10,8 @@
 #include "ThumbnailRendering/SceneThumbnailInfo.h"
 #include "GameFramework/Actor.h"
 
+DEFINE_LOG_CATEGORY_STATIC(LogPrefabAssetThumbScene, Log, All);
+
 FPrefabricatorAssetThumbnailScene::FPrefabricatorAssetThumbnailScene()
 {
 	bForceAllUsedMipsResident = false;
@@ -24,6 +26,8 @@ FPrefabricatorAssetThumbnailScene::FPrefabricatorAssetThumbnailScene()
 
 	PreviewActor->GetRootComponent()->SetMobility(EComponentMobility::Movable);
 	PreviewActor->SetActorEnableCollision(false);
+
+	Touch();
 }
 
 void FPrefabricatorAssetThumbnailScene::SetPrefabAsset(class UPrefabricatorAsset* PrefabAsset)
@@ -32,16 +36,22 @@ void FPrefabricatorAssetThumbnailScene::SetPrefabAsset(class UPrefabricatorAsset
 	if (PrefabAsset) {
 		if (PreviewActor->IsPrefabOutdated()) {
 			PreviewActor->LoadPrefab();
+			UE_LOG(LogPrefabAssetThumbScene, Log, TEXT("Recreating Thumbnail Prefab Actor"));
 		}
 
 		PreviewActor->SetActorLocation(FVector(0, 0, 0), false);
 
-		FBox Bounds = FPrefabTools::GetPrefabBounds(PreviewActor);
+		FBoxSphereBounds Bounds = PreviewActor->PrefabComponent->Bounds;
 
 		// Center the mesh at the world origin then offset to put it on top of the plane
 		const float BoundsZOffset = GetBoundsZOffset(Bounds);
-		PreviewActor->SetActorLocation(-Bounds.GetCenter() + FVector(0, 0, BoundsZOffset), false);
+		PreviewActor->SetActorLocation(-Bounds.Origin + FVector(0, 0, BoundsZOffset), false);
 	}
+}
+
+void FPrefabricatorAssetThumbnailScene::Touch()
+{
+	LastAccessTime = FDateTime::UtcNow();
 }
 
 void FPrefabricatorAssetThumbnailScene::GetViewMatrixParameters(const float InFOVDegrees, FVector& OutOrigin, float& OutOrbitPitch, float& OutOrbitYaw, float& OutOrbitZoom) const
@@ -74,4 +84,5 @@ void FPrefabricatorAssetThumbnailScene::GetViewMatrixParameters(const float InFO
 	OutOrbitPitch = ThumbnailInfo->OrbitPitch;
 	OutOrbitYaw = ThumbnailInfo->OrbitYaw;
 	OutOrbitZoom = TargetDistance + ThumbnailInfo->OrbitZoom;
+
 }

@@ -8,6 +8,7 @@
 
 class FCanvas;
 class FRenderTarget;
+class FPrefabricatorAssetThumbnailScene;
 
 UCLASS()
 class PREFABRICATOREDITOR_API UPrefabricatorAssetThumbnailRenderer : public UDefaultSizedThumbnailRenderer
@@ -23,6 +24,10 @@ class PREFABRICATOREDITOR_API UPrefabricatorAssetThumbnailRenderer : public UDef
 	virtual void BeginDestroy() override;
 
 private:
-	class FPrefabricatorAssetThumbnailScene* ThumbnailScene;
+	FPrefabricatorAssetThumbnailScene* GetThumbnailScene(const FName& InAssetPath);
+	void PurgeUnusedThumbnailScenes();
+
+private:
+	TMap<FName, FPrefabricatorAssetThumbnailScene*> AssetThumbnailScenes;
 };
 

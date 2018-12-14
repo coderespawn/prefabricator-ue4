@@ -6,25 +6,19 @@
 #include "RenderingThread.h"
 #include "SceneView.h"
 
+DEFINE_LOG_CATEGORY_STATIC(LogPrefabAssetThumbRenderer, Log, All);
+
 
 UPrefabricatorAssetThumbnailRenderer::UPrefabricatorAssetThumbnailRenderer(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
-	ThumbnailScene = nullptr;
 }
 
 void UPrefabricatorAssetThumbnailRenderer::Draw(UObject* Object, int32 X, int32 Y, uint32 Width, uint32 Height, FRenderTarget* RenderTarget, FCanvas* Canvas)
 {
 	UPrefabricatorAsset* PrefabAsset = Cast<UPrefabricatorAsset>(Object);
 	if (PrefabAsset && !PrefabAsset->IsPendingKill()) {
-		if (ThumbnailScene == nullptr || ensure(ThumbnailScene->GetWorld() != nullptr) == false) {
-			if (ThumbnailScene) {
-				FlushRenderingCommands();
-				delete ThumbnailScene;
-			}
-			ThumbnailScene = new FPrefabricatorAssetThumbnailScene();
-		}
-
+		FPrefabricatorAssetThumbnailScene* ThumbnailScene = GetThumbnailScene(*PrefabAsset->GetPathName());
 		ThumbnailScene->SetPrefabAsset(PrefabAsset);
 		ThumbnailScene->GetScene()->UpdateSpeedTreeWind(0.0);
 
@@ -37,18 +31,62 @@ void UPrefabricatorAssetThumbnailRenderer::Draw(UObject* Object, int32 X, int32 
 
 		ThumbnailScene->GetView(&ViewFamily, X, Y, Width, Height);
 		RenderViewFamily(Canvas, &ViewFamily);
-		ThumbnailScene->SetPrefabAsset(nullptr);
+		
 	}
 }
 
 void UPrefabricatorAssetThumbnailRenderer::BeginDestroy()
 {
-	if (ThumbnailScene != nullptr)
-	{
-		delete ThumbnailScene;
+	for (auto& Entry : AssetThumbnailScenes) {
+		FPrefabricatorAssetThumbnailScene* ThumbnailScene = Entry.Value;
+		delete ThumbnailScene; 
 		ThumbnailScene = nullptr;
 	}
+	AssetThumbnailScenes.Reset();
 
 	Super::BeginDestroy();
+}
+
+FPrefabricatorAssetThumbnailScene* UPrefabricatorAssetThumbnailRenderer::GetThumbnailScene(const FName& InAssetPath)
+{
+	FPrefabricatorAssetThumbnailScene** SearchResult = AssetThumbnailScenes.Find(InAssetPath);
+	FPrefabricatorAssetThumbnailScene* ThumbnailScene = SearchResult ? *SearchResult : nullptr;
+	if (ThumbnailScene == nullptr || ensure(ThumbnailScene->GetWorld() != nullptr) == false) {
+		if (ThumbnailScene) {
+			FlushRenderingCommands();
+			delete ThumbnailScene;
+		}
+		ThumbnailScene = new FPrefabricatorAssetThumbnailScene();
+		AssetThumbnailScenes.Remove(InAssetPath);
+		AssetThumbnailScenes.Add(InAssetPath, ThumbnailScene);
+	}
+	ThumbnailScene->Touch();
+	return ThumbnailScene;
+}
+
+void UPrefabricatorAssetThumbnailRenderer::PurgeUnusedThumbnailScenes()
+{
+	FDateTime CurrentTime = FDateTime::UtcNow();
+
+	const double MAX_IDLE_TIME_SECS = 5.0;	// in seconds
+
+	TSet<FName> ItemsToPurge;
+	for (auto& Entry : AssetThumbnailScenes) {
+		FPrefabricatorAssetThumbnailScene* ThumbnailScene = Entry.Value;
+		FTimespan ElapsedTime = CurrentTime - ThumbnailScene->LastAccessTime;
+		float ElapsedSeconds = ElapsedTime.GetTotalSeconds();
+		if (ElapsedTime >= MAX_IDLE_TIME_SECS) {
+			ItemsToPurge.Add(Entry.Key);
+		}
+	}
+
+	for (const FName& KeyToPurge : ItemsToPurge) {
+		FPrefabricatorAssetThumbnailScene* ThumbnailScene = AssetThumbnailScenes[KeyToPurge];
+		delete ThumbnailScene;
+		ThumbnailScene = nullptr;
+
+		AssetThumbnailScenes.Remove(KeyToPurge);
+		UE_LOG(LogPrefabAssetThumbRenderer, Log, TEXT("Purged prefab asset thumbnail render scene: %s"), *KeyToPurge.ToString());
+	}
 }
 

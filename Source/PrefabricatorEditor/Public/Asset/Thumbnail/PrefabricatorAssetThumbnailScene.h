@@ -13,6 +13,9 @@ public:
 	/** Sets the static mesh to use in the next GetView() */
 	void SetPrefabAsset(class UPrefabricatorAsset* PrefabAsset);
 
+	void Touch();
+	FDateTime LastAccessTime;
+
 protected:
 	// FThumbnailPreviewScene implementation
 	virtual void GetViewMatrixParameters(const float InFOVDegrees, FVector& OutOrigin, float& OutOrbitPitch, float& OutOrbitYaw, float& OutOrbitZoom) const override;
@@ -20,4 +23,5 @@ protected:
 private:
 	/** The static mesh actor used to display all static mesh thumbnails */
 	class APrefabActor* PreviewActor;
+
 };
