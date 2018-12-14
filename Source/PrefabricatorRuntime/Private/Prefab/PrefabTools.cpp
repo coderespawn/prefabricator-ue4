@@ -244,8 +244,8 @@ namespace {
 		return (PropertyData == TemplatePropertyData);
 	}
 
-	bool ShouldSkipSerialization(UProperty* Property, UObject* ObjToSerialize, APrefabActor* PrefabActor) {
-		if (UObjectProperty* ObjProperty = Cast<UObjectProperty>(Property)) {
+	bool ShouldSkipSerialization(const UProperty* Property, UObject* ObjToSerialize, APrefabActor* PrefabActor) {
+		if (const UObjectProperty* ObjProperty = Cast<const UObjectProperty>(Property)) {
 			UObject* PropertyObjectValue = ObjProperty->GetObjectPropertyValue_InContainer(ObjToSerialize);
 			if (ContainsOuterParent(PropertyObjectValue, ObjToSerialize) ||
 				ContainsOuterParent(PropertyObjectValue, PrefabActor)) {
@@ -303,8 +303,28 @@ namespace {
 			return;
 		}
 
+		TSet<const UProperty*> PropertiesToSerialize;
+		/*
+		if (UActorComponent* ActorComponent = Cast<UActorComponent>(ObjToSerialize)) {
+			ActorComponent->GetUCSModifiedProperties(PropertiesToSerialize);
+		}
+		else {
+		}
+		*/
 		for (TFieldIterator<UProperty> PropertyIterator(ObjToSerialize->GetClass()); PropertyIterator; ++PropertyIterator) {
 			UProperty* Property = *PropertyIterator;
+			if (!Property) continue;
+			if (FPrefabTools::ShouldIgnorePropertySerialization(Property->GetFName())) {
+				continue;
+			}
+			if (Property->HasAnyPropertyFlags(CPF_Transient) || !Property->HasAnyPropertyFlags(CPF_Edit | CPF_Interp)) {
+				continue;
+			}
+
+			PropertiesToSerialize.Add(Property);
+		}
+
+		for (const UProperty* Property : PropertiesToSerialize) {
 			if (!Property) continue;
 			if (FPrefabTools::ShouldIgnorePropertySerialization(Property->GetFName())) {
 				continue;
@@ -313,7 +333,7 @@ namespace {
 			UPrefabricatorPropertyBase* PrefabProperty = nullptr;
 			FString PropertyName = Property->GetPathName(ObjToSerialize->GetClass());
 
-			if (UArrayProperty* ArrayProperty = Cast<UArrayProperty>(Property)) {
+			if (const UArrayProperty* ArrayProperty = Cast<const UArrayProperty>(Property)) {
 				UPrefabricatorArrayProperty* ArrayPrefabProperty = NewObject<UPrefabricatorArrayProperty>(PrefabAsset);
 				ArrayPrefabProperty->PropertyName = PropertyName;
 
@@ -330,7 +350,7 @@ namespace {
 
 				PrefabProperty = ArrayPrefabProperty;
 			}
-			else if (USetProperty* SetProperty = Cast<USetProperty>(Property)) {
+			else if (const USetProperty* SetProperty = Cast<const USetProperty>(Property)) {
 				/*
 				UPrefabricatorSetProperty* SetPrefabProperty = NewObject<UPrefabricatorSetProperty>(PrefabAsset);
 				SetPrefabProperty->PropertyName = PropertyName;
@@ -348,7 +368,7 @@ namespace {
 				PrefabProperty = SetPrefabProperty;
 				*/
 			}
-			else if (UMapProperty* MapProperty = Cast<UMapProperty>(Property)) {
+			else if (const UMapProperty* MapProperty = Cast<const UMapProperty>(Property)) {
 				/*
 				UPrefabricatorMapProperty* MapPrefabProperty = NewObject<UPrefabricatorMapProperty>(PrefabAsset);
 				MapPrefabProperty->PropertyName = PropertyName;
@@ -372,7 +392,7 @@ namespace {
 			}
 			else 
 			{
-				if (HasDefaultValue(Property, ObjToSerialize) || ShouldSkipSerialization(Property, ObjToSerialize, PrefabActor)) {
+				if (ShouldSkipSerialization(Property, ObjToSerialize, PrefabActor)) {
 					continue;
 				}
 
@@ -486,7 +506,7 @@ void FPrefabTools::SaveStateToPrefabAsset(AActor* InActor, APrefabActor* PrefabA
 		SerializeFields(Component, PrefabActor, ComponentData.Properties);
 	}
 
-	//DumpSerializedData(OutActorData);
+	DumpSerializedData(OutActorData);
 }
 
 void FPrefabTools::LoadStateFromPrefabAsset(AActor* InActor, APrefabActor* PrefabActor, const FPrefabricatorActorData& InActorData, const FPrefabLoadSettings& InSettings)
