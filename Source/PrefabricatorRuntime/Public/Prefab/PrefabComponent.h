@@ -14,6 +14,7 @@ public:
 	class UPrefabricatorAsset* PrefabAsset;
 
 	virtual void OnRegister() override;
+	virtual FBoxSphereBounds CalcBounds(const FTransform& LocalToWorld) const;
 
 private:
 	UPROPERTY()

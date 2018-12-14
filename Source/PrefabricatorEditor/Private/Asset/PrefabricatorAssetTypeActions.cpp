@@ -42,6 +42,19 @@ void FPrefabricatorAssetTypeActions::OpenAssetEditor(const TArray<UObject*>& InO
 	}
 }
 
+class UThumbnailInfo* FPrefabricatorAssetTypeActions::GetThumbnailInfo(UObject* Asset) const
+{
+	UPrefabricatorAsset* PrefabAsset = CastChecked<UPrefabricatorAsset>(Asset);
+	UThumbnailInfo* ThumbnailInfo = PrefabAsset->ThumbnailInfo;
+	if (ThumbnailInfo == NULL)
+	{
+		ThumbnailInfo = NewObject<USceneThumbnailInfo>(PrefabAsset, NAME_None, RF_Transactional);
+		PrefabAsset->ThumbnailInfo = ThumbnailInfo;
+	}
+
+	return ThumbnailInfo;
+}
+
 uint32 FPrefabricatorAssetTypeActions::GetCategories()
 {
 	return EAssetTypeCategories::Misc;

@@ -7,6 +7,7 @@
 #include "Components/BillboardComponent.h"
 #include "Engine/Texture2D.h"
 #include "UObject/ConstructorHelpers.h"
+#include "PrefabTools.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogPrefabComponent, Log, All);
 
@@ -37,7 +38,18 @@ void UPrefabComponent::OnRegister()
 		SpriteComponent->SpriteInfo.DisplayName = NSLOCTEXT("PrefabComponent", "Prefab", "Prefab");
 		SpriteComponent->Mobility = EComponentMobility::Static;
 	}
-
 #endif //WITH_EDITORONLY_DATA
+}
+
+FBoxSphereBounds UPrefabComponent::CalcBounds(const FTransform& LocalToWorld) const
+{
+	APrefabActor* PrefabActor = Cast<APrefabActor>(GetOwner());
+	if (PrefabActor) {
+		FBox BoundsBox = FPrefabTools::GetPrefabBounds(PrefabActor);
+		return FBoxSphereBounds(BoundsBox);
+	}
+	else {
+		return FBoxSphereBounds(EForceInit::ForceInitToZero);
+	}
 }
 

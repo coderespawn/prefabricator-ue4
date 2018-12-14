@@ -105,6 +105,12 @@ public:
 	// This allows prefab actors to test against their own LastUpdateID and determine if a refresh is needed
 	UPROPERTY()
 	FGuid LastUpdateID;
+
+
+	/** Information for thumbnail rendering */
+	UPROPERTY(VisibleAnywhere, Instanced, AdvancedDisplay, Category = StaticMesh)
+	class UThumbnailInfo* ThumbnailInfo;
+
 };
 
 

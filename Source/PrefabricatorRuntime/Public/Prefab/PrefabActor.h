@@ -37,7 +37,7 @@ public:
 	bool IsPrefabOutdated();
 
 public:
-	// The ID of the prefab asset when the prefab was last created
+	// The last update ID of the prefab asset when this actor was refreshed from it
 	// This is used to test if the prefab has changed since we last recreated it
 	UPROPERTY()
 	FGuid LastUpdateID;

@@ -18,6 +18,9 @@
 #include "PropertyEditorModule.h"
 #include "UnrealEdGlobals.h"
 #include "MapChangeHook.h"
+#include "PrefabricatorAssetThumbnailRenderer.h"
+#include "ThumbnailRendering/ThumbnailManager.h"
+#include "PrefabricatorAsset.h"
 
 #define LOCTEXT_NAMESPACE "DungeonArchitectEditorModule" 
 
@@ -50,6 +53,8 @@ class FPrefabricatorEditorModule : public IPrefabricatorEditorModule
 		// Override the prefabricator service with the editor version, so the runtime module can access it
 		FPrefabricatorService::Set(MakeShareable(new FPrefabricatorEditorService));
 
+		// Setup the thumbnail renderer for the prefab asset
+		UThumbnailManager::Get().RegisterCustomRenderer(UPrefabricatorAsset::StaticClass(), UPrefabricatorAssetThumbnailRenderer::StaticClass());
 	}
 
 	virtual void ShutdownModule() override {

@@ -197,6 +197,8 @@ void FPrefabTools::SaveStateToPrefabAsset(APrefabActor* PrefabActor)
 		}
 	}
 
+	PrefabActor->PrefabComponent->UpdateBounds();
+
 	// Regenerate a new update id for the prefab asset
 	PrefabAsset->LastUpdateID = FGuid::NewGuid();
 	PrefabActor->LastUpdateID = PrefabAsset->LastUpdateID;
@@ -576,6 +578,8 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 	for (AActor* UnusedActor : ExistingActorPool) {
 		UnusedActor->Destroy();
 	}
+
+	PrefabActor->PrefabComponent->UpdateBounds();
 
 	PrefabActor->LastUpdateID = PrefabAsset->LastUpdateID;
 }
