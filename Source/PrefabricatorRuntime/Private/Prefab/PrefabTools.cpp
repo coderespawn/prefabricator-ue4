@@ -237,11 +237,17 @@ namespace {
 		return false;
 	}
 
-	bool HasDefaultValue(UProperty* Property, UObject* ObjToSerialize) {
-		FString PropertyData, TemplatePropertyData;
-		GetPropertyData(Property, ObjToSerialize, PropertyData);
-		GetPropertyData(Property, ObjToSerialize->GetArchetype(), TemplatePropertyData);
-		return (PropertyData == TemplatePropertyData);
+	bool HasDefaultValue(UObject* InContainer, const FString& InPropertyPath) {
+		if (!InContainer) return false;
+
+		UClass* ObjClass = InContainer->GetClass();
+		if (!ObjClass) return false;
+		UObject* DefaultObject = ObjClass->GetDefaultObject();
+
+		FString PropertyValue, DefaultValue;
+		PropertyPathHelpers::GetPropertyValueAsString(InContainer, InPropertyPath, PropertyValue);
+		PropertyPathHelpers::GetPropertyValueAsString(DefaultObject, InPropertyPath, DefaultValue);
+		return PropertyValue == DefaultValue;
 	}
 
 	bool ShouldSkipSerialization(const UProperty* Property, UObject* ObjToSerialize, APrefabActor* PrefabActor) {
@@ -267,7 +273,7 @@ namespace {
 			UProperty* Property = *PropertyIterator;
 			if (!Property) continue;
 
-			FString PropertyName = Property->GetPathName(InObjToDeserialize->GetClass());
+			FString PropertyName = Property->GetName();
 			UPrefabricatorPropertyBase** SearchResult = PropertiesByName.Find(PropertyName);
 			if (!SearchResult) continue;
 
@@ -276,6 +282,7 @@ namespace {
 			if (UPrefabricatorAtomProperty* PrefabAtomProperty = Cast<UPrefabricatorAtomProperty>(PrefabProperty)) {
 				PropertyPathHelpers::SetPropertyValueFromString(InObjToDeserialize, PrefabAtomProperty->PropertyName, PrefabAtomProperty->ExportedValue);
 			}
+			/*
 			else if (UPrefabricatorArrayProperty* PrefabArrayProperty = Cast<UPrefabricatorArrayProperty>(PrefabProperty)) {
 				if (UArrayProperty* ArrayProperty = Cast<UArrayProperty>(Property)) {
 					FScriptArrayHelper_InContainer ArrayHelper(ArrayProperty, InObjToDeserialize);
@@ -294,6 +301,7 @@ namespace {
 			else if (UPrefabricatorMapProperty* Map = Cast<UPrefabricatorMapProperty>(PrefabProperty)) {
 				// ...
 			}
+			*/
 		}
 	}
 
@@ -307,10 +315,17 @@ namespace {
 		for (TFieldIterator<UProperty> PropertyIterator(ObjToSerialize->GetClass()); PropertyIterator; ++PropertyIterator) {
 			UProperty* Property = *PropertyIterator;
 			if (!Property) continue;
+			if (Property->HasAnyPropertyFlags(CPF_Transient) || !Property->HasAnyPropertyFlags(CPF_Edit | CPF_Interp)) {
+				continue;
+			}
+
 			if (FPrefabTools::ShouldIgnorePropertySerialization(Property->GetFName())) {
 				continue;
 			}
-			if (Property->HasAnyPropertyFlags(CPF_Transient) || !Property->HasAnyPropertyFlags(CPF_Edit | CPF_Interp)) {
+
+			// Check if it has the default value
+			FString PropertyName = Property->GetName();
+			if (HasDefaultValue(ObjToSerialize, PropertyName)) {
 				continue;
 			}
 
@@ -324,66 +339,8 @@ namespace {
 			}
 
 			UPrefabricatorPropertyBase* PrefabProperty = nullptr;
-			FString PropertyName = Property->GetPathName(ObjToSerialize->GetClass());
+			FString PropertyName = Property->GetName();
 
-			if (const UArrayProperty* ArrayProperty = Cast<const UArrayProperty>(Property)) {
-				UPrefabricatorArrayProperty* ArrayPrefabProperty = NewObject<UPrefabricatorArrayProperty>(PrefabAsset);
-				ArrayPrefabProperty->PropertyName = PropertyName;
-
-				FScriptArrayHelper ArrayHelper(ArrayProperty, ArrayProperty->ContainerPtrToValuePtr<void>(ObjToSerialize));
-				UProperty* ArrayItemProperty = ArrayProperty->Inner;
-
-				for (int i = 0; i < ArrayHelper.Num(); i++) {
-					void* ArrayItemData = ArrayHelper.GetRawPtr(i);
-					FString ItemValue;
-					//PropertyPathHelpers::GetPropertyValueAsString(ArrayItemData, PropertyName, ItemValue);
-					ArrayItemProperty->ExportTextItem(ItemValue, ArrayItemData, nullptr, ObjToSerialize, PPF_None);
-					ArrayPrefabProperty->ExportedValues.Add(ItemValue);
-				}
-
-				PrefabProperty = ArrayPrefabProperty;
-			}
-			else if (const USetProperty* SetProperty = Cast<const USetProperty>(Property)) {
-				/*
-				UPrefabricatorSetProperty* SetPrefabProperty = NewObject<UPrefabricatorSetProperty>(PrefabAsset);
-				SetPrefabProperty->PropertyName = PropertyName;
-
-				FScriptSetHelper SetHelper(SetProperty, SetProperty->ContainerPtrToValuePtr<void>(ObjToSerialize));
-				UProperty* SetItemProperty = SetProperty->ElementProp;
-
-				for (int i = 0; i < SetHelper.Num(); i++) {
-					void* SetItemData = SetHelper.GetElementPtr(i);
-					FString ItemValue;
-					SetItemProperty->ExportTextItem(ItemValue, SetItemData, nullptr, ObjToSerialize, PPF_None);
-					SetPrefabProperty->ExportedValues.Add(ItemValue);
-				}
-
-				PrefabProperty = SetPrefabProperty;
-				*/
-			}
-			else if (const UMapProperty* MapProperty = Cast<const UMapProperty>(Property)) {
-				/*
-				UPrefabricatorMapProperty* MapPrefabProperty = NewObject<UPrefabricatorMapProperty>(PrefabAsset);
-				MapPrefabProperty->PropertyName = PropertyName;
-
-				FScriptMapHelper MapHelper(MapProperty, MapProperty->ContainerPtrToValuePtr<void>(ObjToSerialize));
-				UProperty* MapKeyProperty = MapProperty->KeyProp;
-				UProperty* MapValueProperty = MapProperty->ValueProp;
-				
-				for (int i = 0; i < MapHelper.Num(); i++) {
-					void* KeyData = MapHelper.GetKeyPtr(i);
-					void* ValueData = MapHelper.GetValuePtr(i);
-					
-					int32 EntryIdx = MapPrefabProperty->ExportedEntries.AddDefaulted();
-					FPrefabricatorMapPropertyEntry& Entry = MapPrefabProperty->ExportedEntries[EntryIdx];
-					MapKeyProperty->ExportTextItem(Entry.ExportedKey, KeyData, nullptr, ObjToSerialize, PPF_None);
-					MapValueProperty->ExportTextItem(Entry.ExportedValue, ValueData, nullptr, ObjToSerialize, PPF_None);
-				}
-
-				PrefabProperty = MapPrefabProperty;
-				*/
-			}
-			else 
 			{
 				if (ShouldSkipSerialization(Property, ObjToSerialize, PrefabActor)) {
 					continue;
@@ -499,7 +456,7 @@ void FPrefabTools::SaveStateToPrefabAsset(AActor* InActor, APrefabActor* PrefabA
 		SerializeFields(Component, PrefabActor, ComponentData.Properties);
 	}
 
-	//DumpSerializedData(OutActorData);
+	DumpSerializedData(OutActorData);
 }
 
 void FPrefabTools::LoadStateFromPrefabAsset(AActor* InActor, APrefabActor* PrefabActor, const FPrefabricatorActorData& InActorData, const FPrefabLoadSettings& InSettings)
