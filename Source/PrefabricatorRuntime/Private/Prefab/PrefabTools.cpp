@@ -179,6 +179,23 @@ void FPrefabTools::SaveStateToPrefabAsset(APrefabActor* PrefabActor)
 	TArray<AActor*> Children;
 	GetActorChildren(PrefabActor, Children);
 
+	// Make sure the children do not have duplicate asset user data template ids
+	{
+		TSet<FGuid> VisitedItemId;
+		for (AActor* ChildActor : Children) {
+			if (ChildActor && ChildActor->GetRootComponent()) {
+				UPrefabricatorAssetUserData* ChildUserData = ChildActor->GetRootComponent()->GetAssetUserData<UPrefabricatorAssetUserData>();
+				if (ChildUserData) {
+					if (VisitedItemId.Contains(ChildUserData->ItemID)) {
+						ChildUserData->ItemID = FGuid::NewGuid();
+						ChildUserData->Modify();
+					}
+					VisitedItemId.Add(ChildUserData->ItemID);
+				}
+			}
+		}
+	}
+
 	for (AActor* ChildActor : Children) {
 		if (ChildActor && ChildActor->GetRootComponent()) {
 			UPrefabricatorAssetUserData* ChildUserData = ChildActor->GetRootComponent()->GetAssetUserData<UPrefabricatorAssetUserData>();
@@ -203,6 +220,8 @@ void FPrefabTools::SaveStateToPrefabAsset(APrefabActor* PrefabActor)
 	// Regenerate a new update id for the prefab asset
 	PrefabAsset->LastUpdateID = FGuid::NewGuid();
 	PrefabActor->LastUpdateID = PrefabAsset->LastUpdateID;
+
+	PrefabAsset->Modify();
 }
 
 namespace {
@@ -247,8 +266,11 @@ namespace {
 		for (TFieldIterator<UProperty> PropertyIterator(InObjToDeserialize->GetClass()); PropertyIterator; ++PropertyIterator) {
 			UProperty* Property = *PropertyIterator;
 			if (!Property) continue;
-			UPrefabricatorPropertyBase** SearchResult = PropertiesByName.Find(Property->GetName());
+
+			FString PropertyName = Property->GetPathName(InObjToDeserialize->GetClass());
+			UPrefabricatorPropertyBase** SearchResult = PropertiesByName.Find(PropertyName);
 			if (!SearchResult) continue;
+
 			UPrefabricatorPropertyBase* PrefabProperty = *SearchResult;
 
 			if (UPrefabricatorAtomProperty* PrefabAtomProperty = Cast<UPrefabricatorAtomProperty>(PrefabProperty)) {

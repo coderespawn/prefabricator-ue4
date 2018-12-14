@@ -11,6 +11,7 @@ void FMapChangeHook::Initialize()
 {
 	FLevelEditorModule& LevelEditorModule = FModuleManager::GetModuleChecked<FLevelEditorModule>("LevelEditor");
 	CallbackHandle = LevelEditorModule.OnMapChanged().AddRaw(this, &FMapChangeHook::OnMapChanged);
+
 }
 
 void FMapChangeHook::Release()
