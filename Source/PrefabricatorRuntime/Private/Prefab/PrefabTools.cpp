@@ -304,13 +304,6 @@ namespace {
 		}
 
 		TSet<const UProperty*> PropertiesToSerialize;
-		/*
-		if (UActorComponent* ActorComponent = Cast<UActorComponent>(ObjToSerialize)) {
-			ActorComponent->GetUCSModifiedProperties(PropertiesToSerialize);
-		}
-		else {
-		}
-		*/
 		for (TFieldIterator<UProperty> PropertyIterator(ObjToSerialize->GetClass()); PropertyIterator; ++PropertyIterator) {
 			UProperty* Property = *PropertyIterator;
 			if (!Property) continue;
@@ -506,7 +499,7 @@ void FPrefabTools::SaveStateToPrefabAsset(AActor* InActor, APrefabActor* PrefabA
 		SerializeFields(Component, PrefabActor, ComponentData.Properties);
 	}
 
-	DumpSerializedData(OutActorData);
+	//DumpSerializedData(OutActorData);
 }
 
 void FPrefabTools::LoadStateFromPrefabAsset(AActor* InActor, APrefabActor* PrefabActor, const FPrefabricatorActorData& InActorData, const FPrefabLoadSettings& InSettings)
