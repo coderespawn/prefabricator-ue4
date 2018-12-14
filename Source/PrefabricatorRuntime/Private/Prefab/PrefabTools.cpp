@@ -250,11 +250,20 @@ namespace {
 			if (!SearchResult) continue;
 			UPrefabricatorPropertyBase* PrefabProperty = *SearchResult;
 
-			if (UPrefabricatorAtomProperty* Atom = Cast<UPrefabricatorAtomProperty>(PrefabProperty)) {
-				Property->ImportText(*Atom->ExportedValue, Property->ContainerPtrToValuePtr<void>(InObjToDeserialize), PPF_None, InObjToDeserialize);
+			if (UPrefabricatorAtomProperty* PrefabAtomProperty = Cast<UPrefabricatorAtomProperty>(PrefabProperty)) {
+				Property->ImportText(*PrefabAtomProperty->ExportedValue, Property->ContainerPtrToValuePtr<void>(InObjToDeserialize), PPF_None, InObjToDeserialize);
 			}
-			else if (UPrefabricatorArrayProperty* Array = Cast<UPrefabricatorArrayProperty>(PrefabProperty)) {
-				// ...
+			else if (UPrefabricatorArrayProperty* PrefabArrayProperty = Cast<UPrefabricatorArrayProperty>(PrefabProperty)) {
+				if (UArrayProperty* ArrayProperty = Cast<UArrayProperty>(Property)) {
+					FScriptArrayHelper_InContainer ArrayHelper(ArrayProperty, InObjToDeserialize);
+					ArrayHelper.EmptyValues();
+
+					for (int i = 0; i < PrefabArrayProperty->ExportedValues.Num(); i++) {
+						FString ExportedItemValue = PrefabArrayProperty->ExportedValues[i];
+						int32 PropertyItemIdx = ArrayHelper.AddValue();
+						ArrayProperty->Inner->ImportText(*ExportedItemValue, ArrayHelper.GetRawPtr(PropertyItemIdx), PPF_None, nullptr);
+					}
+				}
 			}
 			else if (UPrefabricatorSetProperty* Set = Cast<UPrefabricatorSetProperty>(PrefabProperty)) {
 				// ...
@@ -281,7 +290,6 @@ namespace {
 			UPrefabricatorPropertyBase* PrefabProperty = nullptr;
 			FString PropertyName = Property->GetName();
 
-			/*
 			if (UArrayProperty* ArrayProperty = Cast<UArrayProperty>(Property)) {
 				UPrefabricatorArrayProperty* ArrayPrefabProperty = NewObject<UPrefabricatorArrayProperty>(PrefabAsset);
 				ArrayPrefabProperty->PropertyName = PropertyName;
@@ -335,7 +343,6 @@ namespace {
 				PrefabProperty = MapPrefabProperty;
 			}
 			else 
-			*/
 			{
 				if (HasDefaultValue(Property, ObjToSerialize) || ShouldSkipSerialization(Property, ObjToSerialize, PrefabActor)) {
 					continue;
@@ -492,7 +499,7 @@ void FPrefabTools::GetActorChildren(AActor* InParent, TArray<AActor*>& OutChildr
 namespace {
 	void GetPrefabBoundsRecursive(AActor* InActor, FBox& OutBounds) {
 		if (!InActor->IsA<APrefabActor>()) {
-			OutBounds += InActor->GetComponentsBoundingBox(true);
+			OutBounds += InActor->GetComponentsBoundingBox(false);
 		}
 
 		TArray<AActor*> AttachedActors;
