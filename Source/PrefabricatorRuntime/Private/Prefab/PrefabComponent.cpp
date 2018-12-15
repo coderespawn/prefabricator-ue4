@@ -15,9 +15,8 @@ UPrefabComponent::UPrefabComponent(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
 
-	bVisualizeComponent = true;
-
 #if WITH_EDITORONLY_DATA
+	bVisualizeComponent = true;
 	if (!IsRunningCommandlet()) {
 		ConstructorHelpers::FObjectFinderOptional<UTexture2D> PrefabSpriteObject(TEXT("/Prefabricator/PrefabTool/Sprites/Icon_48"));
 		EditorSpriteTexture = PrefabSpriteObject.Get();

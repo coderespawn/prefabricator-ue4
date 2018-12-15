@@ -90,9 +90,13 @@ struct PREFABRICATORRUNTIME_API FPrefabricatorActorData {
 	TArray<FPrefabricatorComponentData> Components;
 };
 
+UCLASS(Blueprintable)
+class PREFABRICATORRUNTIME_API UPrefabricatorAssetInterface : public UObject {
+	GENERATED_BODY()
+};
 
 UCLASS(Blueprintable)
-class PREFABRICATORRUNTIME_API UPrefabricatorAsset : public UObject {
+class PREFABRICATORRUNTIME_API UPrefabricatorAsset : public UPrefabricatorAssetInterface {
 	GENERATED_UCLASS_BODY()
 public:
 	UPROPERTY()

@@ -11,6 +11,10 @@
 #include "DetailWidgetRow.h"
 #include "Widgets/SBoxPanel.h"
 #include "PrefabEditorTools.h"
+#include "ContentBrowserModule.h"
+#include "IContentBrowserSingleton.h"
+#include "ModuleManager.h"
+#include "PrefabricatorAsset.h"
 
 #define LOCTEXT_NAMESPACE "PrefabActorCustomization" 
 
@@ -75,6 +79,13 @@ FReply FPrefabActorCustomization::HandleSaveToAsset(IDetailLayoutBuilder* Detail
 			// Refresh all the existing prefabs in the level
 			FPrefabEditorTools::ReloadPrefabsInLevel(PrefabActor->GetWorld(), PrefabAsset);
 		}
+
+#if 0
+		// Focus the content browser to this asset
+		//IContentBrowserSingleton& ContentBrowserSingleton = FModuleManager::LoadModuleChecked<FContentBrowserModule>("ContentBrowser").Get();
+		//ContentBrowserSingleton.SyncBrowserToAssets(TArray<UObject*>({ PrefabAsset }));
+#endif
+
 	}
 	return FReply::Handled();
 }
