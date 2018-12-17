@@ -39,7 +39,7 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	UPrefabricatorAsset* GetPrefabAsset();
 
-	void RandomizeSeed();
+	void RandomizeSeed(bool bRecursive = true);
 
 public:
 	// The last update ID of the prefab asset when this actor was refreshed from it

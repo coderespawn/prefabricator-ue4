@@ -116,7 +116,17 @@ UPrefabricatorAsset* APrefabActor::GetPrefabAsset()
 	return PrefabComponent->PrefabAssetInterface ? PrefabComponent->PrefabAssetInterface->GetPrefabAsset(SelectionConfig) : nullptr;
 }
 
-void APrefabActor::RandomizeSeed()
+void APrefabActor::RandomizeSeed(bool bRecursive)
 {
 	Seed = FMath::Rand();
+
+	if (bRecursive) {
+		TArray<AActor*> AttachedChildren;
+		GetAttachedActors(AttachedChildren);
+		for (AActor* AttachedActor : AttachedChildren) {
+			if (APrefabActor* ChildPrefab = Cast<APrefabActor>(AttachedActor)) {
+				ChildPrefab->RandomizeSeed(bRecursive);
+			}
+		}
+	}
 }
