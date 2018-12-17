@@ -7,17 +7,20 @@
 
 #include "Engine/Selection.h"
 #include "GameFramework/Actor.h"
+#include "Editor/EditorEngine.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogPrefabricatorSelectionHook, Log, All);
 
 void FPrefabricatorSelectionHook::Initialize()
 {
-	CallbackHandle = USelection::SelectObjectEvent.AddRaw(this, &FPrefabricatorSelectionHook::OnObjectSelected);
+	CallbackHandle_SelectObject = USelection::SelectionChangedEvent.AddRaw(this, &FPrefabricatorSelectionHook::OnObjectSelected);
+	CallbackHandle_SelectNone = USelection::SelectNoneEvent.AddRaw(this, &FPrefabricatorSelectionHook::OnSelectNone);
 }
 
 void FPrefabricatorSelectionHook::Release()
 {
-	USelection::SelectObjectEvent.Remove(CallbackHandle);
+	USelection::SelectionChangedEvent.Remove(CallbackHandle_SelectObject);
+	USelection::SelectNoneEvent.Remove(CallbackHandle_SelectNone);
 }
 
 namespace {
@@ -58,7 +61,19 @@ void FPrefabricatorSelectionHook::OnObjectSelected(UObject* Object)
 {
 	if (bSelectionGuard) return;
 
-	AActor* RequestedActor = Cast<AActor>(Object);
+	USelection* ActorSelectionSet = GEditor->GetSelectedActors();
+	if (ActorSelectionSet->Num() > 1) {
+		return;
+	}
+	if (ActorSelectionSet->Num() == 0) {
+		LastSelectedObject = nullptr;
+		return;
+	}
+
+	TArray<AActor*> SelectedActorObjects;
+	ActorSelectionSet->GetSelectedObjects<AActor>(SelectedActorObjects);
+
+	AActor* RequestedActor = SelectedActorObjects[0];
 	if (!RequestedActor) {
 		return;
 	}
@@ -96,5 +111,10 @@ void FPrefabricatorSelectionHook::OnObjectSelected(UObject* Object)
 		LastSelectedObject = RequestedActor;
 	}
 
+}
+
+void FPrefabricatorSelectionHook::OnSelectNone()
+{
+	LastSelectedObject = nullptr;
 }
 

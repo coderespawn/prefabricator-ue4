@@ -11,9 +11,11 @@ public:
 
 private:
 	void OnObjectSelected(UObject* Object);
+	void OnSelectNone();
 
 private:
-	FDelegateHandle CallbackHandle;
+	FDelegateHandle CallbackHandle_SelectObject;
+	FDelegateHandle CallbackHandle_SelectNone;
 	TWeakObjectPtr<AActor> LastSelectedObject;
 	bool bSelectionGuard = false;
 };
