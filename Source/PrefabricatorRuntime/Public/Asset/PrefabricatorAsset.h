@@ -6,54 +6,14 @@
 #include "PrefabricatorAsset.generated.h"
 
 UCLASS()
-class PREFABRICATORRUNTIME_API UPrefabricatorPropertyBase : public UObject {
+class PREFABRICATORRUNTIME_API UPrefabricatorProperty : public UObject {
 	GENERATED_BODY()
 public:
 	UPROPERTY()
 	FString PropertyName;
-};
 
-UCLASS()
-class PREFABRICATORRUNTIME_API UPrefabricatorAtomProperty : public UPrefabricatorPropertyBase {
-	GENERATED_BODY()
-public:
 	UPROPERTY()
 	FString ExportedValue;
-};
-
-UCLASS()
-class PREFABRICATORRUNTIME_API UPrefabricatorArrayProperty : public UPrefabricatorPropertyBase {
-	GENERATED_BODY()
-public:
-	UPROPERTY()
-	TArray<FString> ExportedValues;
-};
-
-UCLASS()
-class PREFABRICATORRUNTIME_API UPrefabricatorSetProperty : public UPrefabricatorPropertyBase {
-	GENERATED_BODY()
-public:
-	UPROPERTY()
-	TArray<FString> ExportedValues;
-};
-
-USTRUCT()
-struct PREFABRICATORRUNTIME_API FPrefabricatorMapPropertyEntry {
-	GENERATED_USTRUCT_BODY()
-
-	USTRUCT()
-	FString ExportedKey;
-
-	USTRUCT()
-	FString ExportedValue;
-};
-
-UCLASS()
-class PREFABRICATORRUNTIME_API UPrefabricatorMapProperty : public UPrefabricatorPropertyBase {
-	GENERATED_BODY()
-public:
-	UPROPERTY()
-	TArray<FPrefabricatorMapPropertyEntry> ExportedEntries;
 };
 
 USTRUCT()
@@ -67,7 +27,7 @@ struct PREFABRICATORRUNTIME_API FPrefabricatorComponentData {
 	FString ComponentName;
 
 	UPROPERTY()
-	TArray<UPrefabricatorPropertyBase*> Properties;
+	TArray<UPrefabricatorProperty*> Properties;
 };
 
 USTRUCT()
@@ -84,7 +44,7 @@ struct PREFABRICATORRUNTIME_API FPrefabricatorActorData {
 	FString ClassPath;
 
 	UPROPERTY()
-	TArray<UPrefabricatorPropertyBase*> Properties;
+	TArray<UPrefabricatorProperty*> Properties;
 
 	UPROPERTY()
 	TArray<FPrefabricatorComponentData> Components;

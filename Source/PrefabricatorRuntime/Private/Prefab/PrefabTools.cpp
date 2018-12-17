@@ -263,9 +263,9 @@ namespace {
 		return false;
 	}
 
-	void DeserializeFields(UObject* InObjToDeserialize, const TArray<UPrefabricatorPropertyBase*>& InProperties) {
-		TMap<FString, UPrefabricatorPropertyBase*> PropertiesByName;
-		for (UPrefabricatorPropertyBase* Property : InProperties) {
+	void DeserializeFields(UObject* InObjToDeserialize, const TArray<UPrefabricatorProperty*>& InProperties) {
+		TMap<FString, UPrefabricatorProperty*> PropertiesByName;
+		for (UPrefabricatorProperty* Property : InProperties) {
 			PropertiesByName.Add(Property->PropertyName, Property);
 		}
 
@@ -274,38 +274,17 @@ namespace {
 			if (!Property) continue;
 
 			FString PropertyName = Property->GetName();
-			UPrefabricatorPropertyBase** SearchResult = PropertiesByName.Find(PropertyName);
+			UPrefabricatorProperty** SearchResult = PropertiesByName.Find(PropertyName);
 			if (!SearchResult) continue;
 
-			UPrefabricatorPropertyBase* PrefabProperty = *SearchResult;
-
-			if (UPrefabricatorAtomProperty* PrefabAtomProperty = Cast<UPrefabricatorAtomProperty>(PrefabProperty)) {
-				PropertyPathHelpers::SetPropertyValueFromString(InObjToDeserialize, PrefabAtomProperty->PropertyName, PrefabAtomProperty->ExportedValue);
+			UPrefabricatorProperty* PrefabProperty = *SearchResult;
+			if (PrefabProperty) {
+				PropertyPathHelpers::SetPropertyValueFromString(InObjToDeserialize, PrefabProperty->PropertyName, PrefabProperty->ExportedValue);
 			}
-			/*
-			else if (UPrefabricatorArrayProperty* PrefabArrayProperty = Cast<UPrefabricatorArrayProperty>(PrefabProperty)) {
-				if (UArrayProperty* ArrayProperty = Cast<UArrayProperty>(Property)) {
-					FScriptArrayHelper_InContainer ArrayHelper(ArrayProperty, InObjToDeserialize);
-					ArrayHelper.EmptyValues();
-
-					for (int i = 0; i < PrefabArrayProperty->ExportedValues.Num(); i++) {
-						FString ExportedItemValue = PrefabArrayProperty->ExportedValues[i];
-						int32 PropertyItemIdx = ArrayHelper.AddValue();
-						ArrayProperty->Inner->ImportText(*ExportedItemValue, ArrayHelper.GetRawPtr(PropertyItemIdx), PPF_None, nullptr);
-					}
-				}
-			}
-			else if (UPrefabricatorSetProperty* Set = Cast<UPrefabricatorSetProperty>(PrefabProperty)) {
-				// ...
-			}
-			else if (UPrefabricatorMapProperty* Map = Cast<UPrefabricatorMapProperty>(PrefabProperty)) {
-				// ...
-			}
-			*/
 		}
 	}
 
-	void SerializeFields(UObject* ObjToSerialize, APrefabActor* PrefabActor, TArray<UPrefabricatorPropertyBase*>& OutProperties) {
+	void SerializeFields(UObject* ObjToSerialize, APrefabActor* PrefabActor, TArray<UPrefabricatorProperty*>& OutProperties) {
 		UPrefabricatorAsset* PrefabAsset = PrefabActor->PrefabComponent->PrefabAsset;
 		if (!PrefabAsset) {
 			return;
@@ -338,24 +317,17 @@ namespace {
 				continue;
 			}
 
-			UPrefabricatorPropertyBase* PrefabProperty = nullptr;
+			UPrefabricatorProperty* PrefabProperty = nullptr;
 			FString PropertyName = Property->GetName();
 
-			{
-				if (ShouldSkipSerialization(Property, ObjToSerialize, PrefabActor)) {
-					continue;
-				}
-
-				UPrefabricatorAtomProperty* AtomPrefabProperty = NewObject<UPrefabricatorAtomProperty>(PrefabAsset);
-				AtomPrefabProperty->PropertyName = PropertyName;
-				PropertyPathHelpers::GetPropertyValueAsString(ObjToSerialize, PropertyName, AtomPrefabProperty->ExportedValue);
-				
-				PrefabProperty = AtomPrefabProperty;
+			if (ShouldSkipSerialization(Property, ObjToSerialize, PrefabActor)) {
+				continue;
 			}
 
-			if (PrefabProperty) {
-				OutProperties.Add(PrefabProperty);
-			}
+			PrefabProperty = NewObject<UPrefabricatorProperty>(PrefabAsset);
+			PrefabProperty->PropertyName = PropertyName;
+			PropertyPathHelpers::GetPropertyValueAsString(ObjToSerialize, PropertyName, PrefabProperty->ExportedValue);
+			OutProperties.Add(PrefabProperty);
 		}
 	}
 
@@ -375,29 +347,9 @@ namespace {
 		}
 	}
 
-	void DumpSerializedProperties(const TArray<UPrefabricatorPropertyBase*>& InProperties) {
-		for (UPrefabricatorPropertyBase* Property : InProperties) {
-			if (UPrefabricatorAtomProperty* Atom = Cast<UPrefabricatorAtomProperty>(Property)) {
-				UE_LOG(LogPrefabTools, Log, TEXT("%s: %s"), *Atom->PropertyName, *Atom->ExportedValue);
-			}
-			else if (UPrefabricatorArrayProperty* Array = Cast<UPrefabricatorArrayProperty>(Property)) {
-				UE_LOG(LogPrefabTools, Log, TEXT("%s: Array[%d]"), *Array->PropertyName, Array->ExportedValues.Num());
-				for (int i = 0; i < Array->ExportedValues.Num(); i++) {
-					UE_LOG(LogPrefabTools, Log, TEXT("\t%s"), *Array->ExportedValues[i]);
-				}
-			}
-			else if (UPrefabricatorSetProperty* Set = Cast<UPrefabricatorSetProperty>(Property)) {
-				UE_LOG(LogPrefabTools, Log, TEXT("%s: Set[%d]"), *Set->PropertyName, Set->ExportedValues.Num());
-				for (int i = 0; i < Set->ExportedValues.Num(); i++) {
-					UE_LOG(LogPrefabTools, Log, TEXT("\t%s"), *Set->ExportedValues[i]);
-				}
-			}
-			else if (UPrefabricatorMapProperty* Map = Cast<UPrefabricatorMapProperty>(Property)) {
-				UE_LOG(LogPrefabTools, Log, TEXT("%s: Map[%d]"), *Map->PropertyName, Map->ExportedEntries.Num());
-				for (int i = 0; i < Map->ExportedEntries.Num(); i++) {
-					UE_LOG(LogPrefabTools, Log, TEXT("\t%s <=> %s"), *Map->ExportedEntries[i].ExportedKey, *Map->ExportedEntries[i].ExportedValue);
-				}
-			}
+	void DumpSerializedProperties(const TArray<UPrefabricatorProperty*>& InProperties) {
+		for (UPrefabricatorProperty* Property : InProperties) {
+			UE_LOG(LogPrefabTools, Log, TEXT("%s: %s"), *Property->PropertyName, *Property->ExportedValue);
 		}
 
 	}
