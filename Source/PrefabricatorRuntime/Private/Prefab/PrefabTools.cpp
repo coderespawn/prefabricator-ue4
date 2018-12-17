@@ -266,6 +266,7 @@ namespace {
 	void DeserializeFields(UObject* InObjToDeserialize, const TArray<UPrefabricatorProperty*>& InProperties) {
 		TMap<FString, UPrefabricatorProperty*> PropertiesByName;
 		for (UPrefabricatorProperty* Property : InProperties) {
+			if (!Property) continue;
 			PropertiesByName.Add(Property->PropertyName, Property);
 		}
 
