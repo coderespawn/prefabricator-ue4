@@ -9,6 +9,7 @@
 #include "UObject/ConstructorHelpers.h"
 #include "PrefabTools.h"
 #include "PrefabricatorAsset.h"
+#include "PrefabricatorService.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogPrefabComponent, Log, All);
 
@@ -52,3 +53,29 @@ FBoxSphereBounds UPrefabComponent::CalcBounds(const FTransform& LocalToWorld) co
 		return FBoxSphereBounds(EForceInit::ForceInitToZero);
 	}
 }
+
+
+#if WITH_EDITOR
+void UPrefabComponent::PostEditChangeProperty(struct FPropertyChangedEvent& e)
+{
+	if (e.Property) {
+		FName PropertyName = e.Property->GetFName();
+		if (PropertyName == GET_MEMBER_NAME_CHECKED(UPrefabComponent, PrefabAssetInterface)) {
+			APrefabActor* PrefabActor = Cast<APrefabActor>(GetOwner());
+			if (PrefabActor) {
+				if (PrefabActor->IsPrefabOutdated()) {
+					PrefabActor->LoadPrefab();
+				}
+
+				// Update the property view so the new UI takes effect
+				TSharedPtr<IPrefabricatorService> Service = FPrefabricatorService::Get();
+				if (Service.IsValid()) {
+					Service->SetDetailsViewObject(PrefabActor);
+				}
+			}
+		}
+	}
+
+}
+#endif // WITH_EDITOR
+

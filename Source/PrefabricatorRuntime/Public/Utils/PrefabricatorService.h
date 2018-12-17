@@ -34,6 +34,7 @@ public:
 	virtual int GetNumSelectedActors() = 0;
 	virtual UPrefabricatorAsset* CreatePrefabAsset() = 0;
 	virtual FVector SnapToGrid(const FVector& InLocation) { return InLocation; }
+	virtual void SetDetailsViewObject(UObject* InObject) {}
 };
 
 class PREFABRICATORRUNTIME_API FPrefabricatorRuntimeService : public IPrefabricatorService {

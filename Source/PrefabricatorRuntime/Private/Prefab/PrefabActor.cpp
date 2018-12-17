@@ -71,14 +71,6 @@ void APrefabActor::PostEditChangeProperty(struct FPropertyChangedEvent& e)
 {
 	Super::PostEditChangeProperty(e);
 
-	if (e.Property) {
-		FName PropertyName = e.Property->GetFName();
-		if (PropertyName == GET_MEMBER_NAME_CHECKED(APrefabActor, PrefabComponent)) {
-			if (IsPrefabOutdated()) {
-				LoadPrefab();
-			}
-		}
-	}
 
 }
 
@@ -122,4 +114,9 @@ UPrefabricatorAsset* APrefabActor::GetPrefabAsset()
 	FPrefabAssetSelectionConfig SelectionConfig;
 	SelectionConfig.Seed = Seed;
 	return PrefabComponent->PrefabAssetInterface ? PrefabComponent->PrefabAssetInterface->GetPrefabAsset(SelectionConfig) : nullptr;
+}
+
+void APrefabActor::RandomizeSeed()
+{
+	Seed = FMath::Rand();
 }

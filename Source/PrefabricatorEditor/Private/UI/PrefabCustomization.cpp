@@ -33,33 +33,76 @@ namespace {
 
 void FPrefabActorCustomization::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 {
-	IDetailCategoryBuilder& Category = DetailBuilder.EditCategory("Prefabricator");
 
-	Category.AddCustomRow(LOCTEXT("PrefabCommand_Filter", "save load prefab asset"))
-	.WholeRowContent()
-	[
-		SNew(SHorizontalBox)
-		+SHorizontalBox::Slot()
-		.VAlign(VAlign_Center)
-		.FillWidth(1.0f)
-		.Padding(4.0f)
-		[
-			SNew(SButton)
-			.Text(LOCTEXT("PrefabCommand_SaveToAsset", "Save Prefab to Asset"))
-			.OnClicked(FOnClicked::CreateStatic(&FPrefabActorCustomization::HandleSaveToAsset, &DetailBuilder))
-		]
+	APrefabActor* PrefabActor = GetDetailObject<APrefabActor>(&DetailBuilder);
+	UPrefabricatorAssetInterface* Asset = PrefabActor ? PrefabActor->PrefabComponent->PrefabAssetInterface : nullptr;
+
+	if (Asset) {
+		if (Asset->IsA<UPrefabricatorAsset>()) {
+			IDetailCategoryBuilder& Category = DetailBuilder.EditCategory("Prefab Asset Actions", FText::GetEmpty(), ECategoryPriority::Important);
+			Category.AddExternalObjectProperty({ PrefabActor->PrefabComponent }, GET_MEMBER_NAME_CHECKED(UPrefabComponent, PrefabAssetInterface));
+
+			Category.AddCustomRow(LOCTEXT("PrefabCommand_Filter", "save load prefab asset"))
+			.WholeRowContent()
+			[
+				SNew(SHorizontalBox)
+				+SHorizontalBox::Slot()
+				.VAlign(VAlign_Center)
+				.FillWidth(1.0f)
+				//.Padding(4.0f)
+				[
+					SNew(SButton)
+					.Text(LOCTEXT("PrefabCommand_SaveToAsset", "Save Prefab to Asset"))
+					.OnClicked(FOnClicked::CreateStatic(&FPrefabActorCustomization::HandleSaveToAsset, &DetailBuilder))
+				]
 		
-		+SHorizontalBox::Slot()
-		.VAlign(VAlign_Center)
-		.FillWidth(1.0f)
-		.Padding(4.0f)
-		[
-			SNew(SButton)
-			.Text(LOCTEXT("PrefabCommand_LoadFromAsset", "Load Prefab to Asset"))
-			.OnClicked(FOnClicked::CreateStatic(&FPrefabActorCustomization::HandleLoadFromAsset, &DetailBuilder))
-		]
+				+SHorizontalBox::Slot()
+				.VAlign(VAlign_Center)
+				.FillWidth(1.0f)
+				//.Padding(4.0f)
+				[
+					SNew(SButton)
+					.Text(LOCTEXT("PrefabCommand_LoadFromAsset", "Load Prefab from Asset"))
+					.OnClicked(FOnClicked::CreateStatic(&FPrefabActorCustomization::HandleLoadFromAsset, &DetailBuilder))
+				]
 
-	];
+			];
+
+			Category.AddCustomRow(LOCTEXT("PrefabCommandRandomize_Filter", "randomize prefab collection asset"))
+				.WholeRowContent()
+				[
+					SNew(SButton)
+					.Text(LOCTEXT("PrefabCommand_RandomizeCollection", "Randomize"))
+					.OnClicked(FOnClicked::CreateStatic(&FPrefabActorCustomization::RandomizePrefabCollection, &DetailBuilder))
+				];
+
+			DetailBuilder.HideProperty(GET_MEMBER_NAME_CHECKED(APrefabActor, Seed));
+		}
+		else if (Asset->IsA<UPrefabricatorAssetCollection>()) {
+			IDetailCategoryBuilder& Category = DetailBuilder.EditCategory("Prefab Collection Actions", FText::GetEmpty(), ECategoryPriority::Important);
+			Category.AddExternalObjectProperty({ PrefabActor->PrefabComponent }, GET_MEMBER_NAME_CHECKED(UPrefabComponent, PrefabAssetInterface));
+
+			Category.AddProperty(GET_MEMBER_NAME_CHECKED(APrefabActor, Seed));
+			
+			Category.AddCustomRow(LOCTEXT("PrefabCollectionCommandRandomize_Filter", "randomize prefab collection asset"))
+			.WholeRowContent()
+			[
+				SNew(SButton)
+				.Text(LOCTEXT("PrefabCollectionCommand_RandomizeCollection", "Randomize"))
+				.OnClicked(FOnClicked::CreateStatic(&FPrefabActorCustomization::RandomizePrefabCollection, &DetailBuilder))
+			];
+
+			Category.AddCustomRow(LOCTEXT("PrefabCollectionCommand_Filter", "load prefab collection asset"))
+			.WholeRowContent()
+			[
+				SNew(SButton)
+				.Text(LOCTEXT("PrefabCollectionCommand_RecreateCollection", "Reload Prefab"))
+				.OnClicked(FOnClicked::CreateStatic(&FPrefabActorCustomization::HandleLoadFromAsset, &DetailBuilder))
+			];
+
+		}
+
+	}
 }
 
 TSharedRef<IDetailCustomization> FPrefabActorCustomization::MakeInstance()
@@ -71,7 +114,7 @@ FReply FPrefabActorCustomization::HandleSaveToAsset(IDetailLayoutBuilder* Detail
 {
 	APrefabActor* PrefabActor = GetDetailObject<APrefabActor>(DetailBuilder);
 	if (PrefabActor) {
-		FPrefabTools::SaveStateToPrefabAsset(PrefabActor);
+		PrefabActor->SavePrefab();
 
 		UPrefabricatorAsset* PrefabAsset = Cast<UPrefabricatorAsset>(PrefabActor->PrefabComponent->PrefabAssetInterface);
 		if (PrefabAsset) {
@@ -86,7 +129,17 @@ FReply FPrefabActorCustomization::HandleLoadFromAsset(IDetailLayoutBuilder* Deta
 {
 	APrefabActor* PrefabActor = GetDetailObject<APrefabActor>(DetailBuilder);
 	if (PrefabActor) {
-		FPrefabTools::LoadStateFromPrefabAsset(PrefabActor);
+		PrefabActor->LoadPrefab();
+	}
+	return FReply::Handled();
+}
+
+FReply FPrefabActorCustomization::RandomizePrefabCollection(IDetailLayoutBuilder* DetailBuilder)
+{
+	APrefabActor* PrefabActor = GetDetailObject<APrefabActor>(DetailBuilder);
+	if (PrefabActor) {
+		PrefabActor->RandomizeSeed();
+		PrefabActor->LoadPrefab();
 	}
 	return FReply::Handled();
 }

@@ -17,6 +17,7 @@
 #include "LevelEditor.h"
 #include "LevelEditorViewport.h"
 #include "ThumbnailRendering/SceneThumbnailInfo.h"
+#include "PropertyEditorModule.h"
 
 void FPrefabricatorEditorService::ParentActors(AActor* ParentActor, AActor* ChildActor)
 {
@@ -88,5 +89,13 @@ FVector FPrefabricatorEditorService::SnapToGrid(const FVector& InLocation)
 	else {
 		return InLocation;
 	}
+}
+
+void FPrefabricatorEditorService::SetDetailsViewObject(UObject* InObject)
+{
+	FPropertyEditorModule& PropertyEditorModule = FModuleManager::GetModuleChecked<FPropertyEditorModule>("PropertyEditor");
+	TArray<UObject*> ObjectList;
+	ObjectList.Add(InObject);
+	PropertyEditorModule.UpdatePropertyViews(ObjectList);
 }
 

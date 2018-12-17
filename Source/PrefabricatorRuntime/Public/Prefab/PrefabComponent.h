@@ -19,6 +19,10 @@ public:
 	virtual void OnRegister() override;
 	virtual FBoxSphereBounds CalcBounds(const FTransform& LocalToWorld) const;
 
+#if WITH_EDITOR
+	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& e) override;
+#endif // WITH_EDITOR
+	
 private:
 	UPROPERTY()
 	UTexture2D* EditorSpriteTexture;

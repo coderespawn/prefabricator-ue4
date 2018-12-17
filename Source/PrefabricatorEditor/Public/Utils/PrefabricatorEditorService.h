@@ -12,5 +12,6 @@ public:
 	virtual int GetNumSelectedActors() override;
 	virtual UPrefabricatorAsset* CreatePrefabAsset() override;
 	virtual FVector SnapToGrid(const FVector& InLocation) override;
+	virtual void SetDetailsViewObject(UObject* InObject) override;
 };
 

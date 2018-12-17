@@ -11,7 +11,7 @@ UCLASS(Blueprintable, ConversionRoot, ComponentWrapperClass)
 class PREFABRICATORRUNTIME_API APrefabActor : public AActor {
 	GENERATED_UCLASS_BODY()
 public:
-	UPROPERTY(Category = Prefabricator, VisibleAnywhere, BlueprintReadOnly, meta = (ExposeFunctionCategories = "Prefabricator", AllowPrivateAccess = "true"))
+	UPROPERTY(BlueprintReadOnly, meta = (ExposeFunctionCategories = "Prefabricator", AllowPrivateAccess = "true"))
 	class UPrefabComponent* PrefabComponent;
 
 public:
@@ -38,6 +38,8 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	UPrefabricatorAsset* GetPrefabAsset();
+
+	void RandomizeSeed();
 
 public:
 	// The last update ID of the prefab asset when this actor was refreshed from it
