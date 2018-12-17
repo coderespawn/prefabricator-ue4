@@ -138,7 +138,9 @@ FReply FPrefabActorCustomization::RandomizePrefabCollection(IDetailLayoutBuilder
 {
 	APrefabActor* PrefabActor = GetDetailObject<APrefabActor>(DetailBuilder);
 	if (PrefabActor) {
-		PrefabActor->RandomizeSeed();
+		FRandomStream Random;
+		Random.Initialize(FMath::Rand());
+		PrefabActor->RandomizeSeed(Random);
 		PrefabActor->LoadPrefab();
 	}
 	return FReply::Handled();

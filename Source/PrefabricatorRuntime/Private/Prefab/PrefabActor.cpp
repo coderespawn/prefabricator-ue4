@@ -10,6 +10,9 @@
 #include "PrefabricatorAssetUserData.h"
 #include "PrefabricatorAsset.h"
 
+DEFINE_LOG_CATEGORY_STATIC(LogPrefabActor, Log, All);
+
+
 APrefabActor::APrefabActor(const FObjectInitializer& ObjectInitializer) 
 	: Super(ObjectInitializer)
 {
@@ -118,16 +121,16 @@ UPrefabricatorAsset* APrefabActor::GetPrefabAsset()
 	return PrefabComponent->PrefabAssetInterface ? PrefabComponent->PrefabAssetInterface->GetPrefabAsset(SelectionConfig) : nullptr;
 }
 
-void APrefabActor::RandomizeSeed(bool bRecursive)
+void APrefabActor::RandomizeSeed(const FRandomStream& InRandom, bool bRecursive)
 {
-	Seed = FMath::Rand();
-
+	Seed = InRandom.RandRange(0, 10000000);
+	UE_LOG(LogPrefabActor, Log, TEXT("Randomizing prefab actor with seed: %d"), Seed);
 	if (bRecursive) {
 		TArray<AActor*> AttachedChildren;
 		GetAttachedActors(AttachedChildren);
 		for (AActor* AttachedActor : AttachedChildren) {
 			if (APrefabActor* ChildPrefab = Cast<APrefabActor>(AttachedActor)) {
-				ChildPrefab->RandomizeSeed(bRecursive);
+				ChildPrefab->RandomizeSeed(InRandom, bRecursive);
 			}
 		}
 	}

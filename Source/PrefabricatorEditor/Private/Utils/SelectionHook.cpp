@@ -13,13 +13,13 @@ DEFINE_LOG_CATEGORY_STATIC(LogPrefabricatorSelectionHook, Log, All);
 
 void FPrefabricatorSelectionHook::Initialize()
 {
-	CallbackHandle_SelectObject = USelection::SelectionChangedEvent.AddRaw(this, &FPrefabricatorSelectionHook::OnObjectSelected);
+	CallbackHandle_SelectObject = USelection::SelectObjectEvent.AddRaw(this, &FPrefabricatorSelectionHook::OnObjectSelected);
 	CallbackHandle_SelectNone = USelection::SelectNoneEvent.AddRaw(this, &FPrefabricatorSelectionHook::OnSelectNone);
 }
 
 void FPrefabricatorSelectionHook::Release()
 {
-	USelection::SelectionChangedEvent.Remove(CallbackHandle_SelectObject);
+	USelection::SelectObjectEvent.Remove(CallbackHandle_SelectObject);
 	USelection::SelectNoneEvent.Remove(CallbackHandle_SelectNone);
 }
 

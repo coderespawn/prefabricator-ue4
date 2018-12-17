@@ -506,7 +506,9 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 		}
 
 		if (!ChildActor) {
-			ChildActor = World->SpawnActor<AActor>(ActorClass);
+			FActorSpawnParameters SpawnParams;
+			SpawnParams.OverrideLevel = PrefabActor->GetLevel();
+			ChildActor = World->SpawnActor<AActor>(ActorClass, SpawnParams);
 		}
 
 		// Load the saved data into the actor
@@ -517,7 +519,12 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 
 		// Set the transform
 		FTransform WorldTransform = ActorItemData.RelativeTransform * PrefabActor->GetTransform();
-		ChildActor->SetActorTransform(WorldTransform);
+		if (ChildActor->GetRootComponent()) {
+			EComponentMobility::Type OldChildMobility = ChildActor->GetRootComponent() ? ChildActor->GetRootComponent()->Mobility : EComponentMobility::Movable;
+			ChildActor->GetRootComponent()->SetMobility(EComponentMobility::Movable);
+			ChildActor->SetActorTransform(WorldTransform);
+			ChildActor->GetRootComponent()->SetMobility(OldChildMobility);
+		}
 
 		if (APrefabActor* ChildPrefab = Cast<APrefabActor>(ChildActor)) {
 			FPrefabTools::LoadStateFromPrefabAsset(ChildPrefab, InSettings);

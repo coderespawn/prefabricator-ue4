@@ -24,7 +24,9 @@ public:
 #endif // WITH_EDITOR
 	
 private:
+#if WITH_EDITORONLY_DATA
 	UPROPERTY()
 	UTexture2D* EditorSpriteTexture;
+#endif // WITH_EDITORONLY_DATA
 };
 

@@ -6,7 +6,6 @@
 #include "GameFramework/Actor.h"
 #include "PrefabActor.generated.h"
 
-/** A Dungeon Theme asset lets you design the look and feel of you dungeon with an intuitive graph based approach */
 UCLASS(Blueprintable, ConversionRoot, ComponentWrapperClass)
 class PREFABRICATORRUNTIME_API APrefabActor : public AActor {
 	GENERATED_UCLASS_BODY()
@@ -39,7 +38,7 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	UPrefabricatorAsset* GetPrefabAsset();
 
-	void RandomizeSeed(bool bRecursive = true);
+	void RandomizeSeed(const FRandomStream& InRandom, bool bRecursive = true);
 
 public:
 	// The last update ID of the prefab asset when this actor was refreshed from it
