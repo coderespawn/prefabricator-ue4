@@ -67,22 +67,9 @@ UPrefabricatorAsset* FPrefabricatorEditorService::CreatePrefabAsset()
 	AssetTools.CreateUniqueAssetName(*PrefabPath, TEXT(""), PackageName, AssetName);
 	UPrefabricatorAsset* PrefabAsset = Cast<UPrefabricatorAsset>(AssetTools.CreateAsset(AssetName, PrefabFolder, UPrefabricatorAsset::StaticClass(), nullptr));
 
-	UpdateThumbnail(PrefabAsset);
-
 	ContentBrowserSingleton.SyncBrowserToAssets(TArray<UObject*>({ PrefabAsset }));
 
 	return PrefabAsset;
-}
-
-void FPrefabricatorEditorService::UpdateThumbnail(UPrefabricatorAsset* PrefabAsset)
-{
-	/*
-	if (GCurrentLevelEditingViewportClient) {
-		IContentBrowserSingleton& ContentBrowserSingleton = FModuleManager::LoadModuleChecked<FContentBrowserModule>("ContentBrowser").Get();
-		TArray<FAssetData> AssetList({ FAssetData(PrefabAsset) });
-		ContentBrowserSingleton.CaptureThumbnailFromViewport(GCurrentLevelEditingViewportClient->Viewport, AssetList);
-	}
-	*/
 }
 
 FVector FPrefabricatorEditorService::SnapToGrid(const FVector& InLocation)

@@ -11,7 +11,6 @@ public:
 	virtual void GetSelectedActors(TArray<AActor*>& OutActors) override;
 	virtual int GetNumSelectedActors() override;
 	virtual UPrefabricatorAsset* CreatePrefabAsset() override;
-	virtual void UpdateThumbnail(UPrefabricatorAsset* PrefabAsset) override;
 	virtual FVector SnapToGrid(const FVector& InLocation) override;
 };
 

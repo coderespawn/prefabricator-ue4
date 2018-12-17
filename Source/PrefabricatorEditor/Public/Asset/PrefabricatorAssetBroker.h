@@ -7,20 +7,14 @@
 
 #include "ComponentAssetBroker.h"
 
-class FPrefabricatorAssetBroker : public IComponentAssetBroker
-{
+/** Asset broker for the prefab asset */
+class FPrefabricatorAssetBrokerBase : public IComponentAssetBroker {
 public:
-
-	virtual UClass* GetSupportedAssetClass() override
-	{
-		return UPrefabricatorAsset::StaticClass();
-	}
-
 	virtual bool AssignAssetToComponent(UActorComponent* InComponent, UObject* InAsset) override {
 		if (UPrefabComponent* PrefabComponent = Cast<UPrefabComponent>(InComponent)) {
 			UPrefabricatorAsset* PrefabAsset = Cast<UPrefabricatorAsset>(InAsset);
 			if (PrefabAsset && PrefabAsset) {
-				PrefabComponent->PrefabAsset = PrefabAsset;
+				PrefabComponent->PrefabAssetInterface = PrefabAsset;
 				return true;
 			}
 		}
@@ -32,10 +26,16 @@ public:
 	{
 		if (UPrefabComponent* PrefabComponent = Cast<UPrefabComponent>(InComponent))
 		{
-			return PrefabComponent->PrefabAsset;
+			return PrefabComponent->PrefabAssetInterface;
 		}
 		return nullptr;
 	}
+};
 
+class FPrefabricatorAssetBroker : public FPrefabricatorAssetBrokerBase {
+public:
+	virtual UClass* GetSupportedAssetClass() override {
+		return UPrefabricatorAsset::StaticClass();
+	}
 };
 

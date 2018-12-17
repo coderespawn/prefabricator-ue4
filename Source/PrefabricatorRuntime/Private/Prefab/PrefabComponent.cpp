@@ -8,6 +8,7 @@
 #include "Engine/Texture2D.h"
 #include "UObject/ConstructorHelpers.h"
 #include "PrefabTools.h"
+#include "PrefabricatorAsset.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogPrefabComponent, Log, All);
 
@@ -50,5 +51,10 @@ FBoxSphereBounds UPrefabComponent::CalcBounds(const FTransform& LocalToWorld) co
 	else {
 		return FBoxSphereBounds(EForceInit::ForceInitToZero);
 	}
+}
+
+UPrefabricatorAsset* UPrefabComponent::GetPrefabAsset()
+{
+	return PrefabAssetInterface ? PrefabAssetInterface->GetPrefabAsset() : nullptr;
 }
 

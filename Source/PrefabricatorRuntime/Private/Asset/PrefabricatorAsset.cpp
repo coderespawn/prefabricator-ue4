@@ -10,6 +10,10 @@ UPrefabricatorAsset::UPrefabricatorAsset(const FObjectInitializer& ObjectInitial
 
 }
 
+UPrefabricatorAsset* UPrefabricatorAsset::GetPrefabAsset()
+{
+	return this;
+}
 
 FVector FPrefabricatorAssetUtils::FindPivot(const TArray<AActor*>& InActors)
 {

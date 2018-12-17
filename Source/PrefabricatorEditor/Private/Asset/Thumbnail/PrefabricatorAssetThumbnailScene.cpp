@@ -32,7 +32,7 @@ FPrefabricatorAssetThumbnailScene::FPrefabricatorAssetThumbnailScene()
 
 void FPrefabricatorAssetThumbnailScene::SetPrefabAsset(class UPrefabricatorAsset* PrefabAsset)
 {
-	PreviewActor->PrefabComponent->PrefabAsset = PrefabAsset;
+	PreviewActor->PrefabComponent->PrefabAssetInterface = PrefabAsset;
 	if (PrefabAsset) {
 		if (PreviewActor->IsPrefabOutdated()) {
 			PreviewActor->LoadPrefab();
@@ -67,22 +67,26 @@ void FPrefabricatorAssetThumbnailScene::GetViewMatrixParameters(const float InFO
 	const float BoundsZOffset = GetBoundsZOffset(Bounds);
 	const float TargetDistance = HalfMeshSize / FMath::Tan(HalfFOVRadians);
 
-	USceneThumbnailInfo* ThumbnailInfo = Cast<USceneThumbnailInfo>(PreviewActor->PrefabComponent->PrefabAsset->ThumbnailInfo);
-	if (ThumbnailInfo)
-	{
-		if (TargetDistance + ThumbnailInfo->OrbitZoom < 0)
+	UPrefabricatorAsset* PrefabAsset = Cast<UPrefabricatorAsset>(PreviewActor->PrefabComponent->PrefabAssetInterface);
+	if (PrefabAsset) {
+		USceneThumbnailInfo* ThumbnailInfo = Cast<USceneThumbnailInfo>(PrefabAsset->ThumbnailInfo);
+		if (ThumbnailInfo)
 		{
-			ThumbnailInfo->OrbitZoom = -TargetDistance;
+			if (TargetDistance + ThumbnailInfo->OrbitZoom < 0)
+			{
+				ThumbnailInfo->OrbitZoom = -TargetDistance;
+			}
 		}
-	}
-	else
-	{
-		ThumbnailInfo = USceneThumbnailInfo::StaticClass()->GetDefaultObject<USceneThumbnailInfo>();
+		else
+		{
+			ThumbnailInfo = USceneThumbnailInfo::StaticClass()->GetDefaultObject<USceneThumbnailInfo>();
+		}
+
+		OutOrigin = FVector(0, 0, -BoundsZOffset);
+		OutOrbitPitch = ThumbnailInfo->OrbitPitch;
+		OutOrbitYaw = ThumbnailInfo->OrbitYaw;
+		OutOrbitZoom = TargetDistance + ThumbnailInfo->OrbitZoom;
 	}
 
-	OutOrigin = FVector(0, 0, -BoundsZOffset);
-	OutOrbitPitch = ThumbnailInfo->OrbitPitch;
-	OutOrbitYaw = ThumbnailInfo->OrbitYaw;
-	OutOrbitZoom = TargetDistance + ThumbnailInfo->OrbitZoom;
 
 }

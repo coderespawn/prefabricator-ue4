@@ -53,6 +53,9 @@ struct PREFABRICATORRUNTIME_API FPrefabricatorActorData {
 UCLASS(Blueprintable)
 class PREFABRICATORRUNTIME_API UPrefabricatorAssetInterface : public UObject {
 	GENERATED_BODY()
+
+public:
+	virtual class UPrefabricatorAsset* GetPrefabAsset() { return nullptr; }
 };
 
 UCLASS(Blueprintable)
@@ -75,6 +78,8 @@ public:
 	UPROPERTY(VisibleAnywhere, Instanced, AdvancedDisplay, Category = StaticMesh)
 	class UThumbnailInfo* ThumbnailInfo;
 
+public:
+	virtual UPrefabricatorAsset* GetPrefabAsset() override;
 };
 
 

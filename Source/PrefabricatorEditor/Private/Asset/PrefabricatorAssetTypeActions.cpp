@@ -69,7 +69,7 @@ void FPrefabricatorAssetTypeActions::ExecuteCaptureThumbnails(TArray<TWeakObject
 {
 	for (TWeakObjectPtr<UPrefabricatorAsset> PrefabAsset : PrefabAssets) {
 		if (PrefabAsset.IsValid()) {
-			FPrefabTools::UpdatePrefabThumbnail(PrefabAsset.Get());
+
 		}
 	}
 }

@@ -60,15 +60,6 @@ UPrefabricatorAsset* FPrefabTools::CreatePrefabAsset()
 	return Service.IsValid() ? Service->CreatePrefabAsset() : nullptr;
 }
 
-void FPrefabTools::UpdatePrefabThumbnail(UPrefabricatorAsset* PrefabAsset)
-{
-	if (!PrefabAsset) return;
-	TSharedPtr<IPrefabricatorService> Service = FPrefabricatorService::Get();
-	if (Service.IsValid()) {
-		Service->UpdateThumbnail(PrefabAsset);
-	}
-}
-
 bool FPrefabTools::CanCreatePrefab()
 {
 	return GetNumSelectedActors() > 0;
@@ -132,7 +123,7 @@ void FPrefabTools::CreatePrefabFromActors(const TArray<AActor*>& InActors)
 	EComponentMobility::Type Mobility = FPrefabricatorAssetUtils::FindMobility(Actors);
 	PrefabActor->GetRootComponent()->SetMobility(Mobility);
 
-	PrefabActor->PrefabComponent->PrefabAsset = PrefabAsset;
+	PrefabActor->PrefabComponent->PrefabAssetInterface = PrefabAsset;
 	// Attach the actors to the prefab
 	for (AActor* Actor : Actors) {
 		if (Actor->GetRootComponent()) {
@@ -166,9 +157,9 @@ void FPrefabTools::SaveStateToPrefabAsset(APrefabActor* PrefabActor)
 		return;
 	}
 
-	UPrefabricatorAsset* PrefabAsset = PrefabActor->PrefabComponent->PrefabAsset;
+	UPrefabricatorAsset* PrefabAsset = Cast<UPrefabricatorAsset>(PrefabActor->PrefabComponent->PrefabAssetInterface);
 	if (!PrefabAsset) {
-		UE_LOG(LogPrefabTools, Error, TEXT("Prefab asset is not assigned correctly"));
+		//UE_LOG(LogPrefabTools, Error, TEXT("Prefab asset is not assigned correctly"));
 		return;
 	}
 
@@ -286,7 +277,7 @@ namespace {
 	}
 
 	void SerializeFields(UObject* ObjToSerialize, APrefabActor* PrefabActor, TArray<UPrefabricatorProperty*>& OutProperties) {
-		UPrefabricatorAsset* PrefabAsset = PrefabActor->PrefabComponent->PrefabAsset;
+		UPrefabricatorAsset* PrefabAsset = Cast<UPrefabricatorAsset>(PrefabActor->PrefabComponent->PrefabAssetInterface);
 		if (!PrefabAsset) {
 			return;
 		}
@@ -412,7 +403,7 @@ void FPrefabTools::SaveStateToPrefabAsset(AActor* InActor, APrefabActor* PrefabA
 	DumpSerializedData(OutActorData);
 }
 
-void FPrefabTools::LoadStateFromPrefabAsset(AActor* InActor, APrefabActor* PrefabActor, const FPrefabricatorActorData& InActorData, const FPrefabLoadSettings& InSettings)
+void FPrefabTools::LoadStateFromPrefabAsset(AActor* InActor, const FPrefabricatorActorData& InActorData, const FPrefabLoadSettings& InSettings)
 {
 	DeserializeFields(InActor, InActorData.Properties);
 
@@ -476,7 +467,7 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 		return;
 	}
 
-	UPrefabricatorAsset* PrefabAsset = PrefabActor->PrefabComponent->PrefabAsset;
+	UPrefabricatorAsset* PrefabAsset = PrefabActor->PrefabComponent->GetPrefabAsset();
 	if (!PrefabAsset) {
 		UE_LOG(LogPrefabTools, Error, TEXT("Prefab asset is not assigned correctly"));
 		return;
@@ -519,7 +510,7 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 		}
 
 		// Load the saved data into the actor
-		LoadStateFromPrefabAsset(ChildActor, PrefabActor, ActorItemData, InSettings);
+		LoadStateFromPrefabAsset(ChildActor, ActorItemData, InSettings);
 		
 		ParentActors(PrefabActor, ChildActor);
 		AssignAssetUserData(ChildActor, ActorItemData.PrefabItemID, PrefabActor);

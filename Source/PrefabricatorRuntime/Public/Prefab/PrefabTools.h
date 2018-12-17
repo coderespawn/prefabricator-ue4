@@ -23,7 +23,7 @@ public:
 	static void LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPrefabLoadSettings& InSettings = FPrefabLoadSettings());
 
 	static void SaveStateToPrefabAsset(AActor* InActor, APrefabActor* PrefabActor, FPrefabricatorActorData& OutActorData);
-	static void LoadStateFromPrefabAsset(AActor* InActor, APrefabActor* PrefabActor, const FPrefabricatorActorData& InActorData, const FPrefabLoadSettings& InSettings);
+	static void LoadStateFromPrefabAsset(AActor* InActor, const FPrefabricatorActorData& InActorData, const FPrefabLoadSettings& InSettings);
 
 	static void GetActorChildren(AActor* InParent, TArray<AActor*>& OutChildren);
 
@@ -35,5 +35,4 @@ public:
 	static void GetSelectedActors(TArray<AActor*>& OutActors);
 	static int GetNumSelectedActors();
 	static UPrefabricatorAsset* CreatePrefabAsset();
-	static void UpdatePrefabThumbnail(UPrefabricatorAsset* PrefabAsset);
 };

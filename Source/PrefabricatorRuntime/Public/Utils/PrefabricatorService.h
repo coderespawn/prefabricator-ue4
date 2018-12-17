@@ -33,7 +33,6 @@ public:
 	virtual void GetSelectedActors(TArray<AActor*>& OutActors) = 0;
 	virtual int GetNumSelectedActors() = 0;
 	virtual UPrefabricatorAsset* CreatePrefabAsset() = 0;
-	virtual void UpdateThumbnail(UPrefabricatorAsset* PrefabAsset) = 0;
 	virtual FVector SnapToGrid(const FVector& InLocation) { return InLocation; }
 };
 
@@ -44,6 +43,5 @@ public:
 	virtual void GetSelectedActors(TArray<AActor*>& OutActors) override;
 	virtual int GetNumSelectedActors() override;
 	virtual UPrefabricatorAsset* CreatePrefabAsset() override;
-	virtual void UpdateThumbnail(UPrefabricatorAsset* PrefabAsset) override;
 };
 

@@ -46,9 +46,3 @@ UPrefabricatorAsset* FPrefabricatorRuntimeService::CreatePrefabAsset()
 	// Not supported in runtime builds (and not necessary)
 	return nullptr;
 }
-
-void FPrefabricatorRuntimeService::UpdateThumbnail(UPrefabricatorAsset* PrefabAsset)
-{
-	// Not supported in runtime builds (and not necessary)
-}
-

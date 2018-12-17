@@ -21,7 +21,7 @@ UPrefabricatorActorFactory::UPrefabricatorActorFactory(const FObjectInitializer&
 UObject* UPrefabricatorActorFactory::GetAssetFromActorInstance(AActor* ActorInstance)
 {
 	APrefabActor* PrefabActor = Cast<APrefabActor>(ActorInstance);
-	return PrefabActor ? PrefabActor->PrefabComponent->PrefabAsset : nullptr;
+	return PrefabActor ? PrefabActor->PrefabComponent->GetPrefabAsset() : nullptr;
 }
 
 AActor* UPrefabricatorActorFactory::SpawnActor(UObject* Asset, ULevel* InLevel, const FTransform& Transform, EObjectFlags InObjectFlags, const FName Name)
@@ -29,7 +29,7 @@ AActor* UPrefabricatorActorFactory::SpawnActor(UObject* Asset, ULevel* InLevel, 
 	AActor* Actor = UActorFactory::SpawnActor(Asset, InLevel, Transform, InObjectFlags, Name);
 	APrefabActor* PrefabActor = Cast<APrefabActor>(Actor);
 	if (PrefabActor) {
-		PrefabActor->PrefabComponent->PrefabAsset = Cast<UPrefabricatorAsset>(Asset);
+		PrefabActor->PrefabComponent->PrefabAssetInterface = Cast<UPrefabricatorAssetInterface>(Asset);
 	}
 	return Actor;
 }
@@ -50,7 +50,7 @@ void UPrefabricatorActorFactory::PostSpawnActor(UObject* Asset, AActor* NewActor
 	APrefabActor* PrefabActor = Cast<APrefabActor>(NewActor);
 
 	if (PrefabActor && PrefabActor->PrefabComponent) {
-		PrefabActor->PrefabComponent->PrefabAsset = Cast<UPrefabricatorAsset>(Asset);
+		PrefabActor->PrefabComponent->PrefabAssetInterface = Cast<UPrefabricatorAssetInterface>(Asset);
 		
 		LoadPrefabActorState(PrefabActor);
 	}
@@ -61,7 +61,7 @@ void UPrefabricatorActorFactory::PostCreateBlueprint(UObject* Asset, AActor* CDO
 {
 	APrefabActor* PrefabActor = Cast<APrefabActor>(CDO);
 	if (PrefabActor && PrefabActor->PrefabComponent) {
-		PrefabActor->PrefabComponent->PrefabAsset = Cast<UPrefabricatorAsset>(Asset);
+		PrefabActor->PrefabComponent->PrefabAssetInterface = Cast<UPrefabricatorAssetInterface>(Asset);
 
 		LoadPrefabActorState(PrefabActor);
 	}
@@ -70,7 +70,7 @@ void UPrefabricatorActorFactory::PostCreateBlueprint(UObject* Asset, AActor* CDO
 
 bool UPrefabricatorActorFactory::CanCreateActorFrom(const FAssetData& AssetData, FText& OutErrorMsg)
 {
-	if (AssetData.IsValid() && AssetData.GetClass()->IsChildOf(UPrefabricatorAsset::StaticClass())) {
+	if (AssetData.IsValid() && AssetData.GetClass()->IsChildOf(UPrefabricatorAssetInterface::StaticClass())) {
 		return true;
 	}
 	else {
