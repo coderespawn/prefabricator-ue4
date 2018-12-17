@@ -110,5 +110,7 @@ bool APrefabActor::IsPrefabOutdated()
 
 UPrefabricatorAsset* APrefabActor::GetPrefabAsset()
 {
-	return PrefabComponent->PrefabAssetInterface ? PrefabComponent->PrefabAssetInterface->GetPrefabAsset() : nullptr;
+	FPrefabAssetSelectionConfig SelectionConfig;
+	SelectionConfig.Seed = Seed;
+	return PrefabComponent->PrefabAssetInterface ? PrefabComponent->PrefabAssetInterface->GetPrefabAsset(SelectionConfig) : nullptr;
 }

@@ -59,7 +59,7 @@ class PREFABRICATORRUNTIME_API UPrefabricatorAssetInterface : public UObject {
 	GENERATED_BODY()
 
 public:
-	virtual class UPrefabricatorAsset* GetPrefabAsset() { return nullptr; }
+	virtual class UPrefabricatorAsset* GetPrefabAsset(const FPrefabAssetSelectionConfig& InConfig) { return nullptr; }
 };
 
 UCLASS(Blueprintable)
@@ -83,7 +83,7 @@ public:
 	class UThumbnailInfo* ThumbnailInfo;
 
 public:
-	virtual UPrefabricatorAsset* GetPrefabAsset() override;
+	virtual UPrefabricatorAsset* GetPrefabAsset(const FPrefabAssetSelectionConfig& InConfig) override;
 };
 
 
@@ -106,7 +106,7 @@ public:
 	TArray<FPrefabricatorAssetCollectionItem> Prefabs;
 
 public:
-	virtual UPrefabricatorAsset* GetPrefabAsset() override;
+	virtual UPrefabricatorAsset* GetPrefabAsset(const FPrefabAssetSelectionConfig& InConfig) override;
 };
 
 
