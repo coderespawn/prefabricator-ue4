@@ -57,3 +57,19 @@ EComponentMobility::Type FPrefabricatorAssetUtils::FindMobility(const TArray<AAc
 	return Mobility;
 }
 
+UPrefabricatorAsset* UPrefabricatorAssetCollection::GetPrefabAsset()
+{
+	if (Prefabs.Num() == 0) return nullptr;
+
+	float TotalWeight = 0.0f;
+	for (const FPrefabricatorAssetCollectionItem& Item : Prefabs) {
+		TotalWeight += FMath::Max(0.0f, Item.Weight);
+	}
+
+	if (TotalWeight == 0) {
+		// Return a random value from the list
+		//return Prefabs
+	}
+
+	return nullptr;
+}

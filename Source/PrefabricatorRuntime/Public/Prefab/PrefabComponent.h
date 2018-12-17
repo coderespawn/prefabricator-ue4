@@ -19,8 +19,6 @@ public:
 	virtual void OnRegister() override;
 	virtual FBoxSphereBounds CalcBounds(const FTransform& LocalToWorld) const;
 
-	UPrefabricatorAsset* GetPrefabAsset();
-
 private:
 	UPROPERTY()
 	UTexture2D* EditorSpriteTexture;

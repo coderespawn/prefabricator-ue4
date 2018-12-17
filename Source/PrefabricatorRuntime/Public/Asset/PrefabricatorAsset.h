@@ -50,6 +50,10 @@ struct PREFABRICATORRUNTIME_API FPrefabricatorActorData {
 	TArray<FPrefabricatorComponentData> Components;
 };
 
+struct FPrefabAssetSelectionConfig {
+	int32 Seed = 0;
+};
+
 UCLASS(Blueprintable)
 class PREFABRICATORRUNTIME_API UPrefabricatorAssetInterface : public UObject {
 	GENERATED_BODY()
@@ -77,6 +81,29 @@ public:
 	/** Information for thumbnail rendering */
 	UPROPERTY(VisibleAnywhere, Instanced, AdvancedDisplay, Category = StaticMesh)
 	class UThumbnailInfo* ThumbnailInfo;
+
+public:
+	virtual UPrefabricatorAsset* GetPrefabAsset() override;
+};
+
+
+USTRUCT(BlueprintType)
+struct PREFABRICATORRUNTIME_API FPrefabricatorAssetCollectionItem {
+	GENERATED_USTRUCT_BODY()
+
+	UPROPERTY(EditAnywhere, Category = "Prefabricator")
+	UPrefabricatorAsset* PrefabAsset;
+
+	UPROPERTY(EditAnywhere, Category = "Prefabricator")
+	float Weight = 1.0f;
+};
+
+UCLASS(Blueprintable)
+class PREFABRICATORRUNTIME_API UPrefabricatorAssetCollection : public UPrefabricatorAssetInterface {
+	GENERATED_BODY()
+public:
+	UPROPERTY(EditAnywhere, Category = "Prefabricator")
+	TArray<FPrefabricatorAssetCollectionItem> Prefabs;
 
 public:
 	virtual UPrefabricatorAsset* GetPrefabAsset() override;

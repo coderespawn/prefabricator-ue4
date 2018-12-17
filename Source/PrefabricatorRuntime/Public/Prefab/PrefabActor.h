@@ -36,10 +36,16 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	bool IsPrefabOutdated();
 
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	UPrefabricatorAsset* GetPrefabAsset();
+
 public:
 	// The last update ID of the prefab asset when this actor was refreshed from it
 	// This is used to test if the prefab has changed since we last recreated it
 	UPROPERTY()
 	FGuid LastUpdateID;
+
+	UPROPERTY(EditAnywhere, Category = "Prefabricator")
+	int32 Seed;
 };
 

@@ -14,7 +14,7 @@ void FPrefabEditorTools::ReloadPrefabsInLevel(UWorld* World, UPrefabricatorAsset
 			bool bShouldRefresh = true;
 			// The provided asset can be null, in which case we refresh everything, else we search if it matches the particular prefab asset
 			if (InAsset) {
-				UPrefabricatorAsset* ActorAsset = PrefabActor->PrefabComponent->GetPrefabAsset();
+				UPrefabricatorAsset* ActorAsset = PrefabActor->GetPrefabAsset();
 				bShouldRefresh = (InAsset == ActorAsset);
 			}
 			if (bShouldRefresh) {

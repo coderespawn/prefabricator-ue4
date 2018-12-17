@@ -100,10 +100,15 @@ void APrefabActor::SavePrefab()
 
 bool APrefabActor::IsPrefabOutdated()
 {
-	UPrefabricatorAsset* PrefabAsset = PrefabComponent->GetPrefabAsset();
+	UPrefabricatorAsset* PrefabAsset = GetPrefabAsset();
 	if (!PrefabAsset) {
 		return false;
 	}
 
 	return PrefabAsset->LastUpdateID != LastUpdateID;
+}
+
+UPrefabricatorAsset* APrefabActor::GetPrefabAsset()
+{
+	return PrefabComponent->PrefabAssetInterface ? PrefabComponent->PrefabAssetInterface->GetPrefabAsset() : nullptr;
 }

@@ -467,7 +467,7 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 		return;
 	}
 
-	UPrefabricatorAsset* PrefabAsset = PrefabActor->PrefabComponent->GetPrefabAsset();
+	UPrefabricatorAsset* PrefabAsset = PrefabActor->GetPrefabAsset();
 	if (!PrefabAsset) {
 		UE_LOG(LogPrefabTools, Error, TEXT("Prefab asset is not assigned correctly"));
 		return;

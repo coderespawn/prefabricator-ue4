@@ -52,9 +52,3 @@ FBoxSphereBounds UPrefabComponent::CalcBounds(const FTransform& LocalToWorld) co
 		return FBoxSphereBounds(EForceInit::ForceInitToZero);
 	}
 }
-
-UPrefabricatorAsset* UPrefabComponent::GetPrefabAsset()
-{
-	return PrefabAssetInterface ? PrefabAssetInterface->GetPrefabAsset() : nullptr;
-}
-
