@@ -78,7 +78,9 @@ void APrefabActor::PostDuplicate(EDuplicateMode::Type DuplicateMode)
 {
 	Super::PostDuplicate(DuplicateMode);
 
-	LoadPrefab();
+	if (DuplicateMode == EDuplicateMode::Normal) {
+		LoadPrefab();
+	}
 }
 
 FName APrefabActor::GetCustomIconName() const
