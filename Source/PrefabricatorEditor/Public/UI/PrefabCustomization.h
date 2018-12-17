@@ -17,3 +17,14 @@ public:
 	static FReply RandomizePrefabCollection(IDetailLayoutBuilder* DetailBuilder);
 };
 
+class FPrefabRandomizerCustomization : public IDetailCustomization {
+public:
+	// IDetailCustomization interface
+	virtual void CustomizeDetails(IDetailLayoutBuilder& DetailBuilder) override;
+	// End of IDetailCustomization interface
+
+	static TSharedRef<IDetailCustomization> MakeInstance();
+
+	static FReply HandleRandomize(IDetailLayoutBuilder* DetailBuilder);
+};
+

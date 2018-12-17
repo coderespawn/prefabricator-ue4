@@ -9,6 +9,8 @@
 #include "IAssetTools.h"
 #include "IAssetTypeActions.h"
 #include "UnrealEdGlobals.h"
+#include "PrefabSeedLinker.h"
+#include "PrefabSeedLinkerVisualizer.h"
 
 #define LOCTEXT_NAMESPACE "DungeonArchitectEditorModule" 
 
@@ -32,7 +34,10 @@ private:
 	void RegisterComponentVisualizers() {
 		if (GUnrealEd) {
 			PrefabComponentClassName = UPrefabComponent::StaticClass()->GetFName();
+			PrefabSeedLinkerComponentClassName = UPrefabSeedLinkerComponent::StaticClass()->GetFName();
+
 			RegisterVisualizer(*GUnrealEd, PrefabComponentClassName, MakeShared<FPrefabComponentVisualizer>());
+			RegisterVisualizer(*GUnrealEd, PrefabSeedLinkerComponentClassName, MakeShared<FPrefabSeedLinkerVisualizer>());
 		}
 	}
 
@@ -45,10 +50,12 @@ private:
 	void UnregisterComponentVisualizers() {
 		if (GUnrealEd) {
 			GUnrealEd->UnregisterComponentVisualizer(PrefabComponentClassName);
+			GUnrealEd->UnregisterComponentVisualizer(PrefabSeedLinkerComponentClassName);
 		}
 	}
 
 	FName PrefabComponentClassName;
+	FName PrefabSeedLinkerComponentClassName;
 };
 
 IMPLEMENT_MODULE(FPrefabricatorEditorPostInitModule, PrefabricatorEditorPostInit)

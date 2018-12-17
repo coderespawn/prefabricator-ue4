@@ -20,6 +20,6 @@ void FPrefabComponentVisualizer::DrawVisualization(const UActorComponent* Compon
 	Bounds = Bounds.ExpandBy(2);
 
 	const FMatrix LocalToWorld = FMatrix::Identity;
-	DrawWireBox(PDI, LocalToWorld, Bounds, FLinearColor::Green, SDPG_World);
+	DrawWireBox(PDI, LocalToWorld, Bounds, FLinearColor::Green, SDPG_Foreground);
 }
 

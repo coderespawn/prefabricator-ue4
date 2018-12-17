@@ -124,7 +124,6 @@ UPrefabricatorAsset* APrefabActor::GetPrefabAsset()
 void APrefabActor::RandomizeSeed(const FRandomStream& InRandom, bool bRecursive)
 {
 	Seed = InRandom.RandRange(0, 10000000);
-	UE_LOG(LogPrefabActor, Log, TEXT("Randomizing prefab actor with seed: %d"), Seed);
 	if (bRecursive) {
 		TArray<AActor*> AttachedChildren;
 		GetAttachedActors(AttachedChildren);

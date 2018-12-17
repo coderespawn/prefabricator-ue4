@@ -15,6 +15,7 @@
 #include "IContentBrowserSingleton.h"
 #include "ModuleManager.h"
 #include "PrefabricatorAsset.h"
+#include "PrefabRandomizerActor.h"
 
 #define LOCTEXT_NAMESPACE "PrefabActorCustomization" 
 
@@ -31,9 +32,10 @@ namespace {
 	}
 }
 
+///////////////////////////////// FPrefabActorCustomization /////////////////////////////////
+
 void FPrefabActorCustomization::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 {
-
 	APrefabActor* PrefabActor = GetDetailObject<APrefabActor>(&DetailBuilder);
 	UPrefabricatorAssetInterface* Asset = PrefabActor ? PrefabActor->PrefabComponent->PrefabAssetInterface : nullptr;
 
@@ -146,5 +148,37 @@ FReply FPrefabActorCustomization::RandomizePrefabCollection(IDetailLayoutBuilder
 	return FReply::Handled();
 }
 
-#undef LOCTEXT_NAMESPACE 
+///////////////////////////////// FPrefabRandomizerCustomization /////////////////////////////////
 
+void FPrefabRandomizerCustomization::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
+{
+	APrefabRandomizer* PrefabRandomizer = GetDetailObject<APrefabRandomizer>(&DetailBuilder);
+
+	IDetailCategoryBuilder& Category = DetailBuilder.EditCategory("Prefab Randomizer", FText::GetEmpty(), ECategoryPriority::Important);
+	Category.AddCustomRow(LOCTEXT("PrefabRandomizerCommand_Filter", "randomize prefab collection asset"))
+		.WholeRowContent()
+		[
+			SNew(SButton)
+			.Text(LOCTEXT("PrefabRandomizerCommand_Randomize", "Randomize"))
+			.OnClicked(FOnClicked::CreateStatic(&FPrefabRandomizerCustomization::HandleRandomize, &DetailBuilder))
+		];
+}
+
+
+TSharedRef<IDetailCustomization> FPrefabRandomizerCustomization::MakeInstance()
+{
+	return MakeShareable(new FPrefabRandomizerCustomization);
+}
+
+FReply FPrefabRandomizerCustomization::HandleRandomize(IDetailLayoutBuilder* DetailBuilder)
+{
+	APrefabRandomizer* PrefabRandomizer = GetDetailObject<APrefabRandomizer>(DetailBuilder);
+
+	FRandomStream Random;
+	Random.Initialize(FMath::Rand());
+	PrefabRandomizer->Randomize(Random);
+
+	return FReply::Handled();
+}
+
+#undef LOCTEXT_NAMESPACE 
