@@ -13,7 +13,7 @@
 #define LOCTEXT_NAMESPACE "AssetTypeActions"
 
 //////////////////////////////////////////////////////////////////////////
-// FDungeonThemeAssetTypeActions
+// FPrefabricatorAssetTypeActions
 
 FText FPrefabricatorAssetTypeActions::GetName() const
 {
@@ -60,17 +60,19 @@ uint32 FPrefabricatorAssetTypeActions::GetCategories()
 	return EAssetTypeCategories::Misc;
 }
 
-void FPrefabricatorAssetTypeActions::CaptureThumbnail()
+void FPrefabricatorAssetTypeActions::ExecuteCreatePrefabCollection(TArray<TWeakObjectPtr<UPrefabricatorAsset>> InPrefabAssetPtrs)
 {
-
-}
-
-void FPrefabricatorAssetTypeActions::ExecuteCaptureThumbnails(TArray<TWeakObjectPtr<UPrefabricatorAsset>> PrefabAssets)
-{
-	for (TWeakObjectPtr<UPrefabricatorAsset> PrefabAsset : PrefabAssets) {
-		if (PrefabAsset.IsValid()) {
-
+	TArray<UPrefabricatorAsset*> PrefabAssets;
+	{
+		for (TWeakObjectPtr<UPrefabricatorAsset> AssetPtr : InPrefabAssetPtrs) {
+			if (AssetPtr.IsValid()) {
+				PrefabAssets.Add(AssetPtr.Get());
+			}
 		}
+	}
+
+	for (UPrefabricatorAsset* PrefabAsset : PrefabAssets) {
+
 	}
 }
 
@@ -78,16 +80,41 @@ void FPrefabricatorAssetTypeActions::GetActions(const TArray<UObject*>& InObject
 {
 	auto PrefabAssets = GetTypedWeakObjectPtrs<UPrefabricatorAsset>(InObjects);
 
-	MenuBuilder.AddMenuEntry(
-		NSLOCTEXT("AssetTypeActions_PrefabricatorAsset", "ObjectContext_CaptureThumb", "Capture Thumbnail"),
-		NSLOCTEXT("AssetTypeActions_PrefabricatorAsset", "ObjectContext_CaptureThumbTooltip", "Captures the prefab's thumbnail from the editor's viewport"),
-		FSlateIcon(),
-		FUIAction(
-			FExecuteAction::CreateSP(this, &FPrefabricatorAssetTypeActions::ExecuteCaptureThumbnails, PrefabAssets),
-			FCanExecuteAction()
-		)
-	);
+	if (PrefabAssets.Num() > 0) {
+		MenuBuilder.AddMenuEntry(
+			NSLOCTEXT("AssetTypeActions_PrefabricatorAsset", "ObjectContext_CaptureThumb", "Create Prefab Collection"),
+			NSLOCTEXT("AssetTypeActions_PrefabricatorAsset", "ObjectContext_CaptureThumbTooltip", "Creates a prefab collection, which can be used to randomly select one based on weights"),
+			FSlateIcon(),
+			FUIAction(
+				FExecuteAction::CreateSP(this, &FPrefabricatorAssetTypeActions::ExecuteCreatePrefabCollection, PrefabAssets),
+				FCanExecuteAction()
+			)
+		);
+	}
+
+}
+
+//////////////////////////////////////////////////////////////////////////
+// FPrefabricatorAssetCollectionTypeActions
+
+FText FPrefabricatorAssetCollectionTypeActions::GetName() const
+{
+	return LOCTEXT("TypeActionCollectionName", "Prefab Collection");
+}
+
+FColor FPrefabricatorAssetCollectionTypeActions::GetTypeColor() const
+{
+	return FColor(99, 229, 172);
+}
+
+UClass* FPrefabricatorAssetCollectionTypeActions::GetSupportedClass() const
+{
+	return UPrefabricatorAssetCollection::StaticClass();
+}
+
+uint32 FPrefabricatorAssetCollectionTypeActions::GetCategories()
+{
+	return EAssetTypeCategories::Misc;
 }
 
 #undef LOCTEXT_NAMESPACE
-

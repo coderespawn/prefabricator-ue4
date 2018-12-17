@@ -41,6 +41,7 @@ class FPrefabricatorEditorModule : public IPrefabricatorEditorModule
 		// Register asset types
 		IAssetTools& AssetTools = FModuleManager::LoadModuleChecked<FAssetToolsModule>("AssetTools").Get();
 		RegisterAssetTypeAction(AssetTools, MakeShareable(new FPrefabricatorAssetTypeActions));
+		RegisterAssetTypeAction(AssetTools, MakeShareable(new FPrefabricatorAssetCollectionTypeActions));
 
 		// Register the details customization
 		FPropertyEditorModule& PropertyEditorModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>("PropertyEditor");
@@ -62,6 +63,7 @@ class FPrefabricatorEditorModule : public IPrefabricatorEditorModule
 		// Unregister the prefabricator asset broker
 		if (PrefabAssetBroker.IsValid()) {
 			FComponentAssetBrokerage::UnregisterBroker(PrefabAssetBroker);
+			PrefabAssetBroker = nullptr;
 		}
 
 		// Unregister all the asset types that we registered

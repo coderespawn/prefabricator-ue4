@@ -4,6 +4,8 @@
 
 #include "Asset/PrefabricatorAsset.h"
 
+////////////////////////////////// UPrefabricatorAssetFactory ///////////////////////////////////
+
 UPrefabricatorAssetFactory::UPrefabricatorAssetFactory(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer) {
 	SupportedClass = UPrefabricatorAsset::StaticClass();
 	bCreateNew = true;
@@ -19,3 +21,21 @@ UObject* UPrefabricatorAssetFactory::FactoryCreateNew(UClass* Class, UObject* In
 	return NewAsset;
 }
 
+/////////////////////////////////// UPrefabricatorAssetCollectionFactory ///////////////////////////////////
+
+UPrefabricatorAssetCollectionFactory::UPrefabricatorAssetCollectionFactory(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer) {
+	SupportedClass = UPrefabricatorAssetCollection::StaticClass();
+	bCreateNew = true;
+	bEditAfterNew = true;
+}
+
+bool UPrefabricatorAssetCollectionFactory::CanCreateNew() const
+{
+	return true;
+}
+
+UObject* UPrefabricatorAssetCollectionFactory::FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn)
+{
+	UPrefabricatorAssetCollection* NewAsset = NewObject<UPrefabricatorAssetCollection>(InParent, Class, Name, Flags | RF_Transactional);
+	return NewAsset;
+}

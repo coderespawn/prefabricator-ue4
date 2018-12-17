@@ -8,11 +8,15 @@
 #include "ComponentAssetBroker.h"
 
 /** Asset broker for the prefab asset */
-class FPrefabricatorAssetBrokerBase : public IComponentAssetBroker {
+class FPrefabricatorAssetBroker : public IComponentAssetBroker {
 public:
+	virtual UClass* GetSupportedAssetClass() override {
+		return UPrefabricatorAssetInterface::StaticClass();
+	}
+
 	virtual bool AssignAssetToComponent(UActorComponent* InComponent, UObject* InAsset) override {
 		if (UPrefabComponent* PrefabComponent = Cast<UPrefabComponent>(InComponent)) {
-			UPrefabricatorAsset* PrefabAsset = Cast<UPrefabricatorAsset>(InAsset);
+			UPrefabricatorAssetInterface* PrefabAsset = Cast<UPrefabricatorAssetInterface>(InAsset);
 			if (PrefabAsset && PrefabAsset) {
 				PrefabComponent->PrefabAssetInterface = PrefabAsset;
 				return true;
@@ -31,11 +35,3 @@ public:
 		return nullptr;
 	}
 };
-
-class FPrefabricatorAssetBroker : public FPrefabricatorAssetBrokerBase {
-public:
-	virtual UClass* GetSupportedAssetClass() override {
-		return UPrefabricatorAsset::StaticClass();
-	}
-};
-
