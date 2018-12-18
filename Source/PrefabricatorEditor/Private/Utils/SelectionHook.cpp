@@ -63,7 +63,7 @@ void FPrefabricatorSelectionHook::OnObjectSelected(UObject* Object)
 
 	USelection* ActorSelectionSet = GEditor->GetSelectedActors();
 	if (ActorSelectionSet->Num() > 1) {
-		return;
+		//return;
 	}
 	if (ActorSelectionSet->Num() == 0) {
 		LastSelectedObject = nullptr;
@@ -73,7 +73,7 @@ void FPrefabricatorSelectionHook::OnObjectSelected(UObject* Object)
 	TArray<AActor*> SelectedActorObjects;
 	ActorSelectionSet->GetSelectedObjects<AActor>(SelectedActorObjects);
 
-	AActor* RequestedActor = SelectedActorObjects[0];
+	AActor* RequestedActor = Cast<AActor>(Object); // SelectedActorObjects[0];
 	if (!RequestedActor) {
 		return;
 	}
