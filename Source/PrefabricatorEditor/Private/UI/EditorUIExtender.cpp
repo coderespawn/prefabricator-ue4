@@ -21,6 +21,7 @@
 #include "PrefabActor.h"
 #include "SNotificationList.h"
 #include "NotificationManager.h"
+#include "PrefabEditorTools.h"
 
 #define LOCTEXT_NAMESPACE "EditorUIExtender" 
 
@@ -57,19 +58,6 @@ void FEditorUIExtender::Extend()
 			);
 		}
 
-		static void ShowNotification(FText Text, SNotificationItem::ECompletionState State = SNotificationItem::CS_Fail) {
-			FNotificationInfo Info(Text);
-			Info.bFireAndForget = true;
-			Info.FadeOutDuration = 1.0f;
-			Info.ExpireDuration = 2.0f;
-
-			TWeakPtr<SNotificationItem> NotificationPtr = FSlateNotificationManager::Get().AddNotification(Info);
-			if (NotificationPtr.IsValid())
-			{
-				NotificationPtr.Pin()->SetCompletionState(State);
-			}
-		}
-
 		static void LinkSelectedPrefabSeeds(APrefabSeedLinker* SeedLinker) {
 			if (!SeedLinker) return;
 
@@ -85,10 +73,10 @@ void FEditorUIExtender::Extend()
 					SeedLinker->LinkedActors.AddUnique(PrefabActor);
 				}
 				FString NotificationText = FString::Printf(TEXT("Linked %d prefabs to Seed Linker: %s"), PrefabActors.Num(), *SeedLinker->GetName());
-				ShowNotification(FText::FromString(NotificationText), SNotificationItem::CS_Success);
+				FPrefabEditorTools::ShowNotification(FText::FromString(NotificationText), SNotificationItem::CS_Success);
 			}
 			else {
-				ShowNotification(LOCTEXT("NoPrefabLinkSelectedTitle", "No prefabs selected for linking"), SNotificationItem::CS_Fail);
+				FPrefabEditorTools::ShowNotification(LOCTEXT("NoPrefabLinkSelectedTitle", "No prefabs selected for linking"), SNotificationItem::CS_Fail);
 			}
 		}
 

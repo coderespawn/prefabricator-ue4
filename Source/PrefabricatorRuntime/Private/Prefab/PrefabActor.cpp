@@ -134,3 +134,30 @@ void APrefabActor::RandomizeSeed(const FRandomStream& InRandom, bool bRecursive)
 		}
 	}
 }
+
+////////////////////////////////// FPrefabListBuildQueue //////////////////////////////////
+void FPrefabBuildQueue::Initialize(const TArray<APrefabActor*>& InPrefabsToBuild, double InTimePerFrame)
+{
+	TimePerFrame = InTimePerFrame;
+	for (APrefabActor* PrefabActor : InPrefabsToBuild) {
+		BuildQueue.Enqueue(PrefabActor);
+	}
+}
+
+void FPrefabBuildQueue::Tick()
+{
+	double StartTime = FPlatformTime::Seconds();
+	
+	APrefabActor* Prefab = nullptr;
+	while (BuildQueue.Dequeue(Prefab)) {
+		if (Prefab->IsPrefabOutdated()) {
+			Prefab->LoadPrefab();
+		}
+		if (TimePerFrame > 0) {
+			double ElapsedTime = FPlatformTime::Seconds() - StartTime;
+			if (ElapsedTime >= TimePerFrame) {
+				break;
+			}
+		}
+	}
+}

@@ -36,12 +36,12 @@ void FPrefabricatorAssetThumbnailScene::SetPrefabAsset(class UPrefabricatorAsset
 	if (PrefabAsset) {
 		if (PreviewActor->IsPrefabOutdated()) {
 			PreviewActor->LoadPrefab();
+			FBox BoundsBox = FPrefabTools::GetPrefabBounds(PreviewActor);
+			Bounds = FBoxSphereBounds(BoundsBox);
 			UE_LOG(LogPrefabAssetThumbScene, Log, TEXT("Recreating Thumbnail Prefab Actor"));
 		}
 
 		PreviewActor->SetActorLocation(FVector(0, 0, 0), false);
-
-		FBoxSphereBounds Bounds = PreviewActor->PrefabComponent->Bounds;
 
 		// Center the mesh at the world origin then offset to put it on top of the plane
 		const float BoundsZOffset = GetBoundsZOffset(Bounds);
@@ -58,8 +58,6 @@ void FPrefabricatorAssetThumbnailScene::GetViewMatrixParameters(const float InFO
 {
 	check(PreviewActor);
 	check(PreviewActor->PrefabComponent);
-
-	FBoxSphereBounds Bounds = PreviewActor->PrefabComponent->Bounds;
 
 	const float HalfFOVRadians = FMath::DegreesToRadians<float>(InFOVDegrees) * 0.5f;
 	// Add extra size to view slightly outside of the sphere to compensate for perspective

@@ -11,6 +11,9 @@ class PREFABRICATORRUNTIME_API APrefabRandomizer : public AActor {
 	GENERATED_UCLASS_BODY()
 
 public:
+	virtual void Tick(float DeltaSeconds) override;
+	virtual bool ShouldTickIfViewportsOnly() const override { return true; }
+
 	virtual void BeginPlay() override;
 
 	UFUNCTION(BlueprintCallable)
@@ -24,9 +27,12 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Prefabricator")
 	bool bRandomizeOnBeginPlay = true;
 
-public:
 	UPROPERTY(EditAnywhere, Category = "Prefabricator")
 	int32 SeedOffset = 0;
 
-	
+	UPROPERTY(EditAnywhere, Category = "Prefabricator")
+	float MaxBuildTimePerFrame = 0.02f;
+
+private:
+	TSharedPtr<class FPrefabBuildQueue> BuildQueue;
 };

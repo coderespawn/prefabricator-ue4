@@ -50,3 +50,13 @@ public:
 	int32 Seed;
 };
 
+
+class PREFABRICATORRUNTIME_API FPrefabBuildQueue {
+public:
+	void Initialize(const TArray<APrefabActor*>& InPrefabsToBuild, double InTimePerFrame);
+	void Tick();
+
+private:
+	TQueue<APrefabActor*> BuildQueue;
+	double TimePerFrame = 0;
+};

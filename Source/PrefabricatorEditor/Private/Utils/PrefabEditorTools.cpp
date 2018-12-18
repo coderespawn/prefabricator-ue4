@@ -5,6 +5,8 @@
 #include "PrefabActor.h"
 #include "PrefabActor.h"
 #include "PrefabComponent.h"
+#include "EditorViewportClient.h"
+#include "NotificationManager.h"
 
 void FPrefabEditorTools::ReloadPrefabsInLevel(UWorld* World, UPrefabricatorAsset* InAsset)
 {
@@ -23,5 +25,34 @@ void FPrefabEditorTools::ReloadPrefabsInLevel(UWorld* World, UPrefabricatorAsset
 				}
 			}
 		}
+	}
+}
+
+void FPrefabEditorTools::ShowNotification(FText Text, SNotificationItem::ECompletionState State /*= SNotificationItem::CS_Fail*/)
+{
+	FNotificationInfo Info(Text);
+	Info.bFireAndForget = true;
+	Info.FadeOutDuration = 1.0f;
+	Info.ExpireDuration = 2.0f;
+
+	TWeakPtr<SNotificationItem> NotificationPtr = FSlateNotificationManager::Get().AddNotification(Info);
+	if (NotificationPtr.IsValid())
+	{
+		NotificationPtr.Pin()->SetCompletionState(State);
+	}
+}
+
+void FPrefabEditorTools::SwitchLevelViewportToRealtimeMode()
+{
+	FEditorViewportClient* Client = (FEditorViewportClient*)GEditor->GetActiveViewport()->GetClient();
+	if (Client) {
+		bool bRealtime = Client->IsRealtime();
+		if (!bRealtime) {
+			ShowNotification(NSLOCTEXT("Prefabricator", "PrefabRealtimeMode", "Switched viewport to Realtime mode"), SNotificationItem::CS_None);
+			Client->SetRealtime(true);
+		}
+	}
+	else {
+		ShowNotification(NSLOCTEXT("Prefabricator", "PRefabClientNotFound", "Warning: Cannot find active viewport"));
 	}
 }

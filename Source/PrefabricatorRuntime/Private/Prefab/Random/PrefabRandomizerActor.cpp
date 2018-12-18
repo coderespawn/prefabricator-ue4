@@ -14,6 +14,9 @@
 APrefabRandomizer::APrefabRandomizer(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
+	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bStartWithTickEnabled = true;
+
 	USceneComponent* SceneRoot = ObjectInitializer.CreateDefaultSubobject<USceneComponent>(this, "SceneRoot");
 	RootComponent = SceneRoot;
 
@@ -26,6 +29,17 @@ APrefabRandomizer::APrefabRandomizer(const FObjectInitializer& ObjectInitializer
 		SpriteComponent->SetSprite(PrefabSpriteObject.Get());
 	}
 #endif // WITH_EDITORONLY_DATA
+
+	BuildQueue = MakeShareable(new FPrefabBuildQueue);
+}
+
+void APrefabRandomizer::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+
+	if (BuildQueue.IsValid()) {
+		BuildQueue->Tick();
+	}
 }
 
 void APrefabRandomizer::BeginPlay()
@@ -85,11 +99,8 @@ void APrefabRandomizer::Randomize(const FRandomStream& InRandom)
 		}
 	}
 
-	for (APrefabActor* PrefabActor : PrefabsInLevel) {
-		if (PrefabActor->IsPrefabOutdated()) {
-			PrefabActor->LoadPrefab();
-		}
-	}
+	BuildQueue->Initialize(PrefabsInLevel, MaxBuildTimePerFrame);
+	BuildQueue->Tick();
 }
 
 #if WITH_EDITOR

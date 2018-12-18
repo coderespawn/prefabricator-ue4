@@ -16,6 +16,7 @@
 #include "ModuleManager.h"
 #include "PrefabricatorAsset.h"
 #include "PrefabRandomizerActor.h"
+#include "EditorViewportClient.h"
 
 #define LOCTEXT_NAMESPACE "PrefabActorCustomization" 
 
@@ -30,6 +31,7 @@ namespace {
 		}
 		return Obj;
 	}
+
 }
 
 ///////////////////////////////// FPrefabActorCustomization /////////////////////////////////
@@ -173,6 +175,12 @@ TSharedRef<IDetailCustomization> FPrefabRandomizerCustomization::MakeInstance()
 FReply FPrefabRandomizerCustomization::HandleRandomize(IDetailLayoutBuilder* DetailBuilder)
 {
 	APrefabRandomizer* PrefabRandomizer = GetDetailObject<APrefabRandomizer>(DetailBuilder);
+
+	if (PrefabRandomizer->MaxBuildTimePerFrame > 0) {
+		// This requires async build. We need to switch the editor to realtime mode
+		FPrefabEditorTools::SwitchLevelViewportToRealtimeMode();
+	}
+
 
 	FRandomStream Random;
 	Random.Initialize(FMath::Rand());
