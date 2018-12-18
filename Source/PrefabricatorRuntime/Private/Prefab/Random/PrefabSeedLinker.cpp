@@ -43,3 +43,11 @@ APrefabSeedLinker::APrefabSeedLinker(const FObjectInitializer& ObjectInitializer
 	SeedLinkerComponent = ObjectInitializer.CreateDefaultSubobject<UPrefabSeedLinkerComponent>(this, "SeedLinker");
 	RootComponent = SeedLinkerComponent;
 }
+
+#if WITH_EDITOR
+FName APrefabSeedLinker::GetCustomIconName() const
+{
+	static const FName PrefabIconName("ClassIcon.PrefabSeedLinkerActor");
+	return PrefabIconName;
+}
+#endif // WITH_EDITOR

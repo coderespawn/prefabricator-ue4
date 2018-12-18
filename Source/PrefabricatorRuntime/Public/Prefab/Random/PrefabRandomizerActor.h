@@ -16,6 +16,10 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void Randomize(const FRandomStream& InRandom);
 
+#if WITH_EDITOR
+	virtual FName GetCustomIconName() const override;
+#endif // WITH_EDITOR
+
 public:
 	UPROPERTY(EditAnywhere, Category = "Prefabricator")
 	bool bRandomizeOnBeginPlay = true;
@@ -24,4 +28,5 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Prefabricator")
 	int32 SeedOffset = 0;
 
+	
 };

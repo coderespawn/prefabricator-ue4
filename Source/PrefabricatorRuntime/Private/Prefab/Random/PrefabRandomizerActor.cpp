@@ -91,3 +91,12 @@ void APrefabRandomizer::Randomize(const FRandomStream& InRandom)
 		}
 	}
 }
+
+#if WITH_EDITOR
+FName APrefabRandomizer::GetCustomIconName() const
+{
+	static const FName PrefabIconName("ClassIcon.PrefabRandomizerActor");
+	return PrefabIconName;
+}
+#endif // WITH_EDITOR
+

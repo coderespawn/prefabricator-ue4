@@ -68,6 +68,8 @@ TSharedRef< class FSlateStyleSet > FPrefabEditorStyle::Create()
 		Style.Set("Prefabricator.CreatePrefab", new IMAGE_PLUGIN_BRUSH("PrefabTool/Icons/Icon_Prefab_48", Icon48x48));
 
 		Style.Set("ClassIcon.PrefabActor", new IMAGE_PLUGIN_BRUSH("PrefabTool/Icons/Icon_Prefab_16", Icon16x16));
+		Style.Set("ClassIcon.PrefabRandomizerActor", new IMAGE_PLUGIN_BRUSH("PrefabTool/Icons/Icon_randomizer_16", Icon16x16));
+		Style.Set("ClassIcon.PrefabSeedLinkerActor", new IMAGE_PLUGIN_BRUSH("PrefabTool/Icons/Icon_linker_16", Icon16x16));
 	}
 
 

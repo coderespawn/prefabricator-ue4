@@ -31,4 +31,10 @@ public:
 	UPROPERTY()
 	UPrefabSeedLinkerComponent* SeedLinkerComponent;
 
+public:
+
+#if WITH_EDITOR
+	virtual FName GetCustomIconName() const override;
+#endif // WITH_EDITOR
+
 };
