@@ -2,6 +2,7 @@
 
 #pragma once
 #include "CoreMinimal.h"
+#include "LevelEditor.h"
 
 class FEditorUIExtender {
 public:

@@ -11,6 +11,16 @@
 #include "Framework/MultiBox/MultiBoxBuilder.h"
 #include "Framework/MultiBox/MultiBoxExtender.h"
 #include "LevelEditor.h"
+#include "SlateDelegates.h"
+#include "SNullWidget.h"
+#include "Editor.h"
+#include "EditorModeManager.h"
+#include "EngineUtils.h"
+#include "PrefabSeedLinker.h"
+#include "Engine/Selection.h"
+#include "PrefabActor.h"
+#include "SNotificationList.h"
+#include "NotificationManager.h"
 
 #define LOCTEXT_NAMESPACE "EditorUIExtender" 
 
@@ -47,20 +57,91 @@ void FEditorUIExtender::Extend()
 			);
 		}
 
-		static void ExtendLevelToolbar(FToolBarBuilder& ToolbarBuilder) {
-			// Add a button to open a TimecodeSynchronizer Editor
-			ToolbarBuilder.AddToolBarButton(
-				FUIAction(
-					FExecuteAction::CreateStatic(&FPrefabTools::CreatePrefab),
-					FCanExecuteAction::CreateStatic(&FPrefabTools::CanCreatePrefab)
-				),
-				NAME_None,
-				LOCTEXT("PrefabToolbarButtonText", "Create Prefab"),
-				LOCTEXT("PrefabToolbarButtonTooltip", "Create a prefab from selection"),
-				FSlateIcon(FPrefabEditorStyle::GetStyleSetName(), TEXT("Prefabricator.CreatePrefab"))
-			);
+		static void ShowNotification(FText Text, SNotificationItem::ECompletionState State = SNotificationItem::CS_Fail) {
+			FNotificationInfo Info(Text);
+			Info.bFireAndForget = true;
+			Info.FadeOutDuration = 1.0f;
+			Info.ExpireDuration = 2.0f;
+
+			TWeakPtr<SNotificationItem> NotificationPtr = FSlateNotificationManager::Get().AddNotification(Info);
+			if (NotificationPtr.IsValid())
+			{
+				NotificationPtr.Pin()->SetCompletionState(State);
+			}
 		}
 
+		static void LinkSelectedPrefabSeeds(APrefabSeedLinker* SeedLinker) {
+			if (!SeedLinker) return;
+
+			TArray<APrefabActor*> PrefabActors;
+			{
+				USelection* ActorSelectionSet = GEditor->GetSelectedActors();
+				ActorSelectionSet->GetSelectedObjects(PrefabActors);
+			}
+
+
+			if (PrefabActors.Num() > 0) {
+				for (APrefabActor* PrefabActor : PrefabActors) {
+					SeedLinker->LinkedActors.AddUnique(PrefabActor);
+				}
+				FString NotificationText = FString::Printf(TEXT("Linked %d prefabs to Seed Linker: %s"), PrefabActors.Num(), *SeedLinker->GetName());
+				ShowNotification(FText::FromString(NotificationText), SNotificationItem::CS_Success);
+			}
+			else {
+				ShowNotification(LOCTEXT("NoPrefabLinkSelectedTitle", "No prefabs selected for linking"), SNotificationItem::CS_Fail);
+			}
+		}
+
+		static void HandleShowToolbarPrefabSubMenu_LinkPrefabSeeds(FMenuBuilder& MenuBuilder) {
+			// Grab all the prefab link actors from the scene
+			UWorld* ActiveWorld = GLevelEditorModeTools().GetWorld();
+			if (ActiveWorld) {
+				for (TActorIterator<APrefabSeedLinker> It(ActiveWorld); It; ++It) {
+					APrefabSeedLinker* SeedLinker = *It;
+					if (SeedLinker) {
+						FText ActorName = FText::FromString(SeedLinker->GetName());
+						MenuBuilder.AddMenuEntry
+						(
+							ActorName,
+							ActorName,
+							FSlateIcon(FPrefabEditorStyle::Get().GetStyleSetName(), "ClassIcon.PrefabSeedLinkerActor"),
+							FUIAction(FExecuteAction::CreateStatic(&Local::LinkSelectedPrefabSeeds, SeedLinker))
+						);
+
+					}
+				}
+			}
+
+		}
+
+		static TSharedRef<SWidget> HandleShowToolbarPrefabMenu() {
+			FMenuBuilder MenuBuilder(true, FPrefabricatorCommands::Get().LevelMenuActionList);
+
+			MenuBuilder.BeginSection("Prefabricator-Prefabs", LOCTEXT("PrefabHeader", "Prefabs"));
+			MenuBuilder.AddMenuEntry(FPrefabricatorCommands::Get().CreatePrefab);
+			MenuBuilder.EndSection();
+
+			MenuBuilder.BeginSection("Prefabricator-Randomization", LOCTEXT("RandomizationHeader", "Randomization"));
+
+			MenuBuilder.AddSubMenu(
+				LOCTEXT("MenuLinkSeeds", "Link selected Prefab Collection seeds"),
+				LOCTEXT("MenuLinkSeedsTooltip", "Links the selected prefab collection seeds to an existinga Seed Linker Actor in the scene"),
+				FNewMenuDelegate::CreateStatic(&Local::HandleShowToolbarPrefabSubMenu_LinkPrefabSeeds)
+			);
+			
+			MenuBuilder.EndSection();
+
+			return MenuBuilder.MakeWidget();
+		}
+
+		static void ExtendLevelToolbar(FToolBarBuilder& ToolbarBuilder) {
+			
+			ToolbarBuilder.AddComboButton(FUIAction(),
+				FOnGetContent::CreateStatic(&Local::HandleShowToolbarPrefabMenu),
+				LOCTEXT("PrefabToolbarButtonText", "Prefabricator"),
+				LOCTEXT("PrefabToolbarButtonTooltip", "Show Prefabricator actions"),
+				FSlateIcon(FPrefabEditorStyle::GetStyleSetName(), TEXT("Prefabricator.CreatePrefab")));
+		}
 	};
 
 	FLevelEditorModule& LevelEditorModule = FModuleManager::Get().LoadModuleChecked<FLevelEditorModule>("LevelEditor");
@@ -78,7 +159,8 @@ void FEditorUIExtender::Extend()
 	);
 
 	LevelEditorModule.GetToolBarExtensibilityManager().Get()->AddExtender(LevelToolbarExtender);
-
+	
+	
 }
 
 void FEditorUIExtender::Release()

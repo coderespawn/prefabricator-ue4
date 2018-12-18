@@ -21,7 +21,7 @@ FPrefabricatorCommands::FPrefabricatorCommands() : TCommands<FPrefabricatorComma
 }
 
 void FPrefabricatorCommands::RegisterCommands() {
-	UI_COMMAND(CreatePrefab, "Create Prefab", "Create a new prefab from selection", EUserInterfaceActionType::Button, FInputChord(EKeys::Enter));
+	UI_COMMAND(CreatePrefab, "Create Prefab (from selection)", "Create a new prefab from selection", EUserInterfaceActionType::Button, FInputChord(EKeys::Enter));
 
 	LevelMenuActionList = MakeShareable(new FUICommandList);
 
