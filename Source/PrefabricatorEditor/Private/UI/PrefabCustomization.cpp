@@ -145,7 +145,11 @@ FReply FPrefabActorCustomization::RandomizePrefabCollection(IDetailLayoutBuilder
 		FRandomStream Random;
 		Random.Initialize(FMath::Rand());
 		PrefabActor->RandomizeSeed(Random);
-		PrefabActor->LoadPrefab();
+
+		FPrefabLoadSettings LoadSettings;
+		LoadSettings.bRandomizeNestedSeed = true;
+		LoadSettings.Random = Random;
+		FPrefabTools::LoadStateFromPrefabAsset(PrefabActor, LoadSettings);
 	}
 	return FReply::Handled();
 }

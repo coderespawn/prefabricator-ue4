@@ -60,6 +60,11 @@ UPrefabricatorAsset* FPrefabTools::CreatePrefabAsset()
 	return Service.IsValid() ? Service->CreatePrefabAsset() : nullptr;
 }
 
+int32 FPrefabTools::GetRandomSeed(const FRandomStream& InRandom)
+{
+	return InRandom.RandRange(0, 10000000);
+}
+
 void FPrefabTools::IterateChildrenRecursive(APrefabActor* Prefab, TFunction<void(AActor*)> Visit)
 {
 	TArray<AActor*> Stack;
@@ -553,6 +558,10 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 		}
 
 		if (APrefabActor* ChildPrefab = Cast<APrefabActor>(ChildActor)) {
+			if (InSettings.bRandomizeNestedSeed) {
+				// This is a nested child prefab.  Randomize the seed of the child prefab
+				ChildPrefab->Seed = FPrefabTools::GetRandomSeed(InSettings.Random);
+			}
 			FPrefabTools::LoadStateFromPrefabAsset(ChildPrefab, InSettings);
 		}
 	}

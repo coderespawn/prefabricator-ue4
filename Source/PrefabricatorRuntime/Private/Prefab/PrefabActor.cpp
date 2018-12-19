@@ -123,7 +123,7 @@ UPrefabricatorAsset* APrefabActor::GetPrefabAsset()
 
 void APrefabActor::RandomizeSeed(const FRandomStream& InRandom, bool bRecursive)
 {
-	Seed = InRandom.RandRange(0, 10000000);
+	Seed = FPrefabTools::GetRandomSeed(InRandom);
 	if (bRecursive) {
 		TArray<AActor*> AttachedChildren;
 		GetAttachedActors(AttachedChildren);
@@ -136,22 +136,25 @@ void APrefabActor::RandomizeSeed(const FRandomStream& InRandom, bool bRecursive)
 }
 
 ////////////////////////////////// FPrefabListBuildQueue //////////////////////////////////
-void FPrefabBuildQueue::Initialize(const TArray<APrefabActor*>& InPrefabsToBuild, double InTimePerFrame)
+FPrefabBuildQueue::FPrefabBuildQueue(double InTimePerFrame)
+	: TimePerFrame(InTimePerFrame)
 {
-	TimePerFrame = InTimePerFrame;
-	for (APrefabActor* PrefabActor : InPrefabsToBuild) {
-		BuildQueue.Enqueue(PrefabActor);
-	}
 }
 
 void FPrefabBuildQueue::Tick()
 {
 	double StartTime = FPlatformTime::Seconds();
 	
-	APrefabActor* Prefab = nullptr;
-	while (BuildQueue.Dequeue(Prefab)) {
+	FPrefabBuildQueueItem Item;
+	while (BuildQueue.Dequeue(Item)) {
+		if (!Item.Prefab.IsValid()) continue;
+
+		APrefabActor* Prefab = Item.Prefab.Get();
 		if (Prefab->IsPrefabOutdated()) {
-			Prefab->LoadPrefab();
+			FPrefabLoadSettings LoadSettings;
+			LoadSettings.bRandomizeNestedSeed = Item.bRandomizeNestedSeed;
+			LoadSettings.Random = Item.Random;
+			FPrefabTools::LoadStateFromPrefabAsset(Prefab, LoadSettings);
 		}
 		if (TimePerFrame > 0) {
 			double ElapsedTime = FPlatformTime::Seconds() - StartTime;
@@ -160,4 +163,9 @@ void FPrefabBuildQueue::Tick()
 			}
 		}
 	}
+}
+
+void FPrefabBuildQueue::Enqueue(const FPrefabBuildQueueItem& InItem)
+{
+	BuildQueue.Enqueue(InItem);
 }

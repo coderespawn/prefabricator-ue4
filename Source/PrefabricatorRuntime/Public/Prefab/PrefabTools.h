@@ -10,6 +10,8 @@ struct FPrefabricatorActorData;
 
 struct PREFABRICATORRUNTIME_API FPrefabLoadSettings {
 	bool bUnregisterComponentsBeforeLoading = true;
+	bool bRandomizeNestedSeed = false;
+	FRandomStream Random;
 };
 
 class PREFABRICATORRUNTIME_API FPrefabTools {
@@ -35,6 +37,7 @@ public:
 	static void GetSelectedActors(TArray<AActor*>& OutActors);
 	static int GetNumSelectedActors();
 	static UPrefabricatorAsset* CreatePrefabAsset();
+	static int32 GetRandomSeed(const FRandomStream& Random);
 
 	static void IterateChildrenRecursive(APrefabActor* Actor, TFunction<void(AActor*)> Visit);
 };

@@ -29,8 +29,6 @@ APrefabRandomizer::APrefabRandomizer(const FObjectInitializer& ObjectInitializer
 		SpriteComponent->SetSprite(PrefabSpriteObject.Get());
 	}
 #endif // WITH_EDITORONLY_DATA
-
-	BuildQueue = MakeShareable(new FPrefabBuildQueue);
 }
 
 void APrefabRandomizer::Tick(float DeltaSeconds)
@@ -80,10 +78,17 @@ void APrefabRandomizer::Randomize(const FRandomStream& InRandom)
 {
 	// Grab all the actors in the level
 	ULevel* CurrentLevel = GetLevel();
-	TArray<APrefabActor*> PrefabsInLevel;
-	GetActorsInLevel(CurrentLevel, PrefabsInLevel);
+	TArray<APrefabActor*> AllPrefabsInLevel;
+	GetActorsInLevel(CurrentLevel, AllPrefabsInLevel);
 
-	for (APrefabActor* PrefabActor : PrefabsInLevel) {
+	// Build only the top level prefabs
+	TArray<APrefabActor*> TopLevelPrefabs = AllPrefabsInLevel.FilterByPredicate([](APrefabActor* InPrefab) -> bool {
+		AActor* Parent = InPrefab->GetAttachParentActor();
+		bool bChildOfAnotherPrefab = Parent && Parent->IsA<APrefabActor>();
+		return !bChildOfAnotherPrefab;
+	});
+
+	for (APrefabActor* PrefabActor : TopLevelPrefabs) {
 		PrefabActor->RandomizeSeed(InRandom, false);
 	}
 
@@ -99,7 +104,16 @@ void APrefabRandomizer::Randomize(const FRandomStream& InRandom)
 		}
 	}
 
-	BuildQueue->Initialize(PrefabsInLevel, MaxBuildTimePerFrame);
+
+	BuildQueue = MakeShareable(new FPrefabBuildQueue(MaxBuildTimePerFrame));
+	for (APrefabActor* TopLevelPrefab : TopLevelPrefabs) {
+		FPrefabBuildQueueItem BuildItem;
+		BuildItem.bRandomizeNestedSeed = true;
+		BuildItem.Random = InRandom;
+		BuildItem.Prefab = TopLevelPrefab;
+		BuildQueue->Enqueue(BuildItem);
+	}
+
 	BuildQueue->Tick();
 }
 

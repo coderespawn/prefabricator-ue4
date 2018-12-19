@@ -51,12 +51,19 @@ public:
 };
 
 
+struct FPrefabBuildQueueItem {
+	TWeakObjectPtr<APrefabActor> Prefab;
+	bool bRandomizeNestedSeed = false;
+	FRandomStream Random;
+};
+
 class PREFABRICATORRUNTIME_API FPrefabBuildQueue {
 public:
-	void Initialize(const TArray<APrefabActor*>& InPrefabsToBuild, double InTimePerFrame);
+	FPrefabBuildQueue(double InTimePerFrame);
 	void Tick();
+	void Enqueue(const FPrefabBuildQueueItem& InItem);
 
 private:
-	TQueue<APrefabActor*> BuildQueue;
+	TQueue<FPrefabBuildQueueItem> BuildQueue;
 	double TimePerFrame = 0;
 };
