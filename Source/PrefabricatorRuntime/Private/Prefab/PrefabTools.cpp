@@ -562,8 +562,6 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 		UnusedActor->Destroy();
 	}
 
-	//PrefabActor->PrefabComponent->UpdateBounds();
-
 	PrefabActor->LastUpdateID = PrefabAsset->LastUpdateID;
 }
 
