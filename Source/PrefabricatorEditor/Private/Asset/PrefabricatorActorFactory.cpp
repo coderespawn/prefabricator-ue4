@@ -42,6 +42,11 @@ void UPrefabricatorActorFactory::LoadPrefabActorState(APrefabActor* PrefabActor)
 		FPrefabLoadSettings LoadSettings;
 		LoadSettings.bUnregisterComponentsBeforeLoading = !bIsPreviewActor;
 		FPrefabTools::LoadStateFromPrefabAsset(PrefabActor, LoadSettings);
+		if (bIsPreviewActor) {
+			FPrefabTools::IterateChildrenRecursive(PrefabActor, [](AActor* ChildActor) {
+				ChildActor->SetActorEnableCollision(false);
+			});
+		}
 	}
 }
 

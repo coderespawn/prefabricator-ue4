@@ -60,6 +60,32 @@ UPrefabricatorAsset* FPrefabTools::CreatePrefabAsset()
 	return Service.IsValid() ? Service->CreatePrefabAsset() : nullptr;
 }
 
+void FPrefabTools::IterateChildrenRecursive(APrefabActor* Prefab, TFunction<void(AActor*)> Visit)
+{
+	TArray<AActor*> Stack;
+	{
+		TArray<AActor*> AttachedActors;
+		Prefab->GetAttachedActors(AttachedActors);
+		for (AActor* Child : AttachedActors) {
+			Stack.Push(Child);
+		}
+	}
+
+	while (Stack.Num() > 0) {
+		AActor* Top = Stack.Pop();
+
+		Visit(Top);
+
+		{
+			TArray<AActor*> AttachedActors;
+			Top->GetAttachedActors(AttachedActors);
+			for (AActor* Child : AttachedActors) {
+				Stack.Push(Child);
+			}
+		}
+	}
+}
+
 bool FPrefabTools::CanCreatePrefab()
 {
 	return GetNumSelectedActors() > 0;

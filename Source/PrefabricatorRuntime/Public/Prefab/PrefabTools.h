@@ -35,4 +35,6 @@ public:
 	static void GetSelectedActors(TArray<AActor*>& OutActors);
 	static int GetNumSelectedActors();
 	static UPrefabricatorAsset* CreatePrefabAsset();
+
+	static void IterateChildrenRecursive(APrefabActor* Actor, TFunction<void(AActor*)> Visit);
 };
