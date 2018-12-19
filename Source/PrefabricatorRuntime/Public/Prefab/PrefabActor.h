@@ -65,6 +65,6 @@ public:
 	void Enqueue(const FPrefabBuildQueueItem& InItem);
 
 private:
-	TQueue<FPrefabBuildQueueItem> BuildQueue;
+	TArray<FPrefabBuildQueueItem> BuildQueue;
 	double TimePerFrame = 0;
 };

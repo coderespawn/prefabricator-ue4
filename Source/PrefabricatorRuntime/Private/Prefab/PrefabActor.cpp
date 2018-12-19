@@ -145,17 +145,33 @@ void FPrefabBuildQueue::Tick()
 {
 	double StartTime = FPlatformTime::Seconds();
 	
-	FPrefabBuildQueueItem Item;
-	while (BuildQueue.Dequeue(Item)) {
-		//if (!Item.Prefab.IsValid()) continue;
+	
+	while (BuildQueue.Num() > 0) {
+		FPrefabBuildQueueItem Item = BuildQueue.Pop();
 
 		APrefabActor* Prefab = Item.Prefab.Get();
 		if (Prefab) {
 			FPrefabLoadSettings LoadSettings;
 			LoadSettings.bRandomizeNestedSeed = Item.bRandomizeNestedSeed;
 			LoadSettings.Random = Item.Random;
+			LoadSettings.bAutoBuildChildPrefabs = false;
 			FPrefabTools::LoadStateFromPrefabAsset(Prefab, LoadSettings);
 		}
+
+		// Add the child prefabs to the stack
+		TArray<AActor*> ChildActors;
+		Prefab->GetAttachedActors(ChildActors);
+		for (AActor* ChildActor : ChildActors) {
+			if (APrefabActor* ChildPrefab = Cast<APrefabActor>(ChildActor)) {
+				FPrefabBuildQueueItem ChildBuildRequest;
+				ChildBuildRequest.bRandomizeNestedSeed = Item.bRandomizeNestedSeed;
+				ChildBuildRequest.Random = Item.Random;
+				ChildBuildRequest.Prefab = ChildPrefab;
+				BuildQueue.Push(ChildBuildRequest);
+			}
+		}
+
+
 		if (TimePerFrame > 0) {
 			double ElapsedTime = FPlatformTime::Seconds() - StartTime;
 			if (ElapsedTime >= TimePerFrame) {
@@ -167,10 +183,10 @@ void FPrefabBuildQueue::Tick()
 
 void FPrefabBuildQueue::Reset()
 {
-	BuildQueue.Empty();
+	BuildQueue.Reset();
 }
 
 void FPrefabBuildQueue::Enqueue(const FPrefabBuildQueueItem& InItem)
 {
-	BuildQueue.Enqueue(InItem);
+	BuildQueue.Push(InItem);
 }

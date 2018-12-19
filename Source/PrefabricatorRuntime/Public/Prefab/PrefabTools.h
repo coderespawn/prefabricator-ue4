@@ -11,6 +11,7 @@ struct FPrefabricatorActorData;
 struct PREFABRICATORRUNTIME_API FPrefabLoadSettings {
 	bool bUnregisterComponentsBeforeLoading = true;
 	bool bRandomizeNestedSeed = false;
+	bool bAutoBuildChildPrefabs = true;
 	FRandomStream* Random = nullptr;
 };
 

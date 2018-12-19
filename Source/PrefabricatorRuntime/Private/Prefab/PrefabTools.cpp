@@ -562,7 +562,9 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 				// This is a nested child prefab.  Randomize the seed of the child prefab
 				ChildPrefab->Seed = FPrefabTools::GetRandomSeed(*InSettings.Random);
 			}
-			FPrefabTools::LoadStateFromPrefabAsset(ChildPrefab, InSettings);
+			if (InSettings.bAutoBuildChildPrefabs) {
+				FPrefabTools::LoadStateFromPrefabAsset(ChildPrefab, InSettings);
+			}
 		}
 	}
 
