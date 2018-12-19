@@ -154,7 +154,10 @@ void FPrefabBuildQueue::Tick()
 			FPrefabLoadSettings LoadSettings;
 			LoadSettings.bRandomizeNestedSeed = Item.bRandomizeNestedSeed;
 			LoadSettings.Random = Item.Random;
+
+			// Nested prefabs will be recursively build on the stack over multiple frames
 			LoadSettings.bAutoBuildChildPrefabs = false;
+
 			FPrefabTools::LoadStateFromPrefabAsset(Prefab, LoadSettings);
 		}
 
