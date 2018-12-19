@@ -45,10 +45,8 @@ void APrefabRandomizer::BeginPlay()
 	Super::BeginPlay();
 
 	if (bRandomizeOnBeginPlay) {
-		FRandomStream Random;
 		int32 Seed = FMath::Abs(SeedOffset + (int32)GetTypeHash(GetActorLocation()));
-		Random.Initialize(Seed);
-		Randomize(Random);
+		Randomize(Seed);
 	}
 }
 
@@ -74,8 +72,10 @@ namespace {
 	}
 }
 
-void APrefabRandomizer::Randomize(const FRandomStream& InRandom)
+void APrefabRandomizer::Randomize(int32 InSeed)
 {
+	Random.Initialize(InSeed);
+
 	// Grab all the actors in the level
 	ULevel* CurrentLevel = GetLevel();
 	TArray<APrefabActor*> AllPrefabsInLevel;
@@ -89,7 +89,7 @@ void APrefabRandomizer::Randomize(const FRandomStream& InRandom)
 	});
 
 	for (APrefabActor* PrefabActor : TopLevelPrefabs) {
-		PrefabActor->RandomizeSeed(InRandom, false);
+		PrefabActor->RandomizeSeed(Random, false);
 	}
 
 	TArray<APrefabSeedLinker*> SeedLinkersInLevel;
@@ -104,12 +104,11 @@ void APrefabRandomizer::Randomize(const FRandomStream& InRandom)
 		}
 	}
 
-
 	BuildQueue = MakeShareable(new FPrefabBuildQueue(MaxBuildTimePerFrame));
 	for (APrefabActor* TopLevelPrefab : TopLevelPrefabs) {
 		FPrefabBuildQueueItem BuildItem;
 		BuildItem.bRandomizeNestedSeed = true;
-		BuildItem.Random = InRandom;
+		BuildItem.Random = &Random;
 		BuildItem.Prefab = TopLevelPrefab;
 		BuildQueue->Enqueue(BuildItem);
 	}

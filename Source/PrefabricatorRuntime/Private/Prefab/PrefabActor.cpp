@@ -147,10 +147,10 @@ void FPrefabBuildQueue::Tick()
 	
 	FPrefabBuildQueueItem Item;
 	while (BuildQueue.Dequeue(Item)) {
-		if (!Item.Prefab.IsValid()) continue;
+		//if (!Item.Prefab.IsValid()) continue;
 
 		APrefabActor* Prefab = Item.Prefab.Get();
-		if (Prefab->IsPrefabOutdated()) {
+		if (Prefab) {
 			FPrefabLoadSettings LoadSettings;
 			LoadSettings.bRandomizeNestedSeed = Item.bRandomizeNestedSeed;
 			LoadSettings.Random = Item.Random;
@@ -163,6 +163,11 @@ void FPrefabBuildQueue::Tick()
 			}
 		}
 	}
+}
+
+void FPrefabBuildQueue::Reset()
+{
+	BuildQueue.Empty();
 }
 
 void FPrefabBuildQueue::Enqueue(const FPrefabBuildQueueItem& InItem)

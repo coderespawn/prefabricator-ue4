@@ -558,9 +558,9 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 		}
 
 		if (APrefabActor* ChildPrefab = Cast<APrefabActor>(ChildActor)) {
-			if (InSettings.bRandomizeNestedSeed) {
+			if (InSettings.bRandomizeNestedSeed && InSettings.Random) {
 				// This is a nested child prefab.  Randomize the seed of the child prefab
-				ChildPrefab->Seed = FPrefabTools::GetRandomSeed(InSettings.Random);
+				ChildPrefab->Seed = FPrefabTools::GetRandomSeed(*InSettings.Random);
 			}
 			FPrefabTools::LoadStateFromPrefabAsset(ChildPrefab, InSettings);
 		}

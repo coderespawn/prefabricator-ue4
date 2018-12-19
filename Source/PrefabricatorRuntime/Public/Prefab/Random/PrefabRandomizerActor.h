@@ -17,7 +17,7 @@ public:
 	virtual void BeginPlay() override;
 
 	UFUNCTION(BlueprintCallable)
-	void Randomize(const FRandomStream& InRandom);
+	void Randomize(int32 InSeed);
 
 #if WITH_EDITOR
 	virtual FName GetCustomIconName() const override;
@@ -35,4 +35,5 @@ public:
 
 private:
 	TSharedPtr<class FPrefabBuildQueue> BuildQueue;
+	FRandomStream Random;
 };
