@@ -19,7 +19,8 @@ void FPrefabComponentVisualizer::DrawVisualization(const UActorComponent* Compon
 	FBox Bounds = FPrefabTools::GetPrefabBounds(Parent);
 	Bounds = Bounds.ExpandBy(2);
 
+	const float Thickness = 0;
 	const FMatrix LocalToWorld = FMatrix::Identity;
-	DrawWireBox(PDI, LocalToWorld, Bounds, FLinearColor::Green, SDPG_Foreground);
+	DrawWireBox(PDI, LocalToWorld, Bounds, FLinearColor::Green, SDPG_Foreground, Thickness);
 }
 

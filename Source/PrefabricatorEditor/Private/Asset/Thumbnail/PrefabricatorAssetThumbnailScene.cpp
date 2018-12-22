@@ -65,7 +65,8 @@ void FPrefabricatorAssetThumbnailScene::GetViewMatrixParameters(const float InFO
 	const float BoundsZOffset = GetBoundsZOffset(Bounds);
 	const float TargetDistance = HalfMeshSize / FMath::Tan(HalfFOVRadians);
 
-	UPrefabricatorAsset* PrefabAsset = Cast<UPrefabricatorAsset>(PreviewActor->PrefabComponent->PrefabAssetInterface);
+	UPrefabricatorAsset* PrefabAsset = Cast<UPrefabricatorAsset>(PreviewActor->PrefabComponent->PrefabAssetInterface.LoadSynchronous());
+
 	if (PrefabAsset) {
 		USceneThumbnailInfo* ThumbnailInfo = Cast<USceneThumbnailInfo>(PrefabAsset->ThumbnailInfo);
 		if (ThumbnailInfo)

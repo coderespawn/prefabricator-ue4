@@ -26,11 +26,9 @@ public:
 		return false;
 	}
 
-	virtual UObject* GetAssetFromComponent(UActorComponent* InComponent) override
-	{
-		if (UPrefabComponent* PrefabComponent = Cast<UPrefabComponent>(InComponent))
-		{
-			return PrefabComponent->PrefabAssetInterface;
+	virtual UObject* GetAssetFromComponent(UActorComponent* InComponent) override {
+		if (UPrefabComponent* PrefabComponent = Cast<UPrefabComponent>(InComponent)) {
+			return PrefabComponent->PrefabAssetInterface.LoadSynchronous();
 		}
 		return nullptr;
 	}

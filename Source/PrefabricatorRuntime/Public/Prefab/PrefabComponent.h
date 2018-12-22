@@ -14,7 +14,7 @@ class PREFABRICATORRUNTIME_API UPrefabComponent : public USceneComponent {
 	GENERATED_UCLASS_BODY()
 public:
 	UPROPERTY(EditAnywhere, Category = "Prefabricator", Meta=(DisplayName="Prefab"))
-	class UPrefabricatorAssetInterface* PrefabAssetInterface;
+	TSoftObjectPtr<UPrefabricatorAssetInterface> PrefabAssetInterface;
 
 	virtual void OnRegister() override;
 	virtual FBoxSphereBounds CalcBounds(const FTransform& LocalToWorld) const;

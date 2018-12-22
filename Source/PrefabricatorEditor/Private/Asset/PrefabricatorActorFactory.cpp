@@ -21,7 +21,10 @@ UPrefabricatorActorFactory::UPrefabricatorActorFactory(const FObjectInitializer&
 UObject* UPrefabricatorActorFactory::GetAssetFromActorInstance(AActor* ActorInstance)
 {
 	APrefabActor* PrefabActor = Cast<APrefabActor>(ActorInstance);
-	return PrefabActor ? PrefabActor->PrefabComponent->PrefabAssetInterface : nullptr;
+	if (PrefabActor) {
+		return PrefabActor->PrefabComponent->PrefabAssetInterface.LoadSynchronous();
+	}
+	return nullptr;
 }
 
 AActor* UPrefabricatorActorFactory::SpawnActor(UObject* Asset, ULevel* InLevel, const FTransform& Transform, EObjectFlags InObjectFlags, const FName Name)

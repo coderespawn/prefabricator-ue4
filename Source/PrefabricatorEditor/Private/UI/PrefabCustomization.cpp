@@ -39,7 +39,10 @@ namespace {
 void FPrefabActorCustomization::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 {
 	APrefabActor* PrefabActor = GetDetailObject<APrefabActor>(&DetailBuilder);
-	UPrefabricatorAssetInterface* Asset = PrefabActor ? PrefabActor->PrefabComponent->PrefabAssetInterface : nullptr;
+	UPrefabricatorAssetInterface* Asset = nullptr;
+	if (PrefabActor) {
+		Asset = PrefabActor->PrefabComponent->PrefabAssetInterface.LoadSynchronous();
+	}
 
 	if (Asset) {
 		if (Asset->IsA<UPrefabricatorAsset>()) {
@@ -120,7 +123,7 @@ FReply FPrefabActorCustomization::HandleSaveToAsset(IDetailLayoutBuilder* Detail
 	if (PrefabActor) {
 		PrefabActor->SavePrefab();
 
-		UPrefabricatorAsset* PrefabAsset = Cast<UPrefabricatorAsset>(PrefabActor->PrefabComponent->PrefabAssetInterface);
+		UPrefabricatorAsset* PrefabAsset = Cast<UPrefabricatorAsset>(PrefabActor->PrefabComponent->PrefabAssetInterface.LoadSynchronous());
 		if (PrefabAsset) {
 			// Refresh all the existing prefabs in the level
 			FPrefabEditorTools::ReloadPrefabsInLevel(PrefabActor->GetWorld(), PrefabAsset);
