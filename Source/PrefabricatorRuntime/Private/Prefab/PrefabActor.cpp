@@ -136,6 +136,17 @@ void APrefabActor::RandomizeSeed(const FRandomStream& InRandom, bool bRecursive)
 	}
 }
 
+void APrefabActor::HandleBuildComplete()
+{
+	UPrefabricatorAssetInterface* PrefabAssetInterface = PrefabComponent->PrefabAssetInterface.LoadSynchronous();
+	if (PrefabAssetInterface && PrefabAssetInterface->EventListener) {
+		UPrefabricatorEventListener* EventListenerInstance = NewObject<UPrefabricatorEventListener>(GetTransientPackage(), PrefabAssetInterface->EventListener, NAME_None, RF_Transient);
+		if (EventListenerInstance) {
+			EventListenerInstance->PostSpawn(this);
+		}
+	}
+}
+
 ////////////////////////////////// FPrefabBuildSystem //////////////////////////////////
 FPrefabBuildSystem::FPrefabBuildSystem(double InTimePerFrame)
 	: TimePerFrame(InTimePerFrame)
@@ -185,7 +196,7 @@ void FPrefabBuildSystemCommand_BuildPrefab::Execute(FPrefabBuildSystem& BuildSys
 		LoadSettings.Random = Random;
 
 		// Nested prefabs will be recursively build on the stack over multiple frames
-		LoadSettings.bAutoBuildChildPrefabs = false;
+		LoadSettings.bSynchronousBuild = false;
 
 		FPrefabTools::LoadStateFromPrefabAsset(Prefab.Get(), LoadSettings);
 
@@ -214,6 +225,6 @@ void FPrefabBuildSystemCommand_NotifyBuildComplete::Execute(FPrefabBuildSystem& 
 {
 	if (Prefab.IsValid()) {
 		// TODO: Execute Post spawn script
-
+		Prefab->HandleBuildComplete();
 	}
 }

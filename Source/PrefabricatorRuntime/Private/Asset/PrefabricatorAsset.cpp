@@ -87,3 +87,8 @@ UPrefabricatorAsset* UPrefabricatorAssetCollection::GetPrefabAsset(const FPrefab
 
 	return Prefabs.Last().PrefabAsset;
 }
+
+void UPrefabricatorEventListener::PostSpawn_Implementation(APrefabActor* Prefab)
+{
+
+}

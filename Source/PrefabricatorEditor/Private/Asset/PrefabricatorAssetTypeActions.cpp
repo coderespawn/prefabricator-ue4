@@ -32,14 +32,8 @@ UClass* FPrefabricatorAssetTypeActions::GetSupportedClass() const
 
 void FPrefabricatorAssetTypeActions::OpenAssetEditor(const TArray<UObject*>& InObjects, TSharedPtr<class IToolkitHost> EditWithinLevelEditor)
 {
-	const EToolkitMode::Type Mode = EditWithinLevelEditor.IsValid() ? EToolkitMode::WorldCentric : EToolkitMode::Standalone;
-	for (auto ObjIt = InObjects.CreateConstIterator(); ObjIt; ++ObjIt)
-	{
-		UPrefabricatorAsset* PrefabAsset = Cast<UPrefabricatorAsset>(*ObjIt);
-		if (PrefabAsset) {
-			// TODO: Launch a preview editor
-		}
-	}
+	// Open the default editor
+	FSimpleAssetEditor::CreateEditor(EToolkitMode::Standalone, EditWithinLevelEditor, InObjects);
 }
 
 class UThumbnailInfo* FPrefabricatorAssetTypeActions::GetThumbnailInfo(UObject* Asset) const

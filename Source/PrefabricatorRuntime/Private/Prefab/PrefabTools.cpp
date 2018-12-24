@@ -564,7 +564,7 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 				// This is a nested child prefab.  Randomize the seed of the child prefab
 				ChildPrefab->Seed = FPrefabTools::GetRandomSeed(*InSettings.Random);
 			}
-			if (InSettings.bAutoBuildChildPrefabs) {
+			if (InSettings.bSynchronousBuild) {
 				LoadStateFromPrefabAsset(ChildPrefab, InSettings);
 			}
 		}
@@ -576,5 +576,9 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 	}
 
 	PrefabActor->LastUpdateID = PrefabAsset->LastUpdateID;
+
+	if (InSettings.bSynchronousBuild) {
+		PrefabActor->HandleBuildComplete();
+	}
 }
 

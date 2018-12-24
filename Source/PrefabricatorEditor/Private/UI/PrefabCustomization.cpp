@@ -110,6 +110,10 @@ void FPrefabActorCustomization::CustomizeDetails(IDetailLayoutBuilder& DetailBui
 		}
 
 	}
+	else {
+		IDetailCategoryBuilder& Category = DetailBuilder.EditCategory("Prefabricator", FText::GetEmpty(), ECategoryPriority::Important);
+		Category.AddExternalObjectProperty({ PrefabActor->PrefabComponent }, GET_MEMBER_NAME_CHECKED(UPrefabComponent, PrefabAssetInterface));
+	}
 }
 
 TSharedRef<IDetailCustomization> FPrefabActorCustomization::MakeInstance()

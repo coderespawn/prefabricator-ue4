@@ -55,8 +55,21 @@ struct FPrefabAssetSelectionConfig {
 };
 
 UCLASS(Blueprintable)
+class PREFABRICATORRUNTIME_API UPrefabricatorEventListener : public UObject {
+	GENERATED_BODY()
+public:
+	/** Called when the prefab and all its child prefabs have been spawned and initialized */
+	UFUNCTION(BlueprintNativeEvent, Category = "Prefabricator")
+	void PostSpawn(APrefabActor* Prefab);
+	virtual void PostSpawn_Implementation(APrefabActor* Prefab);
+};
+
+UCLASS(Blueprintable)
 class PREFABRICATORRUNTIME_API UPrefabricatorAssetInterface : public UObject {
 	GENERATED_BODY()
+public:
+	UPROPERTY(EditAnywhere, Category = "Prefabricator")
+	TSubclassOf<UPrefabricatorEventListener> EventListener;
 
 public:
 	virtual class UPrefabricatorAsset* GetPrefabAsset(const FPrefabAssetSelectionConfig& InConfig) { return nullptr; }
@@ -79,7 +92,7 @@ public:
 
 
 	/** Information for thumbnail rendering */
-	UPROPERTY(VisibleAnywhere, Instanced, AdvancedDisplay, Category = StaticMesh)
+	UPROPERTY()
 	class UThumbnailInfo* ThumbnailInfo;
 
 public:

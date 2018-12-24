@@ -17,4 +17,8 @@ public:
 	/** Starts an analytics session without any custom attributes specified */
 	UFUNCTION(BlueprintCallable, Category = "Prefabricator")
 	static APrefabActor* SpawnPrefab(const UObject* WorldContextObject, UPrefabricatorAssetInterface* Prefab, const FTransform& Transform, int32 Seed);
+
+	UFUNCTION(BlueprintCallable, Category = "Prefabricator")
+	static void GetAllAttachedActors(AActor* Prefab, TArray<AActor*>& AttachedActors);
+
 };

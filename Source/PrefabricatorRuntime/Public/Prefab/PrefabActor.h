@@ -39,6 +39,7 @@ public:
 	UPrefabricatorAsset* GetPrefabAsset();
 
 	void RandomizeSeed(const FRandomStream& InRandom, bool bRecursive = true);
+	void HandleBuildComplete();
 
 public:
 	// The last update ID of the prefab asset when this actor was refreshed from it
@@ -46,7 +47,7 @@ public:
 	UPROPERTY()
 	FGuid LastUpdateID;
 
-	UPROPERTY(EditAnywhere, Category = "Prefabricator")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Prefabricator")
 	int32 Seed;
 };
 
