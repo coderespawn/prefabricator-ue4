@@ -148,33 +148,8 @@ void FPrefabBuildQueue::Tick()
 	
 	
 	while (BuildQueue.Num() > 0) {
-		FPrefabBuildQueueItem Item = BuildQueue.Pop();
-
-		APrefabActor* Prefab = Item.Prefab.Get();
-		if (Prefab) {
-			FPrefabLoadSettings LoadSettings;
-			LoadSettings.bRandomizeNestedSeed = Item.bRandomizeNestedSeed;
-			LoadSettings.Random = Item.Random;
-
-			// Nested prefabs will be recursively build on the stack over multiple frames
-			LoadSettings.bAutoBuildChildPrefabs = false;
-
-			FPrefabTools::LoadStateFromPrefabAsset(Prefab, LoadSettings);
-		}
-
-		// Add the child prefabs to the stack
-		TArray<AActor*> ChildActors;
-		Prefab->GetAttachedActors(ChildActors);
-		for (AActor* ChildActor : ChildActors) {
-			if (APrefabActor* ChildPrefab = Cast<APrefabActor>(ChildActor)) {
-				FPrefabBuildQueueItem ChildBuildRequest;
-				ChildBuildRequest.bRandomizeNestedSeed = Item.bRandomizeNestedSeed;
-				ChildBuildRequest.Random = Item.Random;
-				ChildBuildRequest.Prefab = ChildPrefab;
-				BuildQueue.Push(ChildBuildRequest);
-			}
-		}
-
+		FPrefabBuildQueueCommandPtr Item = BuildQueue.Pop();
+		Item->Execute(*this);
 
 		if (TimePerFrame > 0) {
 			double ElapsedTime = FPlatformTime::Seconds() - StartTime;
@@ -190,7 +165,55 @@ void FPrefabBuildQueue::Reset()
 	BuildQueue.Reset();
 }
 
-void FPrefabBuildQueue::Enqueue(const FPrefabBuildQueueItem& InItem)
+void FPrefabBuildQueue::Enqueue(FPrefabBuildQueueCommandPtr InCommand)
 {
-	BuildQueue.Push(InItem);
+	BuildQueue.Push(InCommand);
+}
+
+FPrefabBuildQueueCommand_BuildPrefab::FPrefabBuildQueueCommand_BuildPrefab(TWeakObjectPtr<APrefabActor> InPrefab, bool bInRandomizeNestedSeed, FRandomStream* InRandom)
+	: Prefab(InPrefab)
+	, bRandomizeNestedSeed(bInRandomizeNestedSeed)
+	, Random(InRandom)
+{
+}
+
+void FPrefabBuildQueueCommand_BuildPrefab::Execute(FPrefabBuildQueue& Queue)
+{
+	if (Prefab.IsValid()) {
+		FPrefabLoadSettings LoadSettings;
+		LoadSettings.bRandomizeNestedSeed = bRandomizeNestedSeed;
+		LoadSettings.Random = Random;
+
+		// Nested prefabs will be recursively build on the stack over multiple frames
+		LoadSettings.bAutoBuildChildPrefabs = false;
+
+		FPrefabTools::LoadStateFromPrefabAsset(Prefab.Get(), LoadSettings);
+
+		// Push a build complete notification request. Since this is a stack, it will execute after all the children are processed below
+		FPrefabBuildQueueCommandPtr ChildBuildCommand = MakeShareable(new FPrefabBuildQueueCommand_NotifyBuildComplete(Prefab));
+		Queue.Enqueue(ChildBuildCommand);
+	}
+
+	// Add the child prefabs to the stack
+	TArray<AActor*> ChildActors;
+	Prefab->GetAttachedActors(ChildActors);
+	for (AActor* ChildActor : ChildActors) {
+		if (APrefabActor* ChildPrefab = Cast<APrefabActor>(ChildActor)) {
+			FPrefabBuildQueueCommandPtr ChildBuildCommand = MakeShareable(new FPrefabBuildQueueCommand_BuildPrefab(ChildPrefab, bRandomizeNestedSeed, Random));
+			Queue.Enqueue(ChildBuildCommand);
+		}
+	}
+}
+
+FPrefabBuildQueueCommand_NotifyBuildComplete::FPrefabBuildQueueCommand_NotifyBuildComplete(TWeakObjectPtr<APrefabActor> InPrefab)
+	: Prefab(InPrefab)
+{
+}
+
+void FPrefabBuildQueueCommand_NotifyBuildComplete::Execute(FPrefabBuildQueue& Queue)
+{
+	if (Prefab.IsValid()) {
+		// TODO: Execute Post spawn script
+
+	}
 }

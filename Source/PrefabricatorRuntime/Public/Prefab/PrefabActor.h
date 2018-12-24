@@ -50,21 +50,48 @@ public:
 	int32 Seed;
 };
 
+/////////////////////////////// BuildQueue /////////////////////////////// 
 
-struct FPrefabBuildQueueItem {
+class FPrefabBuildQueue;
+
+class PREFABRICATORRUNTIME_API FPrefabBuildQueueCommand {
+public:
+	virtual ~FPrefabBuildQueueCommand() {}
+	virtual void Execute(FPrefabBuildQueue& Queue) = 0;
+};
+typedef TSharedPtr<FPrefabBuildQueueCommand> FPrefabBuildQueueCommandPtr;
+
+
+class PREFABRICATORRUNTIME_API FPrefabBuildQueueCommand_BuildPrefab : public FPrefabBuildQueueCommand {
+public:
+	FPrefabBuildQueueCommand_BuildPrefab(TWeakObjectPtr<APrefabActor> InPrefab, bool bInRandomizeNestedSeed, FRandomStream* InRandom);
+
+	virtual void Execute(FPrefabBuildQueue& Queue) override;
+
+private:
 	TWeakObjectPtr<APrefabActor> Prefab;
 	bool bRandomizeNestedSeed = false;
 	FRandomStream* Random = nullptr;
 };
+
+class PREFABRICATORRUNTIME_API FPrefabBuildQueueCommand_NotifyBuildComplete : public FPrefabBuildQueueCommand {
+public:
+	FPrefabBuildQueueCommand_NotifyBuildComplete(TWeakObjectPtr<APrefabActor> InPrefab);
+	virtual void Execute(FPrefabBuildQueue& Queue) override;
+
+private:
+	TWeakObjectPtr<APrefabActor> Prefab;
+};
+
 
 class PREFABRICATORRUNTIME_API FPrefabBuildQueue {
 public:
 	FPrefabBuildQueue(double InTimePerFrame);
 	void Tick();
 	void Reset();
-	void Enqueue(const FPrefabBuildQueueItem& InItem);
+	void Enqueue(FPrefabBuildQueueCommandPtr InCommand);
 
 private:
-	TArray<FPrefabBuildQueueItem> BuildQueue;
+	TArray<FPrefabBuildQueueCommandPtr> BuildQueue;
 	double TimePerFrame = 0;
 };

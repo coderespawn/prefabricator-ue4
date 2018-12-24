@@ -565,7 +565,7 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 				ChildPrefab->Seed = FPrefabTools::GetRandomSeed(*InSettings.Random);
 			}
 			if (InSettings.bAutoBuildChildPrefabs) {
-				FPrefabTools::LoadStateFromPrefabAsset(ChildPrefab, InSettings);
+				LoadStateFromPrefabAsset(ChildPrefab, InSettings);
 			}
 		}
 	}

@@ -106,11 +106,8 @@ void APrefabRandomizer::Randomize(int32 InSeed)
 
 	BuildQueue = MakeShareable(new FPrefabBuildQueue(MaxBuildTimePerFrame));
 	for (APrefabActor* TopLevelPrefab : TopLevelPrefabs) {
-		FPrefabBuildQueueItem BuildItem;
-		BuildItem.bRandomizeNestedSeed = true;
-		BuildItem.Random = &Random;
-		BuildItem.Prefab = TopLevelPrefab;
-		BuildQueue->Enqueue(BuildItem);
+		FPrefabBuildQueueCommandPtr BuildCommand = MakeShareable(new FPrefabBuildQueueCommand_BuildPrefab(TopLevelPrefab, true, &Random));
+		BuildQueue->Enqueue(BuildCommand);
 	}
 
 	BuildQueue->Tick();
