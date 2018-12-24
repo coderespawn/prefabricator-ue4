@@ -136,19 +136,19 @@ void APrefabActor::RandomizeSeed(const FRandomStream& InRandom, bool bRecursive)
 	}
 }
 
-////////////////////////////////// FPrefabListBuildQueue //////////////////////////////////
-FPrefabBuildQueue::FPrefabBuildQueue(double InTimePerFrame)
+////////////////////////////////// FPrefabBuildSystem //////////////////////////////////
+FPrefabBuildSystem::FPrefabBuildSystem(double InTimePerFrame)
 	: TimePerFrame(InTimePerFrame)
 {
 }
 
-void FPrefabBuildQueue::Tick()
+void FPrefabBuildSystem::Tick()
 {
 	double StartTime = FPlatformTime::Seconds();
 	
 	
-	while (BuildQueue.Num() > 0) {
-		FPrefabBuildQueueCommandPtr Item = BuildQueue.Pop();
+	while (BuildStack.Num() > 0) {
+		FPrefabBuildSystemCommandPtr Item = BuildStack.Pop();
 		Item->Execute(*this);
 
 		if (TimePerFrame > 0) {
@@ -160,24 +160,24 @@ void FPrefabBuildQueue::Tick()
 	}
 }
 
-void FPrefabBuildQueue::Reset()
+void FPrefabBuildSystem::Reset()
 {
-	BuildQueue.Reset();
+	BuildStack.Reset();
 }
 
-void FPrefabBuildQueue::Enqueue(FPrefabBuildQueueCommandPtr InCommand)
+void FPrefabBuildSystem::PushCommand(FPrefabBuildSystemCommandPtr InCommand)
 {
-	BuildQueue.Push(InCommand);
+	BuildStack.Push(InCommand);
 }
 
-FPrefabBuildQueueCommand_BuildPrefab::FPrefabBuildQueueCommand_BuildPrefab(TWeakObjectPtr<APrefabActor> InPrefab, bool bInRandomizeNestedSeed, FRandomStream* InRandom)
+FPrefabBuildSystemCommand_BuildPrefab::FPrefabBuildSystemCommand_BuildPrefab(TWeakObjectPtr<APrefabActor> InPrefab, bool bInRandomizeNestedSeed, FRandomStream* InRandom)
 	: Prefab(InPrefab)
 	, bRandomizeNestedSeed(bInRandomizeNestedSeed)
 	, Random(InRandom)
 {
 }
 
-void FPrefabBuildQueueCommand_BuildPrefab::Execute(FPrefabBuildQueue& Queue)
+void FPrefabBuildSystemCommand_BuildPrefab::Execute(FPrefabBuildSystem& BuildSystem)
 {
 	if (Prefab.IsValid()) {
 		FPrefabLoadSettings LoadSettings;
@@ -190,8 +190,8 @@ void FPrefabBuildQueueCommand_BuildPrefab::Execute(FPrefabBuildQueue& Queue)
 		FPrefabTools::LoadStateFromPrefabAsset(Prefab.Get(), LoadSettings);
 
 		// Push a build complete notification request. Since this is a stack, it will execute after all the children are processed below
-		FPrefabBuildQueueCommandPtr ChildBuildCommand = MakeShareable(new FPrefabBuildQueueCommand_NotifyBuildComplete(Prefab));
-		Queue.Enqueue(ChildBuildCommand);
+		FPrefabBuildSystemCommandPtr ChildBuildCommand = MakeShareable(new FPrefabBuildSystemCommand_NotifyBuildComplete(Prefab));
+		BuildSystem.PushCommand(ChildBuildCommand);
 	}
 
 	// Add the child prefabs to the stack
@@ -199,18 +199,18 @@ void FPrefabBuildQueueCommand_BuildPrefab::Execute(FPrefabBuildQueue& Queue)
 	Prefab->GetAttachedActors(ChildActors);
 	for (AActor* ChildActor : ChildActors) {
 		if (APrefabActor* ChildPrefab = Cast<APrefabActor>(ChildActor)) {
-			FPrefabBuildQueueCommandPtr ChildBuildCommand = MakeShareable(new FPrefabBuildQueueCommand_BuildPrefab(ChildPrefab, bRandomizeNestedSeed, Random));
-			Queue.Enqueue(ChildBuildCommand);
+			FPrefabBuildSystemCommandPtr ChildBuildCommand = MakeShareable(new FPrefabBuildSystemCommand_BuildPrefab(ChildPrefab, bRandomizeNestedSeed, Random));
+			BuildSystem.PushCommand(ChildBuildCommand);
 		}
 	}
 }
 
-FPrefabBuildQueueCommand_NotifyBuildComplete::FPrefabBuildQueueCommand_NotifyBuildComplete(TWeakObjectPtr<APrefabActor> InPrefab)
+FPrefabBuildSystemCommand_NotifyBuildComplete::FPrefabBuildSystemCommand_NotifyBuildComplete(TWeakObjectPtr<APrefabActor> InPrefab)
 	: Prefab(InPrefab)
 {
 }
 
-void FPrefabBuildQueueCommand_NotifyBuildComplete::Execute(FPrefabBuildQueue& Queue)
+void FPrefabBuildSystemCommand_NotifyBuildComplete::Execute(FPrefabBuildSystem& BuildSystem)
 {
 	if (Prefab.IsValid()) {
 		// TODO: Execute Post spawn script

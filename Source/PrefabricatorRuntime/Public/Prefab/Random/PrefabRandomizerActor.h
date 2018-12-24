@@ -34,6 +34,6 @@ public:
 	float MaxBuildTimePerFrame = 0.02f;
 
 private:
-	TSharedPtr<class FPrefabBuildQueue> BuildQueue;
+	TSharedPtr<class FPrefabBuildSystem> BuildSystem;
 	FRandomStream Random;
 };

@@ -50,23 +50,23 @@ public:
 	int32 Seed;
 };
 
-/////////////////////////////// BuildQueue /////////////////////////////// 
+/////////////////////////////// BuildSystem /////////////////////////////// 
 
-class FPrefabBuildQueue;
+class FPrefabBuildSystem;
 
-class PREFABRICATORRUNTIME_API FPrefabBuildQueueCommand {
+class PREFABRICATORRUNTIME_API FPrefabBuildSystemCommand {
 public:
-	virtual ~FPrefabBuildQueueCommand() {}
-	virtual void Execute(FPrefabBuildQueue& Queue) = 0;
+	virtual ~FPrefabBuildSystemCommand() {}
+	virtual void Execute(FPrefabBuildSystem& BuildSystem) = 0;
 };
-typedef TSharedPtr<FPrefabBuildQueueCommand> FPrefabBuildQueueCommandPtr;
+typedef TSharedPtr<FPrefabBuildSystemCommand> FPrefabBuildSystemCommandPtr;
 
 
-class PREFABRICATORRUNTIME_API FPrefabBuildQueueCommand_BuildPrefab : public FPrefabBuildQueueCommand {
+class PREFABRICATORRUNTIME_API FPrefabBuildSystemCommand_BuildPrefab : public FPrefabBuildSystemCommand {
 public:
-	FPrefabBuildQueueCommand_BuildPrefab(TWeakObjectPtr<APrefabActor> InPrefab, bool bInRandomizeNestedSeed, FRandomStream* InRandom);
+	FPrefabBuildSystemCommand_BuildPrefab(TWeakObjectPtr<APrefabActor> InPrefab, bool bInRandomizeNestedSeed, FRandomStream* InRandom);
 
-	virtual void Execute(FPrefabBuildQueue& Queue) override;
+	virtual void Execute(FPrefabBuildSystem& BuildSystem) override;
 
 private:
 	TWeakObjectPtr<APrefabActor> Prefab;
@@ -74,24 +74,24 @@ private:
 	FRandomStream* Random = nullptr;
 };
 
-class PREFABRICATORRUNTIME_API FPrefabBuildQueueCommand_NotifyBuildComplete : public FPrefabBuildQueueCommand {
+class PREFABRICATORRUNTIME_API FPrefabBuildSystemCommand_NotifyBuildComplete : public FPrefabBuildSystemCommand {
 public:
-	FPrefabBuildQueueCommand_NotifyBuildComplete(TWeakObjectPtr<APrefabActor> InPrefab);
-	virtual void Execute(FPrefabBuildQueue& Queue) override;
+	FPrefabBuildSystemCommand_NotifyBuildComplete(TWeakObjectPtr<APrefabActor> InPrefab);
+	virtual void Execute(FPrefabBuildSystem& BuildSystem) override;
 
 private:
 	TWeakObjectPtr<APrefabActor> Prefab;
 };
 
 
-class PREFABRICATORRUNTIME_API FPrefabBuildQueue {
+class PREFABRICATORRUNTIME_API FPrefabBuildSystem {
 public:
-	FPrefabBuildQueue(double InTimePerFrame);
+	FPrefabBuildSystem(double InTimePerFrame);
 	void Tick();
 	void Reset();
-	void Enqueue(FPrefabBuildQueueCommandPtr InCommand);
+	void PushCommand(FPrefabBuildSystemCommandPtr InCommand);
 
 private:
-	TArray<FPrefabBuildQueueCommandPtr> BuildQueue;
+	TArray<FPrefabBuildSystemCommandPtr> BuildStack;
 	double TimePerFrame = 0;
 };

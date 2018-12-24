@@ -35,8 +35,8 @@ void APrefabRandomizer::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
-	if (BuildQueue.IsValid()) {
-		BuildQueue->Tick();
+	if (BuildSystem.IsValid()) {
+		BuildSystem->Tick();
 	}
 }
 
@@ -104,13 +104,13 @@ void APrefabRandomizer::Randomize(int32 InSeed)
 		}
 	}
 
-	BuildQueue = MakeShareable(new FPrefabBuildQueue(MaxBuildTimePerFrame));
+	BuildSystem = MakeShareable(new FPrefabBuildSystem(MaxBuildTimePerFrame));
 	for (APrefabActor* TopLevelPrefab : TopLevelPrefabs) {
-		FPrefabBuildQueueCommandPtr BuildCommand = MakeShareable(new FPrefabBuildQueueCommand_BuildPrefab(TopLevelPrefab, true, &Random));
-		BuildQueue->Enqueue(BuildCommand);
+		FPrefabBuildSystemCommandPtr BuildCommand = MakeShareable(new FPrefabBuildSystemCommand_BuildPrefab(TopLevelPrefab, true, &Random));
+		BuildSystem->PushCommand(BuildCommand);
 	}
 
-	BuildQueue->Tick();
+	BuildSystem->Tick();
 }
 
 #if WITH_EDITOR
