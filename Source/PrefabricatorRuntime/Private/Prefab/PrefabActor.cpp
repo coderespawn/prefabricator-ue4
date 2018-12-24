@@ -82,7 +82,14 @@ void APrefabActor::PostDuplicate(EDuplicateMode::Type DuplicateMode)
 	Super::PostDuplicate(DuplicateMode);
 
 	if (DuplicateMode == EDuplicateMode::Normal) {
-		LoadPrefab();
+		FRandomStream Random;
+		Random.Initialize(FMath::Rand());
+		RandomizeSeed(Random);
+
+		FPrefabLoadSettings LoadSettings;
+		LoadSettings.bRandomizeNestedSeed = true;
+		LoadSettings.Random = &Random;
+		FPrefabTools::LoadStateFromPrefabAsset(this, LoadSettings);
 	}
 }
 

@@ -30,6 +30,8 @@ APrefabActor* UPrefabricatorBlueprintLibrary::SpawnPrefab(const UObject* WorldCo
 
 void UPrefabricatorBlueprintLibrary::GetAllAttachedActors(AActor* Prefab, TArray<AActor*>& AttachedActors)
 {
+	if (!Prefab) return;
+
 	TArray<AActor*> ChildActors;
 	Prefab->GetAttachedActors(ChildActors);
 	for (AActor* ChildActor : ChildActors) {
