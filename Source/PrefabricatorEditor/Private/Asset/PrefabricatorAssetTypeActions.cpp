@@ -4,12 +4,12 @@
 
 #include "Asset/PrefabricatorAsset.h"
 #include "Prefab/PrefabTools.h"
+#include "PrefabricatorEditorModule.h"
 
 #include "AssetToolsModule.h"
 #include "ContentBrowserModule.h"
 #include "Framework/MultiBox/MultiBoxBuilder.h"
 #include "ThumbnailRendering/SceneThumbnailInfo.h"
-#include "PrefabricatorEditorModule.h"
 
 #define LOCTEXT_NAMESPACE "AssetTypeActions"
 
@@ -115,3 +115,4 @@ uint32 FPrefabricatorAssetCollectionTypeActions::GetCategories()
 }
 
 #undef LOCTEXT_NAMESPACE
+

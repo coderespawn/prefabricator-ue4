@@ -16,9 +16,9 @@
 #include "IContentBrowserSingleton.h"
 #include "LevelEditor.h"
 #include "LevelEditorViewport.h"
-#include "ThumbnailRendering/SceneThumbnailInfo.h"
 #include "PropertyEditorModule.h"
 #include "ScopedTransaction.h"
+#include "ThumbnailRendering/SceneThumbnailInfo.h"
 
 void FPrefabricatorEditorService::ParentActors(AActor* ParentActor, AActor* ChildActor)
 {

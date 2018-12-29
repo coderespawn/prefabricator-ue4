@@ -3,14 +3,14 @@
 #include "PrefabricatorEditorPostInitModule.h"
 
 #include "Prefab/PrefabComponent.h"
+#include "Prefab/Random/PrefabSeedLinker.h"
 #include "Visualizers/PrefabComponentVisualizer.h"
+#include "Visualizers/PrefabSeedLinkerVisualizer.h"
 
 #include "Editor/UnrealEdEngine.h"
 #include "IAssetTools.h"
 #include "IAssetTypeActions.h"
 #include "UnrealEdGlobals.h"
-#include "PrefabSeedLinker.h"
-#include "PrefabSeedLinkerVisualizer.h"
 
 #define LOCTEXT_NAMESPACE "PrefabricatorEditorModule" 
 

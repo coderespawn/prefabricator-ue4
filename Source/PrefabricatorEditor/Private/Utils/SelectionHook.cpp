@@ -5,9 +5,9 @@
 #include "Asset/PrefabricatorAssetUserData.h"
 #include "Prefab/PrefabActor.h"
 
+#include "Editor/EditorEngine.h"
 #include "Engine/Selection.h"
 #include "GameFramework/Actor.h"
-#include "Editor/EditorEngine.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogPrefabricatorSelectionHook, Log, All);
 

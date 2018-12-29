@@ -1,14 +1,16 @@
 //$ Copyright 2015-18, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #include "Asset/Thumbnail/PrefabricatorAssetThumbnailScene.h"
+
+#include "Asset/PrefabricatorAsset.h"
+#include "Prefab/PrefabActor.h"
+#include "Prefab/PrefabComponent.h"
+#include "Prefab/PrefabTools.h"
+
 #include "Engine/World.h"
-#include "PrefabActor.h"
-#include "PreviewScene.h"
-#include "PrefabComponent.h"
-#include "PrefabricatorAsset.h"
-#include "PrefabTools.h"
-#include "ThumbnailRendering/SceneThumbnailInfo.h"
 #include "GameFramework/Actor.h"
+#include "PreviewScene.h"
+#include "ThumbnailRendering/SceneThumbnailInfo.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogPrefabAssetThumbScene, Log, All);
 
@@ -89,3 +91,4 @@ void FPrefabricatorAssetThumbnailScene::GetViewMatrixParameters(const float InFO
 
 
 }
+

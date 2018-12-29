@@ -3,10 +3,10 @@
 #include "Visualizers/PrefabComponentVisualizer.h"
 
 #include "Prefab/PrefabComponent.h"
+#include "Prefab/PrefabTools.h"
 
 #include "GameFramework/Actor.h"
 #include "SceneManagement.h"
-#include "PrefabTools.h"
 
 void FPrefabComponentVisualizer::DrawVisualization(const UActorComponent* Component, const FSceneView* View, FPrimitiveDrawInterface* PDI)
 {

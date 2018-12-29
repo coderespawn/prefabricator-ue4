@@ -12,11 +12,11 @@
 #include "EngineUtils.h"
 #include "GameFramework/Actor.h"
 #include "HAL/UnrealMemory.h"
+#include "PropertyPathHelpers.h"
 #include "Serialization/MemoryReader.h"
 #include "Serialization/ObjectAndNameAsStringProxyArchive.h"
 #include "Serialization/ObjectReader.h"
 #include "Serialization/ObjectWriter.h"
-#include "PropertyPathHelpers.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogPrefabTools, Log, All);
 
@@ -596,3 +596,4 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 }
 
 #undef LOCTEXT_NAMESPACE
+

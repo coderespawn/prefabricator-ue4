@@ -1,15 +1,16 @@
 //$ Copyright 2015-18, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #include "Prefab/Random/PrefabRandomizerActor.h"
-#include "RandomStream.h"
-#include "GameFramework/Actor.h"
-#include "Components/SceneComponent.h"
-#include "Components/BillboardComponent.h"
-#include "ConstructorHelpers.h"
-#include "PrefabActor.h"
-#include "EngineUtils.h"
-#include "PrefabSeedLinker.h"
 
+#include "Prefab/PrefabActor.h"
+#include "Prefab/Random/PrefabSeedLinker.h"
+
+#include "Components/BillboardComponent.h"
+#include "Components/SceneComponent.h"
+#include "EngineUtils.h"
+#include "GameFramework/Actor.h"
+#include "Math/RandomStream.h"
+#include "UObject/ConstructorHelpers.h"
 
 APrefabRandomizer::APrefabRandomizer(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)

@@ -2,13 +2,13 @@
 
 #include "Prefab/PrefabActor.h"
 
+#include "Asset/PrefabricatorAsset.h"
+#include "Asset/PrefabricatorAssetUserData.h"
 #include "Prefab/PrefabComponent.h"
 #include "Prefab/PrefabTools.h"
 
 #include "Components/BillboardComponent.h"
 #include "Engine/PointLight.h"
-#include "PrefabricatorAssetUserData.h"
-#include "PrefabricatorAsset.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogPrefabActor, Log, All);
 
@@ -235,3 +235,4 @@ void FPrefabBuildSystemCommand_NotifyBuildComplete::Execute(FPrefabBuildSystem& 
 		Prefab->HandleBuildComplete();
 	}
 }
+

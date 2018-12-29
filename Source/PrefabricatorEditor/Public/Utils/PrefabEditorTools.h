@@ -2,7 +2,7 @@
 
 #pragma once
 #include "CoreMinimal.h"
-#include "SNotificationList.h"
+#include "Widgets/Notifications/SNotificationList.h"
 
 class UPrefabricatorAsset;
 
@@ -14,3 +14,4 @@ public:
 
 	static void SwitchLevelViewportToRealtimeMode();
 };
+

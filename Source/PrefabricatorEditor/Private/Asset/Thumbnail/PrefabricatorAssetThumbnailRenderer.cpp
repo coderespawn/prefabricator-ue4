@@ -1,8 +1,10 @@
 //$ Copyright 2015-18, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #include "Asset/Thumbnail/PrefabricatorAssetThumbnailRenderer.h"
-#include "PrefabricatorAssetThumbnailScene.h"
-#include "PrefabricatorAsset.h"
+
+#include "Asset/PrefabricatorAsset.h"
+#include "Asset/Thumbnail/PrefabricatorAssetThumbnailScene.h"
+
 #include "RenderingThread.h"
 #include "SceneView.h"
 

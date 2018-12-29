@@ -1,8 +1,9 @@
 //$ Copyright 2015-18, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #include "Prefab/Random/PrefabSeedLinker.h"
-#include "ConstructorHelpers.h"
+
 #include "Components/BillboardComponent.h"
+#include "UObject/ConstructorHelpers.h"
 
 /////////////////////////////////// UPrefabSeedLinkerComponent ///////////////////////////////////
 
@@ -51,3 +52,4 @@ FName APrefabSeedLinker::GetCustomIconName() const
 	return PrefabIconName;
 }
 #endif // WITH_EDITOR
+

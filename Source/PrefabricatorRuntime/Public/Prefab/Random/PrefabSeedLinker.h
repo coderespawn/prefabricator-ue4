@@ -6,7 +6,6 @@
 #include "GameFramework/Actor.h"
 #include "PrefabSeedLinker.generated.h"
 
-
 UCLASS(Blueprintable)
 class PREFABRICATORRUNTIME_API UPrefabSeedLinkerComponent : public USceneComponent {
 	GENERATED_UCLASS_BODY()
@@ -38,3 +37,4 @@ public:
 #endif // WITH_EDITOR
 
 };
+

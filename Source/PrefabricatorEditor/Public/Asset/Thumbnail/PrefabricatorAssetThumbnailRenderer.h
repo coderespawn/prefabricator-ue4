@@ -2,8 +2,8 @@
 
 #pragma once
 #include "CoreMinimal.h"
-#include "UObject/ObjectMacros.h"
 #include "ThumbnailRendering/DefaultSizedThumbnailRenderer.h"
+#include "UObject/ObjectMacros.h"
 #include "PrefabricatorAssetThumbnailRenderer.generated.h"
 
 class FCanvas;

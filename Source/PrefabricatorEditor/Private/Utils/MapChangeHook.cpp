@@ -1,9 +1,11 @@
 //$ Copyright 2015-18, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #include "Utils/MapChangeHook.h"
+
+#include "Utils/PrefabEditorTools.h"
+
 #include "LevelEditor.h"
-#include "ModuleManager.h"
-#include "PrefabEditorTools.h"
+#include "Modules/ModuleManager.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogMapChangeHook, Log, All);
 

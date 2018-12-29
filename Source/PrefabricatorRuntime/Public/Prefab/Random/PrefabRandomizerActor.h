@@ -4,8 +4,6 @@
 #include "CoreMinimal.h"
 #include "PrefabRandomizerActor.generated.h"
 
-
-
 UCLASS(Blueprintable)
 class PREFABRICATORRUNTIME_API APrefabRandomizer : public AActor {
 	GENERATED_UCLASS_BODY()
@@ -37,3 +35,4 @@ private:
 	TSharedPtr<class FPrefabBuildSystem> BuildSystem;
 	FRandomStream Random;
 };
+

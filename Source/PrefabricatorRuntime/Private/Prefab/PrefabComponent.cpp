@@ -2,14 +2,14 @@
 
 #include "Prefab/PrefabComponent.h"
 
+#include "Asset/PrefabricatorAsset.h"
 #include "Prefab/PrefabActor.h"
+#include "Prefab/PrefabTools.h"
+#include "Utils/PrefabricatorService.h"
 
 #include "Components/BillboardComponent.h"
 #include "Engine/Texture2D.h"
 #include "UObject/ConstructorHelpers.h"
-#include "PrefabTools.h"
-#include "PrefabricatorAsset.h"
-#include "PrefabricatorService.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogPrefabComponent, Log, All);
 

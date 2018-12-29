@@ -1,12 +1,14 @@
 //$ Copyright 2015-18, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #include "Utils/PrefabEditorTools.h"
-#include "EngineUtils.h"
-#include "PrefabActor.h"
-#include "PrefabActor.h"
-#include "PrefabComponent.h"
+
+#include "Prefab/PrefabActor.h"
+#include "Prefab/PrefabActor.h"
+#include "Prefab/PrefabComponent.h"
+
 #include "EditorViewportClient.h"
-#include "NotificationManager.h"
+#include "EngineUtils.h"
+#include "Framework/Notifications/NotificationManager.h"
 
 void FPrefabEditorTools::ReloadPrefabsInLevel(UWorld* World, UPrefabricatorAsset* InAsset)
 {
@@ -56,3 +58,4 @@ void FPrefabEditorTools::SwitchLevelViewportToRealtimeMode()
 		ShowNotification(NSLOCTEXT("Prefabricator", "PRefabClientNotFound", "Warning: Cannot find active viewport"));
 	}
 }
+

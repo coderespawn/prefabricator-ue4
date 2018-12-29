@@ -2,14 +2,14 @@
 
 #include "Visualizers/PrefabSeedLinkerVisualizer.h"
 
+#include "Prefab/PrefabActor.h"
+#include "Prefab/PrefabComponent.h"
+#include "Prefab/PrefabTools.h"
+#include "Prefab/Random/PrefabSeedLinker.h"
 
+#include "Components/SceneComponent.h"
 #include "GameFramework/Actor.h"
 #include "SceneManagement.h"
-#include "PrefabTools.h"
-#include "PrefabSeedLinker.h"
-#include "PrefabActor.h"
-#include "Components/SceneComponent.h"
-#include "PrefabComponent.h"
 
 void FPrefabSeedLinkerVisualizer::DrawVisualization(const UActorComponent* Component, const FSceneView* View, FPrimitiveDrawInterface* PDI)
 {

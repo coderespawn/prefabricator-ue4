@@ -2,21 +2,21 @@
 
 #include "UI/PrefabCustomization.h"
 
+#include "Asset/PrefabricatorAsset.h"
 #include "Prefab/PrefabActor.h"
 #include "Prefab/PrefabComponent.h"
 #include "Prefab/PrefabTools.h"
+#include "Prefab/Random/PrefabRandomizerActor.h"
+#include "Utils/PrefabEditorTools.h"
 
+#include "ContentBrowserModule.h"
 #include "DetailCategoryBuilder.h"
 #include "DetailLayoutBuilder.h"
 #include "DetailWidgetRow.h"
-#include "Widgets/SBoxPanel.h"
-#include "PrefabEditorTools.h"
-#include "ContentBrowserModule.h"
-#include "IContentBrowserSingleton.h"
-#include "ModuleManager.h"
-#include "PrefabricatorAsset.h"
-#include "PrefabRandomizerActor.h"
 #include "EditorViewportClient.h"
+#include "IContentBrowserSingleton.h"
+#include "Modules/ModuleManager.h"
+#include "Widgets/SBoxPanel.h"
 
 #define LOCTEXT_NAMESPACE "PrefabActorCustomization" 
 
@@ -199,3 +199,4 @@ FReply FPrefabRandomizerCustomization::HandleRandomize(IDetailLayoutBuilder* Det
 }
 
 #undef LOCTEXT_NAMESPACE 
+
