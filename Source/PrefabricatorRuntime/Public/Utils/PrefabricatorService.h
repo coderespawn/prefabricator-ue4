@@ -35,6 +35,8 @@ public:
 	virtual UPrefabricatorAsset* CreatePrefabAsset() = 0;
 	virtual FVector SnapToGrid(const FVector& InLocation) { return InLocation; }
 	virtual void SetDetailsViewObject(UObject* InObject) {}
+	virtual void BeginTransaction(const FText& Description) {}
+	virtual void EndTransaction() {}
 };
 
 class PREFABRICATORRUNTIME_API FPrefabricatorRuntimeService : public IPrefabricatorService {
