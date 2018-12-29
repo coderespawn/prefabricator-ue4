@@ -12,7 +12,7 @@
 #include "PrefabSeedLinker.h"
 #include "PrefabSeedLinkerVisualizer.h"
 
-#define LOCTEXT_NAMESPACE "DungeonArchitectEditorModule" 
+#define LOCTEXT_NAMESPACE "PrefabricatorEditorModule" 
 
 
 

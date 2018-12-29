@@ -14,7 +14,7 @@
 
 FPrefabricatorCommands::FPrefabricatorCommands() : TCommands<FPrefabricatorCommands>(
 	TEXT("Prefabricator"),
-	NSLOCTEXT("Prefabricator", "Prefabricator", "Prefab Architect"),
+	NSLOCTEXT("Prefabricator", "Prefabricator", "Prefabricator"),
 	NAME_None,
 	FPrefabEditorStyle::GetStyleSetName())
 {

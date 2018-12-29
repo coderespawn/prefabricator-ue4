@@ -7,7 +7,7 @@
 #include "Styling/SlateStyleRegistry.h"
 #include "Styling/SlateTypes.h"
 
-#define BASE_PATH FPaths::GamePluginsDir() / "DungeonArchitect/Content"
+#define BASE_PATH FPaths::GamePluginsDir() / "Prefabricator/Content"
 #define IMAGE_PLUGIN_BRUSH( RelativePath, ... ) FSlateImageBrush( FPrefabEditorStyle::InContent( RelativePath, ".png" ), __VA_ARGS__ )
 #define IMAGE_BRUSH( RelativePath, ... ) FSlateImageBrush( Style.RootToContentDir( RelativePath, TEXT(".png") ), __VA_ARGS__ )
 #define BOX_BRUSH( RelativePath, ... ) FSlateBoxBrush( Style.RootToContentDir( RelativePath, TEXT(".png") ), __VA_ARGS__ )
@@ -20,7 +20,7 @@ TSharedPtr< FSlateStyleSet > FPrefabEditorStyle::StyleInstance = nullptr;
 
 FString FPrefabEditorStyle::InContent(const FString& RelativePath, const ANSICHAR* Extension)
 {
-	static FString ContentDir = IPluginManager::Get().FindPlugin(TEXT("DungeonArchitect"))->GetContentDir();
+	static FString ContentDir = IPluginManager::Get().FindPlugin(TEXT("Prefabricator"))->GetContentDir();
 	return (ContentDir / RelativePath) + Extension;
 }
 

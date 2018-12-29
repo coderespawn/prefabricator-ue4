@@ -8,7 +8,6 @@
 class UPrefabricatorAsset;
 class UPrefabricatorAssetInterface;
 
-/** A Dungeon Theme asset lets you design the look and feel of you dungeon with an intuitive graph based approach */
 UCLASS(Blueprintable)
 class PREFABRICATORRUNTIME_API UPrefabComponent : public USceneComponent {
 	GENERATED_UCLASS_BODY()
