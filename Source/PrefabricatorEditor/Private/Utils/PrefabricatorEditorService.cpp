@@ -18,6 +18,7 @@
 #include "LevelEditorViewport.h"
 #include "ThumbnailRendering/SceneThumbnailInfo.h"
 #include "PropertyEditorModule.h"
+#include "ScopedTransaction.h"
 
 void FPrefabricatorEditorService::ParentActors(AActor* ParentActor, AActor* ChildActor)
 {
@@ -97,5 +98,48 @@ void FPrefabricatorEditorService::SetDetailsViewObject(UObject* InObject)
 	TArray<UObject*> ObjectList;
 	ObjectList.Add(InObject);
 	PropertyEditorModule.UpdatePropertyViews(ObjectList);
+}
+
+
+namespace {
+	/**
+	 * @return		The shared transaction object used by
+	 */
+	static FScopedTransaction*& PrefabStaticTransaction()
+	{
+		static FScopedTransaction* STransaction = NULL;
+		return STransaction;
+	}
+
+	/**
+	 * Ends the outstanding transaction, if one exists.
+	 */
+	static void PrefabEndTransaction()
+	{
+		delete PrefabStaticTransaction();
+		PrefabStaticTransaction() = NULL;
+	}
+
+	/**
+	 * Begins a new transaction, if no outstanding transaction exists.
+	 */
+	static void PrefabBeginTransaction(const FText& Description)
+	{
+		if (!PrefabStaticTransaction())
+		{
+			PrefabStaticTransaction() = new FScopedTransaction(Description);
+		}
+	}
+} // namespace
+
+
+void FPrefabricatorEditorService::BeginTransaction(const FText& Description)
+{
+	PrefabBeginTransaction(Description);
+}
+
+void FPrefabricatorEditorService::EndTransaction()
+{
+	PrefabEndTransaction();
 }
 

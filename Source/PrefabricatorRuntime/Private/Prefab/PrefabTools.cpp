@@ -20,6 +20,8 @@
 
 DEFINE_LOG_CATEGORY_STATIC(LogPrefabTools, Log, All);
 
+#define LOCTEXT_NAMESPACE "PrefabTools"
+
 void FPrefabTools::GetSelectedActors(TArray<AActor*>& OutActors)
 {
 	TSharedPtr<IPrefabricatorService> Service = FPrefabricatorService::Get();
@@ -438,6 +440,12 @@ void FPrefabTools::SaveStateToPrefabAsset(AActor* InActor, APrefabActor* PrefabA
 
 void FPrefabTools::LoadStateFromPrefabAsset(AActor* InActor, const FPrefabricatorActorData& InActorData, const FPrefabLoadSettings& InSettings)
 {
+
+	TSharedPtr<IPrefabricatorService> Service = FPrefabricatorService::Get();
+	if (Service.IsValid()) {
+		Service->BeginTransaction(LOCTEXT("TransLabel_LoadPrefab", "Load Prefab"));
+	}
+
 	DeserializeFields(InActor, InActorData.Properties);
 
 	TMap<FString, UActorComponent*> ComponentsByName;
@@ -461,6 +469,11 @@ void FPrefabTools::LoadStateFromPrefabAsset(AActor* InActor, const FPrefabricato
 			}
 		}
 	}
+
+	if (Service.IsValid()) {
+		Service->EndTransaction();
+	}
+
 }
 
 void FPrefabTools::GetActorChildren(AActor* InParent, TArray<AActor*>& OutChildren)
@@ -582,3 +595,4 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 	}
 }
 
+#undef LOCTEXT_NAMESPACE
