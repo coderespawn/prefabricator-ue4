@@ -37,5 +37,6 @@ public:
 		return FModuleManager::Get().IsModuleLoaded("PrefabricatorEditor");
 	}
 
+	virtual EAssetTypeCategories::Type GetPrefabricatorAssetCategoryBit() const = 0;
 };
 

@@ -9,6 +9,7 @@
 #include "ContentBrowserModule.h"
 #include "Framework/MultiBox/MultiBoxBuilder.h"
 #include "ThumbnailRendering/SceneThumbnailInfo.h"
+#include "PrefabricatorEditorModule.h"
 
 #define LOCTEXT_NAMESPACE "AssetTypeActions"
 
@@ -51,7 +52,8 @@ class UThumbnailInfo* FPrefabricatorAssetTypeActions::GetThumbnailInfo(UObject* 
 
 uint32 FPrefabricatorAssetTypeActions::GetCategories()
 {
-	return EAssetTypeCategories::Misc;
+	return EAssetTypeCategories::Misc |
+		IPrefabricatorEditorModule::Get().GetPrefabricatorAssetCategoryBit();
 }
 
 void FPrefabricatorAssetTypeActions::ExecuteCreatePrefabCollection(TArray<TWeakObjectPtr<UPrefabricatorAsset>> InPrefabAssetPtrs)
@@ -108,7 +110,8 @@ UClass* FPrefabricatorAssetCollectionTypeActions::GetSupportedClass() const
 
 uint32 FPrefabricatorAssetCollectionTypeActions::GetCategories()
 {
-	return EAssetTypeCategories::Misc;
+	return EAssetTypeCategories::Misc |
+		IPrefabricatorEditorModule::Get().GetPrefabricatorAssetCategoryBit();
 }
 
 #undef LOCTEXT_NAMESPACE

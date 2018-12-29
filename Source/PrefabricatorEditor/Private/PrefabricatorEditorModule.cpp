@@ -22,7 +22,7 @@
 #include "ThumbnailRendering/ThumbnailManager.h"
 #include "PrefabricatorAsset.h"
 
-#define LOCTEXT_NAMESPACE "DungeonArchitectEditorModule" 
+#define LOCTEXT_NAMESPACE "PrefabricatorEditorModule" 
 
 
 
@@ -42,6 +42,9 @@ class FPrefabricatorEditorModule : public IPrefabricatorEditorModule
 		IAssetTools& AssetTools = FModuleManager::LoadModuleChecked<FAssetToolsModule>("AssetTools").Get();
 		RegisterAssetTypeAction(AssetTools, MakeShareable(new FPrefabricatorAssetTypeActions));
 		RegisterAssetTypeAction(AssetTools, MakeShareable(new FPrefabricatorAssetCollectionTypeActions));
+
+		// Add a category for the prefabricator assets in the context menu
+		PrefabricatorAssetCategoryBit = AssetTools.RegisterAdvancedAssetCategory(FName(TEXT("Prefabricator")), LOCTEXT("PrefabricatorAssetCategory", "Prefabricator"));
 
 		// Register the details customization
 		FPropertyEditorModule& PropertyEditorModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>("PropertyEditor");
@@ -67,6 +70,7 @@ class FPrefabricatorEditorModule : public IPrefabricatorEditorModule
 			PrefabAssetBroker = nullptr;
 		}
 
+
 		// Unregister all the asset types that we registered
 		if (FModuleManager::Get().IsModuleLoaded("AssetTools"))
 		{
@@ -86,6 +90,10 @@ class FPrefabricatorEditorModule : public IPrefabricatorEditorModule
 		FPrefabEditorStyle::Shutdown();
 	}
 
+	virtual EAssetTypeCategories::Type GetPrefabricatorAssetCategoryBit() const override {
+		return PrefabricatorAssetCategoryBit;
+	}
+
 private:
 	void RegisterAssetTypeAction(IAssetTools& AssetTools, TSharedRef<IAssetTypeActions> Action)
 	{
@@ -98,6 +106,7 @@ private:
 	FMapChangeHook MapChangeHook;
 	TSharedPtr<IComponentAssetBroker> PrefabAssetBroker;
 	TArray< TSharedPtr<IAssetTypeActions> > CreatedAssetTypeActions;
+	EAssetTypeCategories::Type PrefabricatorAssetCategoryBit;
 };
 
 IMPLEMENT_MODULE(FPrefabricatorEditorModule, PrefabricatorEditor)
