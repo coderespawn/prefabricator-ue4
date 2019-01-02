@@ -1,6 +1,11 @@
 CHANGELOG: Prefabricator
 ========================
 
+Version 1.0.1
+-------------
+* Added user guide and other support links in the Prefab menu
+* Added documentation url in the plugin descriptor
+
 Version 1.0.0
 -------------
 * Initial Version. Visit http://prefabricator.io for feature list
