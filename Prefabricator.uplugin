@@ -4,7 +4,7 @@
 	"Version" : 1,
 	"VersionName" : "1.0.0",
 	"CreatedBy" : "Code Respawn",
-	"CreatedByURL" : "http://coderespawn.com",
+	"CreatedByURL" : "http://prefabricator.io",
 	"EngineVersion" : "4.21.0",
 	"Description" : "Create prefabs in unreal engine",
 	"Category" : "Prefab",
