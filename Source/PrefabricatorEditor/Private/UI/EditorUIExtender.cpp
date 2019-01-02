@@ -25,6 +25,13 @@
 
 #define LOCTEXT_NAMESPACE "EditorUIExtender" 
 
+namespace PrefabURLs {
+	static const FString URL_UserGuide	= "https://docs.prefabricator.io";
+	static const FString URL_Website	= "https://prefabricator.io";
+	static const FString URL_Discord	= "https://discord.gg/dRewTSU";
+	static const FString URL_DevForum	= "https://forums.unrealengine.com/search?q=prefabricator&searchJSON=%7B%22keywords%22%3A%22prefabricator%22%7D";
+}
+
 void FEditorUIExtender::Extend()
 {
 	struct Local {
@@ -102,6 +109,26 @@ void FEditorUIExtender::Extend()
 
 		}
 
+		static void LaunchURL(FString URL) {
+			FPlatformProcess::LaunchURL(*URL, nullptr, nullptr);
+		}
+
+		static void HandleShowToolbarPrefabSubMenu_Community(FMenuBuilder& MenuBuilder) {
+			MenuBuilder.AddMenuEntry(
+				LOCTEXT("CommunityForumLabel", "Development Forum"),
+				LOCTEXT("CommunityForumTooltip", "Follow along the development of the pluging and post your queries here"),
+				FSlateIcon(FPrefabEditorStyle::Get().GetStyleSetName(), "ClassIcon.Unreal"),
+				FUIAction(FExecuteAction::CreateStatic(&Local::LaunchURL, PrefabURLs::URL_DevForum))
+			);
+
+			MenuBuilder.AddMenuEntry(
+				LOCTEXT("CommunityDiscordLabel", "Discord Chat"),
+				LOCTEXT("CommunityDiscordTooltip", "Chat with the community and post your queries here"),
+				FSlateIcon(FPrefabEditorStyle::Get().GetStyleSetName(), "ClassIcon.Discord"),
+				FUIAction(FExecuteAction::CreateStatic(&Local::LaunchURL, PrefabURLs::URL_Discord))
+			);
+		}
+
 		static TSharedRef<SWidget> HandleShowToolbarPrefabMenu() {
 			FMenuBuilder MenuBuilder(true, FPrefabricatorCommands::Get().LevelMenuActionList);
 
@@ -116,7 +143,23 @@ void FEditorUIExtender::Extend()
 				LOCTEXT("MenuLinkSeedsTooltip", "Links the selected prefab collection seeds to an existinga Seed Linker Actor in the scene"),
 				FNewMenuDelegate::CreateStatic(&Local::HandleShowToolbarPrefabSubMenu_LinkPrefabSeeds)
 			);
-			
+
+			MenuBuilder.EndSection();
+
+			MenuBuilder.BeginSection("Prefabricator-Help", LOCTEXT("HelpHeader", "Help / Support"));
+
+			MenuBuilder.AddMenuEntry(
+				LOCTEXT("UserGuideLabel", "User Guide"),
+				LOCTEXT("UserGuideTooltip", "Detailed user guide for prefabricator"),
+				FSlateIcon(FPrefabEditorStyle::Get().GetStyleSetName(), "ClassIcon.UE"),
+				FUIAction(FExecuteAction::CreateStatic(&Local::LaunchURL, PrefabURLs::URL_UserGuide))
+			);
+
+			MenuBuilder.AddSubMenu(
+				LOCTEXT("MenuCommunity", "Community"),
+				LOCTEXT("MenuCommunityTooltip", "Get support from the developer and community"),
+				FNewMenuDelegate::CreateStatic(&Local::HandleShowToolbarPrefabSubMenu_Community)
+			);
 			MenuBuilder.EndSection();
 
 			return MenuBuilder.MakeWidget();
