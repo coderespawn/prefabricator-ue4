@@ -26,6 +26,7 @@
 #define LOCTEXT_NAMESPACE "EditorUIExtender" 
 
 namespace PrefabURLs {
+	// TODO: move me to a configuration file
 	static const FString URL_UserGuide	= "https://docs.prefabricator.io";
 	static const FString URL_Website	= "https://prefabricator.io";
 	static const FString URL_Discord	= "https://discord.gg/dRewTSU";
@@ -116,7 +117,7 @@ void FEditorUIExtender::Extend()
 		static void HandleShowToolbarPrefabSubMenu_Community(FMenuBuilder& MenuBuilder) {
 			MenuBuilder.AddMenuEntry(
 				LOCTEXT("CommunityForumLabel", "Development Forum"),
-				LOCTEXT("CommunityForumTooltip", "Follow along the development of the pluging and post your queries here"),
+				LOCTEXT("CommunityForumTooltip", "Follow along the development of the plugin and post your queries here"),
 				FSlateIcon(FPrefabEditorStyle::Get().GetStyleSetName(), "ClassIcon.Unreal"),
 				FUIAction(FExecuteAction::CreateStatic(&Local::LaunchURL, PrefabURLs::URL_DevForum))
 			);
