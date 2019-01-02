@@ -566,7 +566,10 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 		// Set the transform
 		FTransform WorldTransform = ActorItemData.RelativeTransform * PrefabActor->GetTransform();
 		if (ChildActor->GetRootComponent()) {
-			EComponentMobility::Type OldChildMobility = ChildActor->GetRootComponent() ? ChildActor->GetRootComponent()->Mobility : EComponentMobility::Movable;
+			EComponentMobility::Type OldChildMobility = EComponentMobility::Movable;
+			if (ChildActor->GetRootComponent()) {
+				OldChildMobility = ChildActor->GetRootComponent()->Mobility;
+			}
 			ChildActor->GetRootComponent()->SetMobility(EComponentMobility::Movable);
 			ChildActor->SetActorTransform(WorldTransform);
 			ChildActor->GetRootComponent()->SetMobility(OldChildMobility);
