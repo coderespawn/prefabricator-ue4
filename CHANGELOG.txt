@@ -1,6 +1,11 @@
 CHANGELOG: Prefabricator
 ========================
 
+Version 1.0.2
+-------------
+* Added Marketplace url in the plugin descriptor file
+* Updated the year to 2019 in copyright header of the C++ files as per the marketplace guidelines
+
 Version 1.0.1
 -------------
 * Added user guide and other support links in the Prefab menu
