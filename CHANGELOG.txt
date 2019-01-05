@@ -1,6 +1,10 @@
 CHANGELOG: Prefabricator
 ========================
 
+Version 1.0.3
+-------------
+* Added whitelist platforms to the plugin descriptor as per the marketplace requirements
+
 Version 1.0.2
 -------------
 * Added Marketplace url in the plugin descriptor file
