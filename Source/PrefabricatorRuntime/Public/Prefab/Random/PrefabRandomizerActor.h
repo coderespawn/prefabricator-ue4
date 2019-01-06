@@ -14,7 +14,7 @@ public:
 
 	virtual void BeginPlay() override;
 
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category = "Prefabricator")
 	void Randomize(int32 InSeed);
 
 #if WITH_EDITOR
