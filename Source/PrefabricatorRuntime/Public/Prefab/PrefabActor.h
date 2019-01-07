@@ -10,7 +10,7 @@ UCLASS(Blueprintable, ConversionRoot, ComponentWrapperClass)
 class PREFABRICATORRUNTIME_API APrefabActor : public AActor {
 	GENERATED_UCLASS_BODY()
 public:
-	UPROPERTY(BlueprintReadOnly, meta = (ExposeFunctionCategories = "Prefabricator", AllowPrivateAccess = "true"))
+	UPROPERTY(BlueprintReadOnly, Category = "Components", meta = (ExposeFunctionCategories = "Prefabricator", AllowPrivateAccess = "true"))
 	class UPrefabComponent* PrefabComponent;
 
 public:
@@ -26,19 +26,19 @@ public:
 #endif // WITH_EDITOR
 	/// End of AActor Interface 
 
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category = "Prefabricator")
 	void LoadPrefab();
 
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category = "Prefabricator")
 	void SavePrefab();
 
-	UFUNCTION(BlueprintCallable, BlueprintPure)
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Prefabricator")
 	bool IsPrefabOutdated();
 
-	UFUNCTION(BlueprintCallable, BlueprintPure)
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Prefabricator")
 	UPrefabricatorAsset* GetPrefabAsset();
 
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(BlueprintCallable, Category = "Prefabricator")
 	void RandomizeSeed(const FRandomStream& InRandom, bool bRecursive = true);
 	void HandleBuildComplete();
 
