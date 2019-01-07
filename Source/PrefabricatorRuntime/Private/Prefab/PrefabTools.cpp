@@ -147,6 +147,11 @@ void FPrefabTools::CreatePrefabFromActors(const TArray<AActor*>& InActors)
 		return;
 	}
 
+	TSharedPtr<IPrefabricatorService> Service = FPrefabricatorService::Get();
+	if (Service.IsValid()) {
+		Service->BeginTransaction(LOCTEXT("TransLabel_CreatePrefab", "Create Prefab"));
+	}
+
 	UWorld* World = Actors[0]->GetWorld();
 
 	FVector Pivot = FPrefabricatorAssetUtils::FindPivot(Actors);
@@ -165,9 +170,14 @@ void FPrefabTools::CreatePrefabFromActors(const TArray<AActor*>& InActors)
 		ParentActors(PrefabActor, Actor);
 	}
 
+	if (Service.IsValid()) {
+		Service->EndTransaction();
+	}
+
 	SaveStateToPrefabAsset(PrefabActor);
 
 	SelectPrefabActor(PrefabActor);
+
 }
 
 void FPrefabTools::AssignAssetUserData(AActor* InActor, const FGuid& InItemID, APrefabActor* Prefab)
