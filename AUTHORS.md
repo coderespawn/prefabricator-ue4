@@ -6,7 +6,7 @@ Prefabricator Authors
 
 ---
 
-Project Page:
-https://github.com/coderespawn/prefabricator-ue4
-https://prefabricator.io
+Project Page: https://github.com/coderespawn/prefabricator-ue4
+
+Website: https://prefabricator.io
 
