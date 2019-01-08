@@ -3,6 +3,7 @@ CHANGELOG: Prefabricator
 
 Version 1.0.4
 -------------
+* Fixed a mobility bug with prefabs
 * Added whitelist platforms to the plugin descriptor as per the marketplace requirements
 * Added categories to all blueprint UFUNCTIONs so it doesn't cause compile errors on engine source builds
 * Added authors page
