@@ -1,8 +1,8 @@
 {
 	"FileVersion" : 3,
 	"FriendlyName" : "Prefabricator",
-	"Version" : 4,
-	"VersionName" : "1.0.3",
+	"Version" : 5,
+	"VersionName" : "1.0.4",
 	"CreatedBy" : "Code Respawn",
 	"CreatedByURL" : "http://prefabricator.io",
 	"DocsURL": "http://docs.prefabricator.io",
@@ -11,30 +11,44 @@
 	"Category" : "Prefab",
 	"EnabledByDefault" : true,
 	"MarketplaceURL" : "com.epicgames.launcher://ue/marketplace/content/39ccbbf668e84847890992df9922e355",
-	"WhitelistPlatforms" : [
-		"Win32", 
-		"Win64", 
-		"Mac", 
-		"Android", 
-		"IOS"
-	],
 	
 	"Modules" :
 	[
 		{
 			"Name" : "PrefabricatorRuntime",
 			"Type" : "Runtime",
-			"LoadingPhase" : "PreDefault"
+			"LoadingPhase" : "PreDefault",
+			"WhitelistPlatforms" : [
+				"Win32", 
+				"Win64", 
+				"Mac", 
+				"Android", 
+				"IOS"
+			]
 		},
 		{
 			"Name" : "PrefabricatorEditor",
 			"Type" : "Editor",
-			"LoadingPhase" : "Default"
+			"LoadingPhase" : "Default",
+			"WhitelistPlatforms" : [
+				"Win32", 
+				"Win64", 
+				"Mac", 
+				"Android", 
+				"IOS"
+			]
 		},
 		{
 			"Name" : "PrefabricatorEditorPostInit",
 			"Type" : "Editor",
-			"LoadingPhase" : "PostEngineInit"
+			"LoadingPhase" : "PostEngineInit",
+			"WhitelistPlatforms" : [
+				"Win32", 
+				"Win64", 
+				"Mac", 
+				"Android", 
+				"IOS"
+			]
 		}
 	],
 
