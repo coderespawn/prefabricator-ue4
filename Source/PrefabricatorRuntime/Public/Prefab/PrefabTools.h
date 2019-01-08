@@ -32,6 +32,7 @@ public:
 
 	static FBox GetPrefabBounds(AActor* PrefabActor);
 	static bool ShouldIgnorePropertySerialization(const FName& PropertyName);
+	static bool ShouldForcePropertySerialization(const FName& PropertyName);
 
 	static void ParentActors(AActor* ParentActor, AActor* ChildActor);
 	static void SelectPrefabActor(AActor* PrefabActor);

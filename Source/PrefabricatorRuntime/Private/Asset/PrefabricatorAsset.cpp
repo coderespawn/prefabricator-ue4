@@ -40,22 +40,24 @@ FVector FPrefabricatorAssetUtils::FindPivot(const TArray<AActor*>& InActors)
 
 EComponentMobility::Type FPrefabricatorAssetUtils::FindMobility(const TArray<AActor*>& InActors)
 {
-	EComponentMobility::Type Mobility = EComponentMobility::Static;
-
+	return EComponentMobility::Static;
+	/*
+	EComponentMobility::Type Mobility = EComponentMobility::Movable;
 	for (AActor* Actor : InActors) {
 		if (!Actor || !Actor->GetRootComponent()) {
 			continue;
 		}
 		EComponentMobility::Type ActorMobility = Actor->GetRootComponent()->Mobility;
-		if (Mobility == EComponentMobility::Static && ActorMobility != EComponentMobility::Static) {
-			Mobility = ActorMobility;
+		if (Mobility == EComponentMobility::Movable && ActorMobility == EComponentMobility::Stationary) {
+			Mobility = EComponentMobility::Stationary;
 		}
-		if (Mobility == EComponentMobility::Stationary && ActorMobility == EComponentMobility::Movable) {
-			Mobility = EComponentMobility::Movable;
+		else if (ActorMobility == EComponentMobility::Static) {
+			Mobility = EComponentMobility::Static;
 		}
 	}
 
 	return Mobility;
+	*/
 }
 
 UPrefabricatorAsset* UPrefabricatorAssetCollection::GetPrefabAsset(const FPrefabAssetSelectionConfig& InConfig)

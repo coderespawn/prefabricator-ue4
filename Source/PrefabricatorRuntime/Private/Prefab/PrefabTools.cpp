@@ -164,9 +164,6 @@ void FPrefabTools::CreatePrefabFromActors(const TArray<AActor*>& InActors)
 	PrefabActor->PrefabComponent->PrefabAssetInterface = PrefabAsset;
 	// Attach the actors to the prefab
 	for (AActor* Actor : Actors) {
-		if (Actor->GetRootComponent()) {
-			Actor->GetRootComponent()->SetMobility(Mobility);
-		}
 		ParentActors(PrefabActor, Actor);
 	}
 
@@ -339,9 +336,10 @@ namespace {
 				continue;
 			}
 
+			bool bForceSerialize = FPrefabTools::ShouldForcePropertySerialization(Property->GetFName());
+
 			// Check if it has the default value
-			FString PropertyName = Property->GetName();
-			if (HasDefaultValue(ObjToSerialize, PropertyName)) {
+			if (!bForceSerialize && HasDefaultValue(ObjToSerialize, Property->GetName())) {
 				continue;
 			}
 
@@ -357,6 +355,7 @@ namespace {
 			UPrefabricatorProperty* PrefabProperty = nullptr;
 			FString PropertyName = Property->GetName();
 
+			
 			if (ShouldSkipSerialization(Property, ObjToSerialize, PrefabActor)) {
 				continue;
 			}
@@ -417,6 +416,15 @@ bool FPrefabTools::ShouldIgnorePropertySerialization(const FName& InPropertyName
 	};
 
 	return IgnoredFields.Contains(InPropertyName);
+}
+
+bool FPrefabTools::ShouldForcePropertySerialization(const FName& PropertyName)
+{
+	static const TSet<FName> FieldsToForceSerialize = {
+		"Mobility"
+	};
+
+	return FieldsToForceSerialize.Contains(PropertyName);
 }
 
 void FPrefabTools::SaveStateToPrefabAsset(AActor* InActor, APrefabActor* PrefabActor, FPrefabricatorActorData& OutActorData)
