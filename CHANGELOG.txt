@@ -1,6 +1,13 @@
 CHANGELOG: Prefabricator
 ========================
 
+Version 1.0.4
+-------------
+* Added whitelist platforms to the plugin descriptor as per the marketplace requirements
+* Added categories to all blueprint UFUNCTIONs so it doesn't cause compile errors on engine source builds
+* Added authors page
+* Added undo transaction on prefab creation
+
 Version 1.0.3
 -------------
 * Added whitelist platforms to the plugin descriptor as per the marketplace requirements
