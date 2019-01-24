@@ -122,12 +122,23 @@ struct PREFABRICATORRUNTIME_API FPrefabricatorAssetCollectionItem {
 	float Weight = 1.0f;
 };
 
+enum class EPrefabricatorCollectionAssetVersion {
+	InitialVersion = 0,
+
+	//----------- Versions should be placed above this line -----------------
+	LastVersionPlusOne,
+	LatestVersion = LastVersionPlusOne - 1
+};
+
 UCLASS(Blueprintable)
 class PREFABRICATORRUNTIME_API UPrefabricatorAssetCollection : public UPrefabricatorAssetInterface {
-	GENERATED_BODY()
+	GENERATED_UCLASS_BODY()
 public:
 	UPROPERTY(EditAnywhere, Category = "Prefabricator")
 	TArray<FPrefabricatorAssetCollectionItem> Prefabs;
+
+	UPROPERTY()
+	uint32 Version;
 
 public:
 	virtual UPrefabricatorAsset* GetPrefabAsset(const FPrefabAssetSelectionConfig& InConfig) override;

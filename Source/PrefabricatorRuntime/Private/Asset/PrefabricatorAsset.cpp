@@ -60,6 +60,12 @@ EComponentMobility::Type FPrefabricatorAssetUtils::FindMobility(const TArray<AAc
 	*/
 }
 
+///////////////////////////////////////// UPrefabricatorAssetCollection ///////////////////////////////////////// 
+
+UPrefabricatorAssetCollection::UPrefabricatorAssetCollection(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer) {
+	Version = (int32)EPrefabricatorCollectionAssetVersion::LatestVersion;
+}
+
 UPrefabricatorAsset* UPrefabricatorAssetCollection::GetPrefabAsset(const FPrefabAssetSelectionConfig& InConfig)
 {
 	if (Prefabs.Num() == 0) return nullptr;
