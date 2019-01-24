@@ -75,6 +75,14 @@ public:
 	virtual class UPrefabricatorAsset* GetPrefabAsset(const FPrefabAssetSelectionConfig& InConfig) { return nullptr; }
 };
 
+enum class EPrefabricatorAssetVersion {
+	InitialVersion = 0,
+
+	//----------- Versions should be placed above this line -----------------
+	LastVersionPlusOne,
+	LatestVersion = LastVersionPlusOne -1
+};
+
 UCLASS(Blueprintable)
 class PREFABRICATORRUNTIME_API UPrefabricatorAsset : public UPrefabricatorAssetInterface {
 	GENERATED_UCLASS_BODY()
@@ -95,6 +103,9 @@ public:
 	UPROPERTY()
 	class UThumbnailInfo* ThumbnailInfo;
 
+	UPROPERTY()
+	uint32 Version;
+
 public:
 	virtual UPrefabricatorAsset* GetPrefabAsset(const FPrefabAssetSelectionConfig& InConfig) override;
 };
@@ -105,18 +116,29 @@ struct PREFABRICATORRUNTIME_API FPrefabricatorAssetCollectionItem {
 	GENERATED_USTRUCT_BODY()
 
 	UPROPERTY(EditAnywhere, Category = "Prefabricator")
-	UPrefabricatorAsset* PrefabAsset;
+	TSoftObjectPtr<UPrefabricatorAsset> PrefabAsset;
 
 	UPROPERTY(EditAnywhere, Category = "Prefabricator")
 	float Weight = 1.0f;
 };
 
+enum class EPrefabricatorCollectionAssetVersion {
+	InitialVersion = 0,
+
+	//----------- Versions should be placed above this line -----------------
+	LastVersionPlusOne,
+	LatestVersion = LastVersionPlusOne - 1
+};
+
 UCLASS(Blueprintable)
 class PREFABRICATORRUNTIME_API UPrefabricatorAssetCollection : public UPrefabricatorAssetInterface {
-	GENERATED_BODY()
+	GENERATED_UCLASS_BODY()
 public:
 	UPROPERTY(EditAnywhere, Category = "Prefabricator")
 	TArray<FPrefabricatorAssetCollectionItem> Prefabs;
+
+	UPROPERTY()
+	uint32 Version;
 
 public:
 	virtual UPrefabricatorAsset* GetPrefabAsset(const FPrefabAssetSelectionConfig& InConfig) override;

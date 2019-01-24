@@ -3,6 +3,8 @@
 #pragma once
 #include "CoreMinimal.h"
 #include "Widgets/Notifications/SNotificationList.h"
+#include "ContentBrowserModule.h"
+#include "IContentBrowserSingleton.h"
 
 class UPrefabricatorAsset;
 
@@ -13,5 +15,26 @@ public:
 	static void ShowNotification(FText Text, SNotificationItem::ECompletionState State = SNotificationItem::CS_Fail);
 
 	static void SwitchLevelViewportToRealtimeMode();
+
+	template<typename T>
+	static T* CreateAssetOnContentBrowser(const FString& InAssetName, bool bSyncBrowserToAsset)
+	{
+		IContentBrowserSingleton& ContentBrowserSingleton = FModuleManager::LoadModuleChecked<FContentBrowserModule>("ContentBrowser").Get();
+		TArray<FString> SelectedFolders;
+		ContentBrowserSingleton.GetSelectedPathViewFolders(SelectedFolders);
+		FString AssetFolder = SelectedFolders.Num() > 0 ? SelectedFolders[0] : "/Game";
+		FString AssetPath = AssetFolder + "/" + InAssetName;
+
+		FString PackageName, AssetName;
+		IAssetTools& AssetTools = FModuleManager::Get().LoadModuleChecked<FAssetToolsModule>("AssetTools").Get();
+		AssetTools.CreateUniqueAssetName(*AssetPath, TEXT(""), PackageName, AssetName);
+		T* AssetObject = Cast<T>(AssetTools.CreateAsset(AssetName, AssetFolder, T::StaticClass(), nullptr));
+		if (AssetObject && bSyncBrowserToAsset) {
+			ContentBrowserSingleton.SyncBrowserToAssets(TArray<UObject*>({ AssetObject }));
+		}
+
+		return AssetObject;
+	}
+
 };
 

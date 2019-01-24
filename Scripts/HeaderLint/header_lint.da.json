@@ -1,5 +1,4 @@
 {
-	"plugin_source_dir": "D:/gamedev/ue4/PF421X/Plugins/Prefabricator/Source",
 	"plugin_modules": [
 		"PrefabricatorRuntime", 
 		"PrefabricatorEditor",

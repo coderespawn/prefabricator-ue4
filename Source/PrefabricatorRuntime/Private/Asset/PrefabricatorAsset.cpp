@@ -8,7 +8,7 @@
 #include "GameFramework/Actor.h"
 
 UPrefabricatorAsset::UPrefabricatorAsset(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer) {
-
+	Version = (int32)EPrefabricatorAssetVersion::LatestVersion;
 }
 
 UPrefabricatorAsset* UPrefabricatorAsset::GetPrefabAsset(const FPrefabAssetSelectionConfig& InConfig)
@@ -60,6 +60,12 @@ EComponentMobility::Type FPrefabricatorAssetUtils::FindMobility(const TArray<AAc
 	*/
 }
 
+///////////////////////////////////////// UPrefabricatorAssetCollection ///////////////////////////////////////// 
+
+UPrefabricatorAssetCollection::UPrefabricatorAssetCollection(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer) {
+	Version = (int32)EPrefabricatorCollectionAssetVersion::LatestVersion;
+}
+
 UPrefabricatorAsset* UPrefabricatorAssetCollection::GetPrefabAsset(const FPrefabAssetSelectionConfig& InConfig)
 {
 	if (Prefabs.Num() == 0) return nullptr;
@@ -71,24 +77,33 @@ UPrefabricatorAsset* UPrefabricatorAssetCollection::GetPrefabAsset(const FPrefab
 
 	FRandomStream Random;
 	Random.Initialize(InConfig.Seed);
+	
+	TSoftObjectPtr<UPrefabricatorAsset> PrefabAssetPtr;
 
 	if (TotalWeight == 0) {
 		// Return a random value from the list
 		int32 Index = Random.RandRange(0, Prefabs.Num() - 1);
-		return Prefabs[Index].PrefabAsset;
+		PrefabAssetPtr = Prefabs[Index].PrefabAsset;
 	}
-
-	float SelectionValue = Random.FRandRange(0, TotalWeight);
-	float StartRange = 0.0f;
-	for (const FPrefabricatorAssetCollectionItem& Item : Prefabs) {
-		float EndRange = StartRange + Item.Weight;
-		if (SelectionValue >= StartRange && SelectionValue < EndRange) {
-			return Item.PrefabAsset;
+	else {
+		float SelectionValue = Random.FRandRange(0, TotalWeight);
+		float StartRange = 0.0f;
+		for (const FPrefabricatorAssetCollectionItem& Item : Prefabs) {
+			float EndRange = StartRange + Item.Weight;
+			if (SelectionValue >= StartRange && SelectionValue < EndRange) {
+				PrefabAssetPtr = Item.PrefabAsset;
+				break;
+			}
+			StartRange = EndRange;
 		}
-		StartRange = EndRange;
+		if (!PrefabAssetPtr.IsValid()) {
+			PrefabAssetPtr = Prefabs.Last().PrefabAsset;
+		}
 	}
-
-	return Prefabs.Last().PrefabAsset;
+	if (PrefabAssetPtr.IsValid()) {
+		return PrefabAssetPtr.LoadSynchronous();
+	}
+	return nullptr;
 }
 
 void UPrefabricatorEventListener::PostSpawn_Implementation(APrefabActor* Prefab)

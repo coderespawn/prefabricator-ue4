@@ -10,6 +10,8 @@
 #include "ContentBrowserModule.h"
 #include "Framework/MultiBox/MultiBoxBuilder.h"
 #include "ThumbnailRendering/SceneThumbnailInfo.h"
+#include "PrefabEditorTools.h"
+#include "PrefabricatorAsset.h"
 
 #define LOCTEXT_NAMESPACE "AssetTypeActions"
 
@@ -67,9 +69,13 @@ void FPrefabricatorAssetTypeActions::ExecuteCreatePrefabCollection(TArray<TWeakO
 		}
 	}
 
+	UPrefabricatorAssetCollection* Collection = FPrefabEditorTools::CreateAssetOnContentBrowser<UPrefabricatorAssetCollection>("PrefabCollection", true);
 	for (UPrefabricatorAsset* PrefabAsset : PrefabAssets) {
-
+		FPrefabricatorAssetCollectionItem Item;
+		Item.PrefabAsset = PrefabAsset;
+		Collection->Prefabs.Add(Item);
 	}
+	Collection->Modify();
 }
 
 void FPrefabricatorAssetTypeActions::GetActions(const TArray<UObject*>& InObjects, FMenuBuilder& MenuBuilder)
