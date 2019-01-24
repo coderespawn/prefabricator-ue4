@@ -2,9 +2,9 @@ CHANGELOG: Prefabricator
 ========================
 Version 1.0.5
 -------------
-* Prefab Collection asset can be created by right clicking on mulitple selected prefab assets
+* Prefab Collection asset can be created by right clicking on multiple selected prefab assets
 * Fixed an issue where detail panel buttons on the multiple selected prefab actors were working only on the first selected actor
-* Added vesion number to the serialized prefab asset and asset collection
+* Added version number to the serialized prefab asset and asset collection
 * Updated prefab collection asset data structure to use soft object pointer instead of direct uobject reference of prefab assets
 
 Version 1.0.4
