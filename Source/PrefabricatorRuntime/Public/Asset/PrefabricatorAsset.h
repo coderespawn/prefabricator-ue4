@@ -116,7 +116,7 @@ struct PREFABRICATORRUNTIME_API FPrefabricatorAssetCollectionItem {
 	GENERATED_USTRUCT_BODY()
 
 	UPROPERTY(EditAnywhere, Category = "Prefabricator")
-	UPrefabricatorAsset* PrefabAsset;
+	TSoftObjectPtr<UPrefabricatorAsset> PrefabAsset;
 
 	UPROPERTY(EditAnywhere, Category = "Prefabricator")
 	float Weight = 1.0f;

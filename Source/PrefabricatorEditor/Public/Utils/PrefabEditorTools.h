@@ -29,7 +29,7 @@ public:
 		IAssetTools& AssetTools = FModuleManager::Get().LoadModuleChecked<FAssetToolsModule>("AssetTools").Get();
 		AssetTools.CreateUniqueAssetName(*AssetPath, TEXT(""), PackageName, AssetName);
 		T* AssetObject = Cast<T>(AssetTools.CreateAsset(AssetName, AssetFolder, T::StaticClass(), nullptr));
-		if (bSyncBrowserToAsset) {
+		if (AssetObject && bSyncBrowserToAsset) {
 			ContentBrowserSingleton.SyncBrowserToAssets(TArray<UObject*>({ AssetObject }));
 		}
 
