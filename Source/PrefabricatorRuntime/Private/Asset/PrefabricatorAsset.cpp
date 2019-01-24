@@ -8,7 +8,7 @@
 #include "GameFramework/Actor.h"
 
 UPrefabricatorAsset::UPrefabricatorAsset(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer) {
-
+	Version = (int32)EPrefabricatorAssetVersion::LatestVersion;
 }
 
 UPrefabricatorAsset* UPrefabricatorAsset::GetPrefabAsset(const FPrefabAssetSelectionConfig& InConfig)

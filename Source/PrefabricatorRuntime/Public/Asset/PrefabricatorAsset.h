@@ -75,6 +75,14 @@ public:
 	virtual class UPrefabricatorAsset* GetPrefabAsset(const FPrefabAssetSelectionConfig& InConfig) { return nullptr; }
 };
 
+enum class EPrefabricatorAssetVersion {
+	InitialVersion = 0,
+
+	//----------- Versions should be placed above this line -----------------
+	LastVersionPlusOne,
+	LatestVersion = LastVersionPlusOne -1
+};
+
 UCLASS(Blueprintable)
 class PREFABRICATORRUNTIME_API UPrefabricatorAsset : public UPrefabricatorAssetInterface {
 	GENERATED_UCLASS_BODY()
@@ -94,6 +102,9 @@ public:
 	/** Information for thumbnail rendering */
 	UPROPERTY()
 	class UThumbnailInfo* ThumbnailInfo;
+
+	UPROPERTY()
+	uint32 Version;
 
 public:
 	virtual UPrefabricatorAsset* GetPrefabAsset(const FPrefabAssetSelectionConfig& InConfig) override;
