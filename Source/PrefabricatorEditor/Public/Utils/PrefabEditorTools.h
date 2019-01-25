@@ -2,9 +2,9 @@
 
 #pragma once
 #include "CoreMinimal.h"
-#include "Widgets/Notifications/SNotificationList.h"
 #include "ContentBrowserModule.h"
 #include "IContentBrowserSingleton.h"
+#include "Widgets/Notifications/SNotificationList.h"
 
 class UPrefabricatorAsset;
 
