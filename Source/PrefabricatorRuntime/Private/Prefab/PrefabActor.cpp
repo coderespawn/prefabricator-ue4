@@ -108,7 +108,7 @@ void APrefabActor::SetIsTemporarilyHiddenInEditor(bool bIsHidden)
 	UPrefabricatorBlueprintLibrary::GetAllAttachedActors(this, AttachedActors);
 	for(AActor* AttachedActor : AttachedActors)
 	{
-		AttachedActor->SetIsTemporarilyHiddenInEditor(bHidden);
+		AttachedActor->SetIsTemporarilyHiddenInEditor(bIsHidden);
 	}
 }
 
