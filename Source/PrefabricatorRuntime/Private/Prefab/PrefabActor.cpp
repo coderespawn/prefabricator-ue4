@@ -6,6 +6,7 @@
 #include "Asset/PrefabricatorAssetUserData.h"
 #include "Prefab/PrefabComponent.h"
 #include "Prefab/PrefabTools.h"
+#include "Utils/PrefabricatorFunctionLibrary.h"
 
 #include "Components/BillboardComponent.h"
 #include "Engine/PointLight.h"
@@ -97,6 +98,18 @@ FName APrefabActor::GetCustomIconName() const
 {
 	static const FName PrefabIconName("ClassIcon.PrefabActor");
 	return PrefabIconName;
+}
+
+void APrefabActor::SetIsTemporarilyHiddenInEditor(bool bIsHidden)
+{
+	Super::SetIsTemporarilyHiddenInEditor(bIsHidden);
+
+	TArray<AActor*> AttachedActors;
+	UPrefabricatorBlueprintLibrary::GetAllAttachedActors(this, AttachedActors);
+	for(AActor* AttachedActor : AttachedActors)
+	{
+		AttachedActor->SetIsTemporarilyHiddenInEditor(bHidden);
+	}
 }
 
 #endif // WITH_EDITOR

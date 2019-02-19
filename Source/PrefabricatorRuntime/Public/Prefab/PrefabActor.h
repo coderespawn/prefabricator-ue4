@@ -23,6 +23,7 @@ public:
 	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& e) override;
 	virtual void PostDuplicate(EDuplicateMode::Type DuplicateMode) override;
 	virtual FName GetCustomIconName() const override;
+	virtual void SetIsTemporarilyHiddenInEditor( bool bIsHidden ) override;
 #endif // WITH_EDITOR
 	/// End of AActor Interface 
 
