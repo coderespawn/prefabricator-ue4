@@ -11,7 +11,7 @@
 /**
  * The public interface to this module
  */
-class IPrefabricatorEditorModule : public IModuleInterface
+class PREFABRICATOREDITOR_API IPrefabricatorEditorModule : public IModuleInterface
 {
 
 public:

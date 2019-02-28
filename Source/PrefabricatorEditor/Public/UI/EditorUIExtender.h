@@ -4,7 +4,7 @@
 #include "CoreMinimal.h"
 #include "LevelEditor.h"
 
-class FEditorUIExtender {
+class PREFABRICATOREDITOR_API FEditorUIExtender {
 public:
 	void Extend();
 	void Release();

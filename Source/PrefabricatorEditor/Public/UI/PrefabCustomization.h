@@ -4,7 +4,7 @@
 #include "CoreMinimal.h"
 #include "IDetailCustomization.h"
 
-class FPrefabActorCustomization : public IDetailCustomization {
+class PREFABRICATOREDITOR_API FPrefabActorCustomization : public IDetailCustomization {
 public:
 	// IDetailCustomization interface
 	virtual void CustomizeDetails(IDetailLayoutBuilder& DetailBuilder) override;
@@ -17,7 +17,7 @@ public:
 	static FReply RandomizePrefabCollection(IDetailLayoutBuilder* DetailBuilder);
 };
 
-class FPrefabRandomizerCustomization : public IDetailCustomization {
+class PREFABRICATOREDITOR_API FPrefabRandomizerCustomization : public IDetailCustomization {
 public:
 	// IDetailCustomization interface
 	virtual void CustomizeDetails(IDetailLayoutBuilder& DetailBuilder) override;
