@@ -10,7 +10,7 @@ UCLASS(Blueprintable, ConversionRoot, ComponentWrapperClass)
 class PREFABRICATORRUNTIME_API APrefabActor : public AActor {
 	GENERATED_UCLASS_BODY()
 public:
-	UPROPERTY(BlueprintReadOnly, Category = "Components", meta = (ExposeFunctionCategories = "Prefabricator", AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (ExposeFunctionCategories = "Prefabricator,Mobility", AllowPrivateAccess = "true"))
 	class UPrefabComponent* PrefabComponent;
 
 public:
