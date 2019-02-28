@@ -236,3 +236,29 @@ void FPrefabBuildSystemCommand_NotifyBuildComplete::Execute(FPrefabBuildSystem& 
 	}
 }
 
+
+
+/////////////////////////////////////
+
+AReplicablePrefabActor::AReplicablePrefabActor(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
+{
+}
+
+void AReplicablePrefabActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+}
+
+void AReplicablePrefabActor::BeginPlay()
+{
+	if (Role == ROLE_Authority)
+	{
+		bReplicates = false;
+		SetRemoteRoleForBackwardsCompat(ROLE_SimulatedProxy);
+		SetReplicates(true);
+	}
+
+	Super::BeginPlay();
+}
