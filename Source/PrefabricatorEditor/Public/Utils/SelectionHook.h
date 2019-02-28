@@ -4,7 +4,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 
-class FPrefabricatorSelectionHook {
+class PREFABRICATOREDITOR_API FPrefabricatorSelectionHook {
 public:
 	void Initialize();
 	void Release();

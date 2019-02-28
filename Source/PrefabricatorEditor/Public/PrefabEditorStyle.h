@@ -4,7 +4,7 @@
 #include "CoreMinimal.h"
 #include "Styling/SlateStyle.h"
 
-class FPrefabEditorStyle
+class PREFABRICATOREDITOR_API FPrefabEditorStyle
 {
 public:
 	static void Initialize();

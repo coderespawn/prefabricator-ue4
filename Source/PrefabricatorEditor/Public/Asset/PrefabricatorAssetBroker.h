@@ -8,7 +8,7 @@
 #include "ComponentAssetBroker.h"
 
 /** Asset broker for the prefab asset */
-class FPrefabricatorAssetBroker : public IComponentAssetBroker {
+class PREFABRICATOREDITOR_API FPrefabricatorAssetBroker : public IComponentAssetBroker {
 public:
 	virtual UClass* GetSupportedAssetClass() override {
 		return UPrefabricatorAssetInterface::StaticClass();

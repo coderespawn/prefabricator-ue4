@@ -10,7 +10,7 @@ class APrefabActor;
 struct FWorldContext;
 
 UCLASS()
-class UPrefabricatorBlueprintLibrary : public UBlueprintFunctionLibrary
+class PREFABRICATORRUNTIME_API UPrefabricatorBlueprintLibrary : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 public:
