@@ -97,3 +97,14 @@ private:
 	TArray<FPrefabBuildSystemCommandPtr> BuildStack;
 	double TimePerFrame = 0;
 };
+
+
+
+UCLASS(Blueprintable, ConversionRoot, ComponentWrapperClass)
+class PREFABRICATORRUNTIME_API AReplicablePrefabActor : public APrefabActor {
+	GENERATED_UCLASS_BODY()
+public:
+	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	virtual void BeginPlay() override;
+
+};

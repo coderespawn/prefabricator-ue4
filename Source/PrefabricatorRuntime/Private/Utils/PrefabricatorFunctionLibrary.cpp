@@ -14,7 +14,15 @@ APrefabActor* UPrefabricatorBlueprintLibrary::SpawnPrefab(const UObject* WorldCo
 	APrefabActor* PrefabActor = nullptr;
 	UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull);
 	if (World) {
-		PrefabActor = World->SpawnActor<APrefabActor>(APrefabActor::StaticClass(), Transform);
+		if (Prefab->bReplicates) {
+			FActorSpawnParameters SpawnParams;
+			PrefabActor = World->SpawnActor<AReplicablePrefabActor>(AReplicablePrefabActor::StaticClass(), Transform);
+		}
+		else {
+			PrefabActor = World->SpawnActor<APrefabActor>(APrefabActor::StaticClass(), Transform);
+		}
+		
+
 		if (PrefabActor) {
 			PrefabActor->PrefabComponent->PrefabAssetInterface = Prefab;
 

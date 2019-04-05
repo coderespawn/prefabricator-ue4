@@ -71,6 +71,9 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Prefabricator")
 	TSubclassOf<UPrefabricatorEventListener> EventListener;
 
+	UPROPERTY(EditAnywhere, Category = "Replication")
+	bool bReplicates = false;
+
 public:
 	virtual class UPrefabricatorAsset* GetPrefabAsset(const FPrefabAssetSelectionConfig& InConfig) { return nullptr; }
 };
