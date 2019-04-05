@@ -1,5 +1,12 @@
 CHANGELOG: Prefabricator
 ========================
+Version 1.1.0
+-------------
+* New: Added 4.22 engine support
+* New: Added class exports in C++ to make them visible outside of the module
+* New: Mobility of the prefab actor is now editable from the Details window
+
+
 Version 1.0.5
 -------------
 * Prefab Collection asset can be created by right clicking on multiple selected prefab assets
