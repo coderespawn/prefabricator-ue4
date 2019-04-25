@@ -2,7 +2,9 @@
 
 #pragma once
 #include "CoreMinimal.h"
+#include "AssetToolsModule.h"
 #include "ContentBrowserModule.h"
+#include "IAssetTools.h"
 #include "IContentBrowserSingleton.h"
 #include "Widgets/Notifications/SNotificationList.h"
 
