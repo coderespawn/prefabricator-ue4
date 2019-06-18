@@ -18,6 +18,8 @@
 #include "Modules/ModuleManager.h"
 #include "Widgets/SBoxPanel.h"
 
+#include "PrefabricatorSettings.h"
+
 #define LOCTEXT_NAMESPACE "PrefabActorCustomization" 
 
 namespace {
@@ -135,8 +137,12 @@ FReply FPrefabActorCustomization::HandleSaveToAsset(IDetailLayoutBuilder* Detail
 
 			UPrefabricatorAsset* PrefabAsset = Cast<UPrefabricatorAsset>(PrefabActor->PrefabComponent->PrefabAssetInterface.LoadSynchronous());
 			if (PrefabAsset) {
-				// Refresh all the existing prefabs in the level
-				FPrefabEditorTools::ReloadPrefabsInLevel(PrefabActor->GetWorld(), PrefabAsset);
+				const UPrefabricatorSettings* PS = GetDefault<UPrefabricatorSettings>();
+				if(PS->bAllowDynamicUpdate)
+				{
+					// Refresh all the existing prefabs in the level
+					FPrefabEditorTools::ReloadPrefabsInLevel(PrefabActor->GetWorld(), PrefabAsset);
+				}
 			}
 		}
 	}
