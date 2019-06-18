@@ -3,6 +3,7 @@
 #pragma once
 #include "CoreMinimal.h"
 #include "IDetailCustomization.h"
+#include "Input/Reply.h"
 
 class PREFABRICATOREDITOR_API FPrefabActorCustomization : public IDetailCustomization {
 public:
@@ -13,6 +14,7 @@ public:
 	static TSharedRef<IDetailCustomization> MakeInstance();
 
 	static FReply HandleSaveToAsset(IDetailLayoutBuilder* DetailBuilder);
+	static FReply HandleSaveToNewAsset(IDetailLayoutBuilder* DetailBuilder);
 	static FReply HandleLoadFromAsset(IDetailLayoutBuilder* DetailBuilder);
 	static FReply RandomizePrefabCollection(IDetailLayoutBuilder* DetailBuilder);
 };
