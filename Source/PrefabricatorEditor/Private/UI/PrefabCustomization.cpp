@@ -21,6 +21,7 @@
 #include "Widgets/Input/SButton.h"
 
 #include "PrefabricatorSettings.h"
+#include "PrefabricatorEditorModule.h"
 
 #define LOCTEXT_NAMESPACE "PrefabActorCustomization" 
 
@@ -59,6 +60,14 @@ void FPrefabActorCustomization::CustomizeDetails(IDetailLayoutBuilder& DetailBui
 		}
 
 	}
+	FPrefabDetailsExtend& ExtenderDelegate = IPrefabricatorEditorModule::Get().GetPrefabActorDetailsExtender();
+
+	
+	if(ExtenderDelegate.IsBound())
+	{
+		ExtenderDelegate.Execute(DetailBuilder);
+	}
+	
 
 	if (!bIsCollection) {
 		IDetailCategoryBuilder& Category = DetailBuilder.EditCategory("Prefab Asset Actions", FText::GetEmpty(), ECategoryPriority::Important);
