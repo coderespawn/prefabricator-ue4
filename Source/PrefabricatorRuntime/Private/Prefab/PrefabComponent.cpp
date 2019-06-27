@@ -44,6 +44,10 @@ void UPrefabComponent::OnRegister()
 
 FBoxSphereBounds UPrefabComponent::CalcBounds(const FTransform& LocalToWorld) const
 {
+	if(InheritedBoundingBox.GetBox().GetSize().Size() > 0)
+	{
+		return InheritedBoundingBox;
+	}
 	APrefabActor* PrefabActor = Cast<APrefabActor>(GetOwner());
 	if (PrefabActor) {
 		FBox BoundsBox = FPrefabTools::GetPrefabBounds(PrefabActor);

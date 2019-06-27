@@ -12,6 +12,8 @@ UCLASS(Blueprintable)
 class PREFABRICATORRUNTIME_API UPrefabComponent : public USceneComponent {
 	GENERATED_UCLASS_BODY()
 public:
+	UPROPERTY()
+		FBoxSphereBounds InheritedBoundingBox;
 	UPROPERTY(EditAnywhere, Category = "Prefabricator", Meta=(DisplayName="Prefab"))
 	TSoftObjectPtr<UPrefabricatorAssetInterface> PrefabAssetInterface;
 
