@@ -6,6 +6,7 @@
 #include "Utils/PrefabricatorService.h"
 
 #include "GameFramework/Actor.h"
+#include "PrefabricatorSettings.h"
 
 UPrefabricatorAsset::UPrefabricatorAsset(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer) {
 	Version = (int32)EPrefabricatorAssetVersion::LatestVersion;
@@ -26,7 +27,14 @@ FVector FPrefabricatorAssetUtils::FindPivot(const TArray<AActor*>& InActors)
 			FBox ActorBounds = FPrefabTools::GetPrefabBounds(Actor);
 			Bounds += ActorBounds;
 		}
-		Pivot = Bounds.GetCenter();
+		if(GetDefault< UPrefabricatorSettings>()->bPivotOnExtreme)
+		{
+			Pivot = Bounds.GetCenter() - Bounds.GetExtent();
+		}
+		else
+		{
+			Pivot = Bounds.GetCenter();
+		}
 		Pivot.Z = Bounds.Min.Z;
 	}
 

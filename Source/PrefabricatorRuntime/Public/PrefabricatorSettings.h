@@ -15,6 +15,11 @@ class PREFABRICATORRUNTIME_API UPrefabricatorSettings : public UDeveloperSetting
 {
 	GENERATED_BODY()
 public:
+
+	/* Position pivot on extreme corner (bottom, left up), instead of center. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, config, Category = "Settings")
+		bool bPivotOnExtreme;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, config, Category = "Settings")
 	bool bAllowDynamicUpdate;
 
