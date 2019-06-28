@@ -180,7 +180,7 @@ FReply FPrefabActorCustomization::HandleSaveToNewAsset(IDetailLayoutBuilder* Det
 
 			if(Children.Num() > 0)
 			{
-				FPrefabTools::CreatePrefabFromExistingPrefab(PrefabActor, Children);
+				FPrefabTools::CreatePrefabFromActors(Children);
 			}
 		}
 	}

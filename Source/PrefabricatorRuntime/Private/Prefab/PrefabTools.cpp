@@ -170,51 +170,7 @@ void FPrefabTools::CreatePrefabFromActors(const TArray<AActor*>& InActors)
 	if (Service.IsValid()) {
 		Service->EndTransaction();
 	}
-	
-	SaveStateToPrefabAsset(PrefabActor);
 
-	SelectPrefabActor(PrefabActor);
-
-}
-
-void FPrefabTools::CreatePrefabFromExistingPrefab(APrefabActor* Parent, const TArray<AActor*>& InActors)
-{
-	TArray<AActor*> Actors;
-	SanitizePrefabActorsForCreation(InActors, Actors);
-
-	if (Actors.Num() == 0) {
-		return;
-	}
-
-	UPrefabricatorAsset* PrefabAsset = CreatePrefabAsset();
-	if (!PrefabAsset) {
-		return;
-	}
-
-	TSharedPtr<IPrefabricatorService> Service = FPrefabricatorService::Get();
-	if (Service.IsValid()) {
-		Service->BeginTransaction(LOCTEXT("TransLabel_CreatePrefab", "Create Prefab"));
-	}
-
-	UWorld* World = Actors[0]->GetWorld();
-
-	FVector Pivot = FPrefabricatorAssetUtils::FindPivot(Actors);
-	APrefabActor* PrefabActor = World->SpawnActor<APrefabActor>(Pivot, FRotator::ZeroRotator);
-
-	// Find the compatible mobility for the prefab actor
-	EComponentMobility::Type Mobility = FPrefabricatorAssetUtils::FindMobility(Actors);
-	PrefabActor->GetRootComponent()->SetMobility(Mobility);
-
-	PrefabActor->PrefabComponent->PrefabAssetInterface = PrefabAsset;
-	// Attach the actors to the prefab
-	for (AActor* Actor : Actors) {
-		ParentActors(PrefabActor, Actor);
-	}
-
-	if (Service.IsValid()) {
-		Service->EndTransaction();
-	}
-	PrefabActor->PrefabComponent->InheritedBoundingBox = Parent->PrefabComponent->Bounds;
 	SaveStateToPrefabAsset(PrefabActor);
 
 	SelectPrefabActor(PrefabActor);
