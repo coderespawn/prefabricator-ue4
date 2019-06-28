@@ -7,6 +7,14 @@
 #include "Templates/SubclassOf.h"
 #include "PrefabricatorSettings.generated.h"
 
+UENUM(BlueprintType)
+enum class EPrefabricatorPivotPosition : uint8
+{
+	ExtremeLeft,
+	ExtremeRight,
+	Center
+};
+
 /**
  * 
  */
@@ -18,7 +26,7 @@ public:
 
 	/* Position pivot on extreme corner (bottom, left up), instead of center. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, config, Category = "Settings")
-		bool bPivotOnExtreme;
+		EPrefabricatorPivotPosition PivotPosition;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, config, Category = "Settings")
 	bool bAllowDynamicUpdate;

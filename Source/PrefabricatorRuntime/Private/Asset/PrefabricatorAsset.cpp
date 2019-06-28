@@ -27,13 +27,19 @@ FVector FPrefabricatorAssetUtils::FindPivot(const TArray<AActor*>& InActors)
 			FBox ActorBounds = FPrefabTools::GetPrefabBounds(Actor);
 			Bounds += ActorBounds;
 		}
-		if(GetDefault< UPrefabricatorSettings>()->bPivotOnExtreme)
-		{
-			Pivot = Bounds.GetCenter() - Bounds.GetExtent();
-		}
-		else
-		{
-			Pivot = Bounds.GetCenter();
+
+		switch (GetDefault< UPrefabricatorSettings>()->PivotPosition) 
+		{ 
+			case EPrefabricatorPivotPosition::ExtremeLeft:
+				Pivot = Bounds.GetCenter() - Bounds.GetExtent();
+				break;
+			case EPrefabricatorPivotPosition::ExtremeRight:
+				Pivot = Bounds.GetCenter() + Bounds.GetExtent();
+				break;
+			case EPrefabricatorPivotPosition::Center:
+				Pivot = Bounds.GetCenter();
+				break;
+			default:;
 		}
 		Pivot.Z = Bounds.Min.Z;
 	}

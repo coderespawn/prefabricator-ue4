@@ -6,6 +6,7 @@ UPrefabricatorSettings::UPrefabricatorSettings()
 {
 	//Do not change default behavior.
 	bAllowDynamicUpdate = true;
+	PivotPosition = EPrefabricatorPivotPosition::Center;
 }
 
 /** Gets the settings container name for the settings, either Project or Editor */
