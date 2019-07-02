@@ -18,6 +18,11 @@
 #include "Modules/ModuleManager.h"
 #include "Widgets/SBoxPanel.h"
 
+#include "Widgets/Input/SButton.h"
+
+#include "PrefabricatorSettings.h"
+#include "PrefabricatorEditorModule.h"
+
 #define LOCTEXT_NAMESPACE "PrefabActorCustomization" 
 
 namespace {
@@ -55,6 +60,14 @@ void FPrefabActorCustomization::CustomizeDetails(IDetailLayoutBuilder& DetailBui
 		}
 
 	}
+	FPrefabDetailsExtend& ExtenderDelegate = IPrefabricatorEditorModule::Get().GetPrefabActorDetailsExtender();
+
+	
+	if(ExtenderDelegate.IsBound())
+	{
+		ExtenderDelegate.Execute(DetailBuilder);
+	}
+	
 
 	if (!bIsCollection) {
 		IDetailCategoryBuilder& Category = DetailBuilder.EditCategory("Prefab Asset Actions", FText::GetEmpty(), ECategoryPriority::Important);
@@ -73,7 +86,15 @@ void FPrefabActorCustomization::CustomizeDetails(IDetailLayoutBuilder& DetailBui
 				.Text(LOCTEXT("PrefabCommand_SaveToAsset", "Save Prefab to Asset"))
 				.OnClicked(FOnClicked::CreateStatic(&FPrefabActorCustomization::HandleSaveToAsset, &DetailBuilder))
 			]
-		
+			+ SHorizontalBox::Slot()
+			.VAlign(VAlign_Center)
+			.FillWidth(1.0f)
+			//.Padding(4.0f)
+			[
+				SNew(SButton)
+				.Text(LOCTEXT("PrefabCommand_SaveToNewAsset", "Save Prefab to New Asset"))
+				.OnClicked(FOnClicked::CreateStatic(&FPrefabActorCustomization::HandleSaveToNewAsset, &DetailBuilder))
+			]
 			+SHorizontalBox::Slot()
 			.VAlign(VAlign_Center)
 			.FillWidth(1.0f)
@@ -135,8 +156,31 @@ FReply FPrefabActorCustomization::HandleSaveToAsset(IDetailLayoutBuilder* Detail
 
 			UPrefabricatorAsset* PrefabAsset = Cast<UPrefabricatorAsset>(PrefabActor->PrefabComponent->PrefabAssetInterface.LoadSynchronous());
 			if (PrefabAsset) {
-				// Refresh all the existing prefabs in the level
-				FPrefabEditorTools::ReloadPrefabsInLevel(PrefabActor->GetWorld(), PrefabAsset);
+				const UPrefabricatorSettings* PS = GetDefault<UPrefabricatorSettings>();
+				if(PS->bAllowDynamicUpdate)
+				{
+					// Refresh all the existing prefabs in the level
+					FPrefabEditorTools::ReloadPrefabsInLevel(PrefabActor->GetWorld(), PrefabAsset);
+				}
+			}
+		}
+	}
+	return FReply::Handled();
+}
+
+FReply FPrefabActorCustomization::HandleSaveToNewAsset(IDetailLayoutBuilder* DetailBuilder)
+{
+	TArray<APrefabActor*> PrefabActors = GetDetailObject<APrefabActor>(DetailBuilder);
+	for (APrefabActor* PrefabActor : PrefabActors) {
+		if (PrefabActor) {
+			
+			TArray<AActor*> Children;
+			
+			FPrefabTools::GetActorChildren(PrefabActor, Children);
+
+			if(Children.Num() > 0)
+			{
+				FPrefabTools::CreatePrefabFromActors(Children);
 			}
 		}
 	}

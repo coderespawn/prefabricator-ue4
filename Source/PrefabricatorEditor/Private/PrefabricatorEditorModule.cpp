@@ -28,6 +28,8 @@
 
 class FPrefabricatorEditorModule : public IPrefabricatorEditorModule
 {
+	FPrefabDetailsExtend PrefabActorDetailsExtender;
+
 	virtual void StartupModule() override 
 	{
 		FPrefabEditorStyle::Initialize();
@@ -93,7 +95,10 @@ class FPrefabricatorEditorModule : public IPrefabricatorEditorModule
 	virtual EAssetTypeCategories::Type GetPrefabricatorAssetCategoryBit() const override {
 		return PrefabricatorAssetCategoryBit;
 	}
-
+	virtual FPrefabDetailsExtend& GetPrefabActorDetailsExtender() override
+	{
+		return PrefabActorDetailsExtender;
+	}
 private:
 	void RegisterAssetTypeAction(IAssetTools& AssetTools, TSharedRef<IAssetTypeActions> Action)
 	{
