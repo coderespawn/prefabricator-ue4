@@ -494,6 +494,32 @@ void FPrefabTools::LoadStateFromPrefabAsset(AActor* InActor, const FPrefabricato
 
 }
 
+void FPrefabTools::UnlinkAndDestroyPrefabActor(APrefabActor* PrefabActor)
+{
+	TSharedPtr<IPrefabricatorService> Service = FPrefabricatorService::Get();
+	if (Service.IsValid()) {
+		Service->BeginTransaction(LOCTEXT("TransLabel_CreatePrefab", "Unlink Prefab"));
+	}
+
+	// Grab all the actors directly attached to this prefab actor
+	TArray<AActor*> ChildActors;
+	PrefabActor->GetAttachedActors(ChildActors);
+
+	// Detach them from the prefab actor and cleanup
+	for (AActor* ChildActor: ChildActors) {
+		ChildActor->DetachFromActor(FDetachmentTransformRules(EDetachmentRule::KeepWorld, true));
+		ChildActor->GetRootComponent()->RemoveUserDataOfClass(UPrefabricatorAssetUserData::StaticClass());
+	}
+
+	// Finally delete the prefab actor
+	PrefabActor->Destroy();
+
+	if (Service.IsValid()) {
+		Service->EndTransaction();
+	}
+
+}
+
 void FPrefabTools::GetActorChildren(AActor* InParent, TArray<AActor*>& OutChildren)
 {
 	InParent->GetAttachedActors(OutChildren);

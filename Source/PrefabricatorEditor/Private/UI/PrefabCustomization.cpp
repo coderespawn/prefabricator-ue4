@@ -115,6 +115,16 @@ void FPrefabActorCustomization::CustomizeDetails(IDetailLayoutBuilder& DetailBui
 				.OnClicked(FOnClicked::CreateStatic(&FPrefabActorCustomization::RandomizePrefabCollection, &DetailBuilder))
 			];
 
+
+		Category.AddCustomRow(LOCTEXT("PrefabCommandUnlink_Filter", "unlink prefab"))
+			.WholeRowContent()
+			[
+				SNew(SButton)
+				.Text(LOCTEXT("PrefabCommand_Unlink", "Unlink"))
+			.OnClicked(FOnClicked::CreateStatic(&FPrefabActorCustomization::UnlinkPrefab, &DetailBuilder))
+			];
+
+
 		DetailBuilder.HideProperty(GET_MEMBER_NAME_CHECKED(APrefabActor, Seed));
 	}
 	else {
@@ -175,11 +185,11 @@ FReply FPrefabActorCustomization::HandleSaveToNewAsset(IDetailLayoutBuilder* Det
 		if (PrefabActor) {
 			
 			TArray<AActor*> Children;
-			
-			FPrefabTools::GetActorChildren(PrefabActor, Children);
+			PrefabActor->GetAttachedActors(Children);
 
 			if(Children.Num() > 0)
 			{
+				FPrefabTools::UnlinkAndDestroyPrefabActor(PrefabActor);
 				FPrefabTools::CreatePrefabFromActors(Children);
 			}
 		}
@@ -211,6 +221,18 @@ FReply FPrefabActorCustomization::RandomizePrefabCollection(IDetailLayoutBuilder
 			LoadSettings.bRandomizeNestedSeed = true;
 			LoadSettings.Random = &Random;
 			FPrefabTools::LoadStateFromPrefabAsset(PrefabActor, LoadSettings);
+		}
+	}
+	return FReply::Handled();
+}
+
+FReply FPrefabActorCustomization::UnlinkPrefab(IDetailLayoutBuilder* DetailBuilder)
+{
+
+	TArray<APrefabActor*> PrefabActors = GetDetailObject<APrefabActor>(DetailBuilder);
+	for (APrefabActor* PrefabActor : PrefabActors) {
+		if (PrefabActor) {
+			FPrefabTools::UnlinkAndDestroyPrefabActor(PrefabActor);
 		}
 	}
 	return FReply::Handled();
