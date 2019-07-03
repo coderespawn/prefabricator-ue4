@@ -5,6 +5,20 @@
 #include "Engine/EngineTypes.h"
 #include "PrefabricatorAsset.generated.h"
 
+USTRUCT()
+struct PREFABRICATORRUNTIME_API FPrefabricatorPropertyAssetMapping {
+	GENERATED_BODY()
+
+	UPROPERTY()
+	FSoftObjectPath AssetReference;
+
+	UPROPERTY()
+	FString AssetClassName;
+
+	UPROPERTY()
+	FName AssetObjectPath;
+};
+
 UCLASS()
 class PREFABRICATORRUNTIME_API UPrefabricatorProperty : public UObject {
 	GENERATED_BODY()
@@ -14,6 +28,12 @@ public:
 
 	UPROPERTY()
 	FString ExportedValue;
+
+	UPROPERTY()
+	TArray<FPrefabricatorPropertyAssetMapping> AssetSoftReferenceMappings;
+
+	void SaveReferencedAssetValues();
+	void LoadReferencedAssetValues();
 };
 
 USTRUCT()

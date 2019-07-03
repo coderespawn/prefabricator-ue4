@@ -311,6 +311,7 @@ namespace {
 
 			UPrefabricatorProperty* PrefabProperty = *SearchResult;
 			if (PrefabProperty) {
+				PrefabProperty->LoadReferencedAssetValues();
 				PropertyPathHelpers::SetPropertyValueFromString(InObjToDeserialize, PrefabProperty->PropertyName, PrefabProperty->ExportedValue);
 			}
 		}
@@ -363,6 +364,7 @@ namespace {
 			PrefabProperty = NewObject<UPrefabricatorProperty>(PrefabAsset);
 			PrefabProperty->PropertyName = PropertyName;
 			PropertyPathHelpers::GetPropertyValueAsString(ObjToSerialize, PropertyName, PrefabProperty->ExportedValue);
+			PrefabProperty->SaveReferencedAssetValues();
 			OutProperties.Add(PrefabProperty);
 		}
 	}
@@ -391,6 +393,7 @@ namespace {
 	}
 
 	void DumpSerializedData(const FPrefabricatorActorData& InActorData) {
+		UE_LOG(LogPrefabTools, Log, TEXT("############################################################"));
 		UE_LOG(LogPrefabTools, Log, TEXT("Actor Properties: %s"), *InActorData.ClassPath);
 		UE_LOG(LogPrefabTools, Log, TEXT("================="));
 		DumpSerializedProperties(InActorData.Properties);
