@@ -110,11 +110,12 @@ UPrefabricatorAsset* UPrefabricatorAssetCollection::GetPrefabAsset(const FPrefab
 			}
 			StartRange = EndRange;
 		}
-		if (!PrefabAssetPtr.IsValid()) {
+		if (!PrefabAssetPtr.IsNull()) {
 			PrefabAssetPtr = Prefabs.Last().PrefabAsset;
 		}
 	}
-	if (PrefabAssetPtr.IsValid()) {
+	
+	if (!PrefabAssetPtr.IsNull()) {
 		return PrefabAssetPtr.LoadSynchronous();
 	}
 	return nullptr;
