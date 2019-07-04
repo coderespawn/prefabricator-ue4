@@ -12,7 +12,7 @@ struct PREFABRICATORRUNTIME_API FPrefabLoadSettings {
 	bool bUnregisterComponentsBeforeLoading = true;
 	bool bRandomizeNestedSeed = false;
 	bool bSynchronousBuild = true;
-	FRandomStream* Random = nullptr;
+	const FRandomStream* Random = nullptr;
 };
 
 class PREFABRICATORRUNTIME_API FPrefabTools {
@@ -28,6 +28,7 @@ public:
 	static void SaveStateToPrefabAsset(AActor* InActor, APrefabActor* PrefabActor, FPrefabricatorActorData& OutActorData);
 	static void LoadStateFromPrefabAsset(AActor* InActor, const FPrefabricatorActorData& InActorData, const FPrefabLoadSettings& InSettings);
 
+	static void UnlinkAndDestroyPrefabActor(APrefabActor* PrefabActor);
 	static void GetActorChildren(AActor* InParent, TArray<AActor*>& OutChildren);
 
 	static FBox GetPrefabBounds(AActor* PrefabActor);
@@ -42,4 +43,14 @@ public:
 	static int32 GetRandomSeed(const FRandomStream& Random);
 
 	static void IterateChildrenRecursive(APrefabActor* Actor, TFunction<void(AActor*)> Visit);
+};
+
+class PREFABRICATORRUNTIME_API FPrefabVersionControl {
+public:
+	static void UpgradeToLatestVersion(UPrefabricatorAsset* Prefab);
+
+private:
+	static void UpgradeFromVersion_InitialVersion(UPrefabricatorAsset* Prefab);
+	static void UpgradeFromVersion_AddedSoftReferences(UPrefabricatorAsset* Prefab);
+
 };
