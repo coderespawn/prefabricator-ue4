@@ -12,7 +12,7 @@ struct PREFABRICATORRUNTIME_API FPrefabLoadSettings {
 	bool bUnregisterComponentsBeforeLoading = true;
 	bool bRandomizeNestedSeed = false;
 	bool bSynchronousBuild = true;
-	FRandomStream* Random = nullptr;
+	const FRandomStream* Random = nullptr;
 };
 
 class PREFABRICATORRUNTIME_API FPrefabTools {
