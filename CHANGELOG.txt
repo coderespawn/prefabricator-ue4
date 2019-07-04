@@ -1,5 +1,16 @@
 CHANGELOG: Prefabricator
 ========================
+Version 1.2.0
+-------------
+* New: Prefabs now store soft refernces to assets and the references can be viewed from the reference viewer. This keeps the prefab from breaking when the assets are moved around
+* New: Added Upgrade option in the Prefabricator Tool button's Advanced submenu. This upgrades all the existing prefabs in the project to the latest version, adding soft references
+* New: Project settings to control automatic updates of prefabs in the level [Contribution from @iniside] 
+* New: Project settings to control default pivot location when new prefabs are created [Contribution from @iniside] 
+* New: Save an existing prefab in the level as a new asset [Contribution from @iniside] 
+* New: Unlink prefabs in the scene to turn them into normal actors
+* Fix: Fixed prefab collection loading issues in non-editor builds which was causing randomization to not work
+
+
 Version 1.1.0
 -------------
 * New: Added 4.22 engine support
