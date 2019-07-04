@@ -61,7 +61,7 @@ uint32 FPrefabricatorAssetTypeActions::GetCategories()
 
 FText FPrefabricatorAssetTypeActions::GetDisplayNameFromAssetData(const FAssetData& AssetData) const
 {
-	UPrefabricatorAsset* PrefabAsset = Cast<UPrefabricatorAsset>(AssetData.FastGetAsset(true));
+	UPrefabricatorAsset* PrefabAsset = Cast<UPrefabricatorAsset>(AssetData.GetAsset());
 	if (PrefabAsset) {
 		if (PrefabAsset->Version != (uint32)EPrefabricatorAssetVersion::LatestVersion) {
 			return LOCTEXT("TypeActionsName_UpgradeRequired", "Prefab (upgrade required, right click)");
