@@ -21,6 +21,8 @@
 #include "PropertyEditorModule.h"
 #include "ThumbnailRendering/ThumbnailManager.h"
 #include "UnrealEdGlobals.h"
+#include "AssetRegistryModule.h"
+#include "PrefabTools.h"
 
 #define LOCTEXT_NAMESPACE "PrefabricatorEditorModule" 
 
@@ -99,6 +101,21 @@ class FPrefabricatorEditorModule : public IPrefabricatorEditorModule
 	{
 		return PrefabActorDetailsExtender;
 	}
+
+	virtual void UpgradePrefabAssets() override {
+		FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
+		TArray<FAssetData> AssetDataList;
+		AssetRegistryModule.Get().GetAssetsByClass(FName("PrefabricatorAsset"), AssetDataList);
+		for (const FAssetData& AssetData : AssetDataList) {
+			UPrefabricatorAsset* PrefabAsset = Cast<UPrefabricatorAsset>(AssetData.GetAsset());
+			if (PrefabAsset) {
+				if (PrefabAsset->Version != (uint32)EPrefabricatorAssetVersion::LatestVersion) {
+					FPrefabVersionControl::UpgradeToLatestVersion(PrefabAsset);
+				}
+			}
+		}
+	}
+
 private:
 	void RegisterAssetTypeAction(IAssetTools& AssetTools, TSharedRef<IAssetTypeActions> Action)
 	{

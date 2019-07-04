@@ -245,13 +245,13 @@ void FPrefabTools::SaveStateToPrefabAsset(APrefabActor* PrefabActor)
 			SaveStateToPrefabAsset(ChildActor, PrefabActor, ActorData);
 		}
 	}
+	PrefabAsset->Version = (uint32)EPrefabricatorAssetVersion::LatestVersion;
 
 	PrefabActor->PrefabComponent->UpdateBounds();
 
 	// Regenerate a new update id for the prefab asset
 	PrefabAsset->LastUpdateID = FGuid::NewGuid();
 	PrefabActor->LastUpdateID = PrefabAsset->LastUpdateID;
-
 	PrefabAsset->Modify();
 }
 
@@ -394,7 +394,7 @@ namespace {
 
 	void DumpSerializedData(const FPrefabricatorActorData& InActorData) {
 		UE_LOG(LogPrefabTools, Log, TEXT("############################################################"));
-		UE_LOG(LogPrefabTools, Log, TEXT("Actor Properties: %s"), *InActorData.ClassPath);
+		UE_LOG(LogPrefabTools, Log, TEXT("Actor Properties: %s"), *InActorData.ClassPathRef.GetAssetPathString());
 		UE_LOG(LogPrefabTools, Log, TEXT("================="));
 		DumpSerializedProperties(InActorData.Properties);
 
@@ -437,7 +437,9 @@ void FPrefabTools::SaveStateToPrefabAsset(AActor* InActor, APrefabActor* PrefabA
 	FTransform InversePrefabTransform = PrefabActor->GetTransform().Inverse();
 	FTransform LocalTransform = InActor->GetTransform() * InversePrefabTransform;
 	OutActorData.RelativeTransform = LocalTransform;
-	OutActorData.ClassPath = InActor->GetClass()->GetPathName();
+	FString ClassPath = InActor->GetClass()->GetPathName();
+	OutActorData.ClassPathRef = FSoftClassPath(ClassPath);
+	OutActorData.ClassPath = ClassPath;
 	SerializeFields(InActor, PrefabActor, OutActorData.Properties);
 
 	TArray<UActorComponent*> Components;
@@ -583,7 +585,19 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 	}
 
 	for (FPrefabricatorActorData& ActorItemData : PrefabAsset->ActorData) {
-		UClass* ActorClass = LoadObject<UClass>(nullptr, *ActorItemData.ClassPath);
+		// Handle backward compatibility
+		{
+			if (!ActorItemData.ClassPathRef.IsValid()) {
+				ActorItemData.ClassPathRef = ActorItemData.ClassPath;
+			}
+
+			if (ActorItemData.ClassPathRef.GetAssetPathString() != ActorItemData.ClassPath) {
+				ActorItemData.ClassPath = ActorItemData.ClassPathRef.GetAssetPathString();
+			}
+		}
+
+
+		UClass* ActorClass = LoadObject<UClass>(nullptr, *ActorItemData.ClassPathRef.GetAssetPathString());
 		if (!ActorClass) continue;
 
 		UWorld* World = PrefabActor->GetWorld();
@@ -591,7 +605,7 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 		if (AActor** SearchResult = ActorByItemID.Find(ActorItemData.PrefabItemID)) {
 			ChildActor = *SearchResult;
 			FString ExistingClassName = ChildActor->GetClass()->GetPathName();
-			FString RequiredClassName = ActorItemData.ClassPath;
+			FString RequiredClassName = ActorItemData.ClassPathRef.GetAssetPathString();
 			if (ExistingClassName == RequiredClassName) {
 				// We can reuse this actor
 				ExistingActorPool.Remove(ChildActor);
@@ -643,6 +657,47 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 	if (InSettings.bSynchronousBuild) {
 		PrefabActor->HandleBuildComplete();
 	}
+}
+
+void FPrefabVersionControl::UpgradeToLatestVersion(UPrefabricatorAsset* PrefabAsset)
+{
+	if (PrefabAsset->Version == (int32)EPrefabricatorAssetVersion::InitialVersion) {
+		UpgradeFromVersion_InitialVersion(PrefabAsset);
+	}
+
+	if (PrefabAsset->Version == (int32)EPrefabricatorAssetVersion::AddedSoftReference) {
+		// TODO: Handle any future upgrades here to move the asset to the next version
+	}
+
+	//....
+
+}
+
+void FPrefabVersionControl::UpgradeFromVersion_InitialVersion(UPrefabricatorAsset* PrefabAsset)
+{
+	check(PrefabAsset->Version == (int32)EPrefabricatorAssetVersion::InitialVersion);
+
+	for (FPrefabricatorActorData& Entry : PrefabAsset->ActorData) {
+		for (UPrefabricatorProperty* ActorProperty : Entry.Properties) {
+			ActorProperty->SaveReferencedAssetValues();
+		}
+
+		for (FPrefabricatorComponentData& ComponentData : Entry.Components) {
+			for (UPrefabricatorProperty* ComponentProperty : ComponentData.Properties) {
+				ComponentProperty->SaveReferencedAssetValues();
+			}
+		}
+	}
+
+	PrefabAsset->Version = (int32)EPrefabricatorAssetVersion::AddedSoftReference;
+	PrefabAsset->Modify();
+}
+
+void FPrefabVersionControl::UpgradeFromVersion_AddedSoftReferences(UPrefabricatorAsset* PrefabAsset)
+{
+	check(PrefabAsset->Version == (int32)EPrefabricatorAssetVersion::AddedSoftReference);
+
+	// Handle future version upgrade here to move to next version
 }
 
 #undef LOCTEXT_NAMESPACE

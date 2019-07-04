@@ -9,11 +9,11 @@
 #include "PrefabricatorSettings.h"
 #include "Regex.h"
 #include "PackageName.h"
+#include "PrefabricatorConstants.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogPrefabricatorAsset, Log, All);
 
 UPrefabricatorAsset::UPrefabricatorAsset(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer) {
-	Version = (int32)EPrefabricatorAssetVersion::LatestVersion;
 }
 
 UPrefabricatorAsset* UPrefabricatorAsset::GetPrefabAsset(const FPrefabAssetSelectionConfig& InConfig)
@@ -133,14 +133,14 @@ void UPrefabricatorProperty::SaveReferencedAssetValues()
 {
 	AssetSoftReferenceMappings.Reset();
 
-	const FRegexPattern Pattern(TEXT("[A-Za-z0-9_]+'.*?'"));
+	const FRegexPattern Pattern(*FPrefabricatorConstants::SoftReferenceSearchPattern);
 	FRegexMatcher Matcher(Pattern, *ExportedValue);
 
 	while (Matcher.FindNext()) {
 		int32 StartIdx = Matcher.GetMatchBeginning();
 		int32 EndIdx = Matcher.GetMatchEnding();
 		FString AssetPath = ExportedValue.Mid(StartIdx, EndIdx - StartIdx + 1);
-		if (AssetPath.StartsWith("PrefabricatorAssetUserData")) {
+		if (AssetPath.StartsWith("PrefabricatorAssetUserData")) {		// TODO: Get this name from the static class
 			continue;
 		}
 		FSoftObjectPath SoftPath(AssetPath);

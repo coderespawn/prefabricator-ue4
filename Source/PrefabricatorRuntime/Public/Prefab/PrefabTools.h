@@ -44,3 +44,13 @@ public:
 
 	static void IterateChildrenRecursive(APrefabActor* Actor, TFunction<void(AActor*)> Visit);
 };
+
+class PREFABRICATORRUNTIME_API FPrefabVersionControl {
+public:
+	static void UpgradeToLatestVersion(UPrefabricatorAsset* Prefab);
+
+private:
+	static void UpgradeFromVersion_InitialVersion(UPrefabricatorAsset* Prefab);
+	static void UpgradeFromVersion_AddedSoftReferences(UPrefabricatorAsset* Prefab);
+
+};

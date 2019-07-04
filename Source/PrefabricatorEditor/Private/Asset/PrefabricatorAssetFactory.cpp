@@ -18,6 +18,7 @@ bool UPrefabricatorAssetFactory::CanCreateNew() const {
 
 UObject* UPrefabricatorAssetFactory::FactoryCreateNew(UClass* Class, UObject* InParent, FName Name, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) {
 	UPrefabricatorAsset* NewAsset = NewObject<UPrefabricatorAsset>(InParent, Class, Name, Flags | RF_Transactional);
+	NewAsset->Version = (uint32)EPrefabricatorAssetVersion::LatestVersion;
 	return NewAsset;
 }
 

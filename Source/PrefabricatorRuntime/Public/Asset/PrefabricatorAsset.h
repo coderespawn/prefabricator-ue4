@@ -64,6 +64,9 @@ struct PREFABRICATORRUNTIME_API FPrefabricatorActorData {
 	FString ClassPath;
 
 	UPROPERTY()
+	FSoftClassPath ClassPathRef;
+
+	UPROPERTY()
 	TArray<UPrefabricatorProperty*> Properties;
 
 	UPROPERTY()
@@ -100,6 +103,7 @@ public:
 
 enum class EPrefabricatorAssetVersion {
 	InitialVersion = 0,
+	AddedSoftReference,
 
 	//----------- Versions should be placed above this line -----------------
 	LastVersionPlusOne,

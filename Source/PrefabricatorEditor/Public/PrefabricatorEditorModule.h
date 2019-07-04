@@ -40,5 +40,6 @@ public:
 
 	virtual EAssetTypeCategories::Type GetPrefabricatorAssetCategoryBit() const = 0;
 	virtual FPrefabDetailsExtend& GetPrefabActorDetailsExtender() = 0;
+	virtual void UpgradePrefabAssets() = 0;
 };
 
