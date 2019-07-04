@@ -17,6 +17,9 @@ struct PREFABRICATORRUNTIME_API FPrefabricatorPropertyAssetMapping {
 
 	UPROPERTY()
 	FName AssetObjectPath;
+
+	UPROPERTY()
+	bool bUseQuotes = false;
 };
 
 UCLASS()

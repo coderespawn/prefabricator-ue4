@@ -5,6 +5,5 @@
 
 class PREFABRICATORRUNTIME_API FPrefabricatorConstants {
 public:
-	static const FString SoftReferenceSearchPattern;
 };
 

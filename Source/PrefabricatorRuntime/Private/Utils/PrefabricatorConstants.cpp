@@ -3,4 +3,3 @@
 #include "Utils/PrefabricatorConstants.h"
 
 
-const FString FPrefabricatorConstants::SoftReferenceSearchPattern = "[A-Za-z0-9_]+'.*?'";
