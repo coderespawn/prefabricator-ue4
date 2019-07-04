@@ -3,8 +3,8 @@
 #pragma once
 #include "CoreMinimal.h"
 
-
 class PREFABRICATORRUNTIME_API FPrefabricatorConstants {
 public:
 	static const FString SoftReferenceSearchPattern;
 };
+

@@ -1,7 +1,6 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+//$ Copyright 2015-19, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #pragma once
-
 #include "CoreMinimal.h"
 #include "Engine/DeveloperSettings.h"
 #include "Templates/SubclassOf.h"
@@ -48,3 +47,4 @@ public:
 	virtual FText GetSectionDescription() const;
 #endif
 };
+

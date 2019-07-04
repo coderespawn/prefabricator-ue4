@@ -7,6 +7,7 @@
 #include "Prefab/Random/PrefabSeedLinker.h"
 #include "PrefabEditorCommands.h"
 #include "PrefabEditorStyle.h"
+#include "PrefabricatorEditorModule.h"
 #include "Utils/PrefabEditorTools.h"
 
 #include "AssetToolsModule.h"
@@ -22,7 +23,6 @@
 #include "LevelEditor.h"
 #include "Widgets/Notifications/SNotificationList.h"
 #include "Widgets/SNullWidget.h"
-#include "PrefabricatorEditorModule.h"
 
 #define LOCTEXT_NAMESPACE "EditorUIExtender" 
 

@@ -3,13 +3,13 @@
 #include "Asset/PrefabricatorAsset.h"
 
 #include "Prefab/PrefabTools.h"
+#include "PrefabricatorSettings.h"
+#include "Utils/PrefabricatorConstants.h"
 #include "Utils/PrefabricatorService.h"
 
 #include "GameFramework/Actor.h"
-#include "PrefabricatorSettings.h"
-#include "Regex.h"
-#include "PackageName.h"
-#include "PrefabricatorConstants.h"
+#include "Internationalization/Regex.h"
+#include "Misc/PackageName.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogPrefabricatorAsset, Log, All);
 
@@ -189,3 +189,4 @@ void UPrefabricatorProperty::LoadReferencedAssetValues()
 		Modify();
 	}
 }
+

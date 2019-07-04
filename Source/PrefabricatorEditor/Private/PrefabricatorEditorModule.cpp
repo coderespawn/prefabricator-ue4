@@ -6,6 +6,7 @@
 #include "Asset/PrefabricatorAssetBroker.h"
 #include "Asset/PrefabricatorAssetTypeActions.h"
 #include "Asset/Thumbnail/PrefabricatorAssetThumbnailRenderer.h"
+#include "Prefab/PrefabTools.h"
 #include "PrefabEditorCommands.h"
 #include "PrefabEditorStyle.h"
 #include "UI/EditorUIExtender.h"
@@ -14,6 +15,7 @@
 #include "Utils/PrefabricatorEditorService.h"
 #include "Utils/SelectionHook.h"
 
+#include "AssetRegistryModule.h"
 #include "AssetToolsModule.h"
 #include "Editor/UnrealEdEngine.h"
 #include "IAssetTools.h"
@@ -21,8 +23,6 @@
 #include "PropertyEditorModule.h"
 #include "ThumbnailRendering/ThumbnailManager.h"
 #include "UnrealEdGlobals.h"
-#include "AssetRegistryModule.h"
-#include "PrefabTools.h"
 
 #define LOCTEXT_NAMESPACE "PrefabricatorEditorModule" 
 

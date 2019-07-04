@@ -2,7 +2,8 @@
 
 #pragma once
 #include "CoreMinimal.h"
-#include "Widgets/SWidget.h"
 #include "DetailLayoutBuilder.h"
+#include "Widgets/SWidget.h"
 
 DECLARE_DELEGATE_OneParam(FPrefabDetailsExtend, IDetailLayoutBuilder&);
+

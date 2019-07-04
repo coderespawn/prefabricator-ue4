@@ -2,12 +2,13 @@
 
 #pragma once
 #include "CoreMinimal.h"
+#include "PrefabEditorTypes.h"
+
 #include "AssetTypeCategories.h"
 #include "Modules/ModuleInterface.h"
 #include "Modules/ModuleManager.h"
 #include "Toolkits/AssetEditorToolkit.h"
 #include "Toolkits/IToolkit.h"
-#include "PrefabEditorTypes.h"
 
 /**
  * The public interface to this module

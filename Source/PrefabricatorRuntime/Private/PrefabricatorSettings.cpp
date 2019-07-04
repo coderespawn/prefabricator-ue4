@@ -1,6 +1,7 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+//$ Copyright 2015-19, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #include "PrefabricatorSettings.h"
+
 
 UPrefabricatorSettings::UPrefabricatorSettings()
 {
@@ -37,3 +38,4 @@ FText UPrefabricatorSettings::GetSectionDescription() const
 	return FText::FromString("Prefabricator Settings");
 }
 #endif
+

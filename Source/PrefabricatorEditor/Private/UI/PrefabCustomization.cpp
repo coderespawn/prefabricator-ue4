@@ -7,6 +7,8 @@
 #include "Prefab/PrefabComponent.h"
 #include "Prefab/PrefabTools.h"
 #include "Prefab/Random/PrefabRandomizerActor.h"
+#include "PrefabricatorEditorModule.h"
+#include "PrefabricatorSettings.h"
 #include "Utils/PrefabEditorTools.h"
 
 #include "ContentBrowserModule.h"
@@ -16,12 +18,8 @@
 #include "EditorViewportClient.h"
 #include "IContentBrowserSingleton.h"
 #include "Modules/ModuleManager.h"
-#include "Widgets/SBoxPanel.h"
-
 #include "Widgets/Input/SButton.h"
-
-#include "PrefabricatorSettings.h"
-#include "PrefabricatorEditorModule.h"
+#include "Widgets/SBoxPanel.h"
 
 #define LOCTEXT_NAMESPACE "PrefabActorCustomization" 
 
