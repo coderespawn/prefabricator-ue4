@@ -5,6 +5,20 @@
 #include "Engine/EngineTypes.h"
 #include "PrefabricatorAsset.generated.h"
 
+USTRUCT()
+struct PREFABRICATORRUNTIME_API FPrefabricatorPropertyAssetMapping {
+	GENERATED_BODY()
+
+	UPROPERTY()
+	FSoftObjectPath AssetReference;
+
+	UPROPERTY()
+	FString AssetClassName;
+
+	UPROPERTY()
+	FName AssetObjectPath;
+};
+
 UCLASS()
 class PREFABRICATORRUNTIME_API UPrefabricatorProperty : public UObject {
 	GENERATED_BODY()
@@ -14,6 +28,12 @@ public:
 
 	UPROPERTY()
 	FString ExportedValue;
+
+	UPROPERTY()
+	TArray<FPrefabricatorPropertyAssetMapping> AssetSoftReferenceMappings;
+
+	void SaveReferencedAssetValues();
+	void LoadReferencedAssetValues();
 };
 
 USTRUCT()
@@ -42,6 +62,9 @@ struct PREFABRICATORRUNTIME_API FPrefabricatorActorData {
 
 	UPROPERTY()
 	FString ClassPath;
+
+	UPROPERTY()
+	FSoftClassPath ClassPathRef;
 
 	UPROPERTY()
 	TArray<UPrefabricatorProperty*> Properties;
@@ -80,6 +103,7 @@ public:
 
 enum class EPrefabricatorAssetVersion {
 	InitialVersion = 0,
+	AddedSoftReference,
 
 	//----------- Versions should be placed above this line -----------------
 	LastVersionPlusOne,

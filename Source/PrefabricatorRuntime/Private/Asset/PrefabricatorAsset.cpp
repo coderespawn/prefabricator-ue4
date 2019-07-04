@@ -6,9 +6,14 @@
 #include "Utils/PrefabricatorService.h"
 
 #include "GameFramework/Actor.h"
+#include "PrefabricatorSettings.h"
+#include "Regex.h"
+#include "PackageName.h"
+#include "PrefabricatorConstants.h"
+
+DEFINE_LOG_CATEGORY_STATIC(LogPrefabricatorAsset, Log, All);
 
 UPrefabricatorAsset::UPrefabricatorAsset(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer) {
-	Version = (int32)EPrefabricatorAssetVersion::LatestVersion;
 }
 
 UPrefabricatorAsset* UPrefabricatorAsset::GetPrefabAsset(const FPrefabAssetSelectionConfig& InConfig)
@@ -26,7 +31,20 @@ FVector FPrefabricatorAssetUtils::FindPivot(const TArray<AActor*>& InActors)
 			FBox ActorBounds = FPrefabTools::GetPrefabBounds(Actor);
 			Bounds += ActorBounds;
 		}
-		Pivot = Bounds.GetCenter();
+
+		switch (GetDefault< UPrefabricatorSettings>()->PivotPosition) 
+		{ 
+			case EPrefabricatorPivotPosition::ExtremeLeft:
+				Pivot = Bounds.GetCenter() - Bounds.GetExtent();
+				break;
+			case EPrefabricatorPivotPosition::ExtremeRight:
+				Pivot = Bounds.GetCenter() + Bounds.GetExtent();
+				break;
+			case EPrefabricatorPivotPosition::Center:
+				Pivot = Bounds.GetCenter();
+				break;
+			default:;
+		}
 		Pivot.Z = Bounds.Min.Z;
 	}
 
@@ -111,3 +129,63 @@ void UPrefabricatorEventListener::PostSpawn_Implementation(APrefabActor* Prefab)
 
 }
 
+void UPrefabricatorProperty::SaveReferencedAssetValues()
+{
+	AssetSoftReferenceMappings.Reset();
+
+	const FRegexPattern Pattern(*FPrefabricatorConstants::SoftReferenceSearchPattern);
+	FRegexMatcher Matcher(Pattern, *ExportedValue);
+
+	while (Matcher.FindNext()) {
+		int32 StartIdx = Matcher.GetMatchBeginning();
+		int32 EndIdx = Matcher.GetMatchEnding();
+		FString AssetPath = ExportedValue.Mid(StartIdx, EndIdx - StartIdx + 1);
+		if (AssetPath.StartsWith("PrefabricatorAssetUserData")) {		// TODO: Get this name from the static class
+			continue;
+		}
+		FSoftObjectPath SoftPath(AssetPath);
+
+		FPrefabricatorPropertyAssetMapping Mapping;
+		Mapping.AssetReference = SoftPath;
+		if (Mapping.AssetReference.IsValid()) {
+			FString ObjectPathString;
+			FPackageName::ParseExportTextPath(AssetPath, &Mapping.AssetClassName, &ObjectPathString);
+			Mapping.AssetObjectPath = *ObjectPathString;
+			AssetSoftReferenceMappings.Add(Mapping);
+			UE_LOG(LogPrefabricatorAsset, Log, TEXT("######>>> Found Asset: [%s][%s] | %s"), *Mapping.AssetClassName, *Mapping.AssetObjectPath.ToString(), *Mapping.AssetReference.GetAssetPathName().ToString());
+		}
+	}
+}
+
+void UPrefabricatorProperty::LoadReferencedAssetValues()
+{
+	bool bModified = false;
+	for (FPrefabricatorPropertyAssetMapping& Mapping : AssetSoftReferenceMappings) {
+		// Check if the name has changed
+		//if (!Mapping.AssetReference.IsValid()) {
+		//	continue;
+		//}
+
+		FName ReferencedPath = Mapping.AssetReference.GetAssetPathName();
+		if (ReferencedPath.ToString().IsEmpty()) {
+			continue;
+		}
+
+		if (ReferencedPath == Mapping.AssetObjectPath) {
+			// No change in the exported text path and the referenced path
+			continue;
+		}
+
+		// The object path has changed.  Update it and mark as modified
+		FString ReplaceFrom = FString::Printf(TEXT("%s\'%s\'"), *Mapping.AssetClassName, *Mapping.AssetObjectPath.ToString());
+		FString ReplaceTo = FString::Printf(TEXT("%s\'%s\'"), *Mapping.AssetClassName, *ReferencedPath.ToString());
+		ExportedValue = ExportedValue.Replace(*ReplaceFrom, *ReplaceTo);
+		Mapping.AssetObjectPath = ReferencedPath;
+
+		bModified = true;
+	}
+
+	if (bModified) {
+		Modify();
+	}
+}

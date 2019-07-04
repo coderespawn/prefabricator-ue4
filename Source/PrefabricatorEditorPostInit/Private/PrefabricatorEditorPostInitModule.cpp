@@ -22,7 +22,6 @@ class FPrefabricatorEditorPostInitModule : public IPrefabricatorEditorPostInitMo
 	{
 		// Register component visualizers
 		RegisterComponentVisualizers();
-
 	}
 
 	virtual void ShutdownModule() override {

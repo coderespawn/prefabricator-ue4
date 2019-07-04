@@ -7,6 +7,7 @@
 #include "Modules/ModuleManager.h"
 #include "Toolkits/AssetEditorToolkit.h"
 #include "Toolkits/IToolkit.h"
+#include "PrefabEditorTypes.h"
 
 /**
  * The public interface to this module
@@ -38,5 +39,7 @@ public:
 	}
 
 	virtual EAssetTypeCategories::Type GetPrefabricatorAssetCategoryBit() const = 0;
+	virtual FPrefabDetailsExtend& GetPrefabActorDetailsExtender() = 0;
+	virtual void UpgradePrefabAssets() = 0;
 };
 
