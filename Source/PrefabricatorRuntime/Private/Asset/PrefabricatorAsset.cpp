@@ -106,22 +106,21 @@ UPrefabricatorAsset* UPrefabricatorAssetCollection::GetPrefabAsset(const FPrefab
 	else {
 		float SelectionValue = Random.FRandRange(0, TotalWeight);
 		float StartRange = 0.0f;
+		bool bFound = false;
 		for (const FPrefabricatorAssetCollectionItem& Item : Prefabs) {
 			float EndRange = StartRange + Item.Weight;
 			if (SelectionValue >= StartRange && SelectionValue < EndRange) {
 				PrefabAssetPtr = Item.PrefabAsset;
+				bFound = true;
 				break;
 			}
 			StartRange = EndRange;
 		}
-		if (!PrefabAssetPtr.IsValid()) {
+		if (!bFound) {
 			PrefabAssetPtr = Prefabs.Last().PrefabAsset;
 		}
 	}
-	if (PrefabAssetPtr.IsValid()) {
-		return PrefabAssetPtr.LoadSynchronous();
-	}
-	return nullptr;
+	return PrefabAssetPtr.LoadSynchronous();
 }
 
 void UPrefabricatorEventListener::PostSpawn_Implementation(APrefabActor* Prefab)
