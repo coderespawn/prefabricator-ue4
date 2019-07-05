@@ -12,7 +12,7 @@ struct PREFABRICATORRUNTIME_API FPrefabLoadSettings {
 	bool bUnregisterComponentsBeforeLoading = true;
 	bool bRandomizeNestedSeed = false;
 	bool bSynchronousBuild = true;
-	FRandomStream* Random = nullptr;
+	const FRandomStream* Random = nullptr;
 };
 
 class PREFABRICATORRUNTIME_API FPrefabTools {
@@ -43,4 +43,14 @@ public:
 	static int32 GetRandomSeed(const FRandomStream& Random);
 
 	static void IterateChildrenRecursive(APrefabActor* Actor, TFunction<void(AActor*)> Visit);
+};
+
+class PREFABRICATORRUNTIME_API FPrefabVersionControl {
+public:
+	static void UpgradeToLatestVersion(UPrefabricatorAsset* Prefab);
+
+private:
+	static void UpgradeFromVersion_InitialVersion(UPrefabricatorAsset* Prefab);
+	static void UpgradeFromVersion_AddedSoftReferences(UPrefabricatorAsset* Prefab);
+
 };

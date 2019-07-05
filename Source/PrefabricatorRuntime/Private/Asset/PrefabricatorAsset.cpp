@@ -3,13 +3,17 @@
 #include "Asset/PrefabricatorAsset.h"
 
 #include "Prefab/PrefabTools.h"
+#include "PrefabricatorSettings.h"
+#include "Utils/PrefabricatorConstants.h"
 #include "Utils/PrefabricatorService.h"
 
 #include "GameFramework/Actor.h"
-#include "PrefabricatorSettings.h"
+#include "Internationalization/Regex.h"
+#include "Misc/PackageName.h"
+
+DEFINE_LOG_CATEGORY_STATIC(LogPrefabricatorAsset, Log, All);
 
 UPrefabricatorAsset::UPrefabricatorAsset(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer) {
-	Version = (int32)EPrefabricatorAssetVersion::LatestVersion;
 }
 
 UPrefabricatorAsset* UPrefabricatorAsset::GetPrefabAsset(const FPrefabAssetSelectionConfig& InConfig)
@@ -102,10 +106,12 @@ UPrefabricatorAsset* UPrefabricatorAssetCollection::GetPrefabAsset(const FPrefab
 	else {
 		float SelectionValue = Random.FRandRange(0, TotalWeight);
 		float StartRange = 0.0f;
+		bool bFound = false;
 		for (const FPrefabricatorAssetCollectionItem& Item : Prefabs) {
 			float EndRange = StartRange + Item.Weight;
 			if (SelectionValue >= StartRange && SelectionValue < EndRange) {
 				PrefabAssetPtr = Item.PrefabAsset;
+				bFound = true;
 				break;
 			}
 			StartRange = EndRange;
@@ -124,5 +130,94 @@ UPrefabricatorAsset* UPrefabricatorAssetCollection::GetPrefabAsset(const FPrefab
 void UPrefabricatorEventListener::PostSpawn_Implementation(APrefabActor* Prefab)
 {
 
+}
+
+void UPrefabricatorProperty::SaveReferencedAssetValues()
+{
+	AssetSoftReferenceMappings.Reset();
+
+	const FString SoftReferenceSearchPattern = "([A-Za-z0-9_]+)'(.*?)'";
+
+	const FRegexPattern Pattern(*SoftReferenceSearchPattern);
+	FRegexMatcher Matcher(Pattern, *ExportedValue);
+
+	while (Matcher.FindNext()) {
+		FString FullPath = Matcher.GetCaptureGroup(0);
+		FString ClassName = Matcher.GetCaptureGroup(1);
+		FString ObjectPath = Matcher.GetCaptureGroup(2);
+		if (ClassName == "PrefabricatorAssetUserData") {
+			continue;
+		}
+		bool bUseQuotes = false;
+		if (ObjectPath.Len() >= 2 && ObjectPath.StartsWith("\"") && ObjectPath.EndsWith("\"")) {
+			ObjectPath = ObjectPath.Mid(1, ObjectPath.Len() - 2);
+			bUseQuotes = true;
+		}
+
+		/*
+		int32 StartIdx = Matcher.GetMatchBeginning();
+		int32 EndIdx = Matcher.GetMatchEnding();
+		FString AssetPath = ExportedValue.Mid(StartIdx, EndIdx - StartIdx + 1);
+		if (AssetPath.StartsWith("PrefabricatorAssetUserData")) {		// TODO: Get this name from the static class
+			continue;
+		}
+		*/
+
+		FSoftObjectPath SoftPath(ObjectPath);
+
+		FPrefabricatorPropertyAssetMapping Mapping;
+		Mapping.AssetReference = SoftPath;
+		//if (Mapping.AssetReference.IsValid()) 
+		{
+			//FString ObjectPathString;
+			//FPackageName::ParseExportTextPath(AssetPath, &Mapping.AssetClassName, &ObjectPathString);
+			Mapping.AssetClassName = ClassName;
+			Mapping.AssetObjectPath = *ObjectPath;
+			Mapping.bUseQuotes = bUseQuotes;
+			AssetSoftReferenceMappings.Add(Mapping);
+			UE_LOG(LogPrefabricatorAsset, Log, TEXT("######>>> Found Asset: [%s][%s] | %s"), *Mapping.AssetClassName, *Mapping.AssetObjectPath.ToString(), *Mapping.AssetReference.GetAssetPathName().ToString());
+		}
+	}
+}
+
+void UPrefabricatorProperty::LoadReferencedAssetValues()
+{
+	bool bModified = false;
+	for (FPrefabricatorPropertyAssetMapping& Mapping : AssetSoftReferenceMappings) {
+		// Check if the name has changed
+		//if (!Mapping.AssetReference.IsValid()) {
+		//	continue;
+		//}
+
+		FName ReferencedPath = Mapping.AssetReference.GetAssetPathName();
+		if (ReferencedPath.ToString().IsEmpty()) {
+			continue;
+		}
+
+		if (ReferencedPath == Mapping.AssetObjectPath) {
+			// No change in the exported text path and the referenced path
+			continue;
+		}
+
+		// The object path has changed.  Update it and mark as modified
+		FString ReplaceFrom, ReplaceTo;
+		if (Mapping.bUseQuotes) {
+			ReplaceFrom = FString::Printf(TEXT("%s\'\"%s\"\'"), *Mapping.AssetClassName, *Mapping.AssetObjectPath.ToString());
+			ReplaceTo = FString::Printf(TEXT("%s\'\"%s\"\'"), *Mapping.AssetClassName, *ReferencedPath.ToString());
+		}
+		else {
+			ReplaceFrom = FString::Printf(TEXT("%s\'%s\'"), *Mapping.AssetClassName, *Mapping.AssetObjectPath.ToString());
+			ReplaceTo = FString::Printf(TEXT("%s\'%s\'"), *Mapping.AssetClassName, *ReferencedPath.ToString());
+		}
+
+		ExportedValue = ExportedValue.Replace(*ReplaceFrom, *ReplaceTo);
+		Mapping.AssetObjectPath = ReferencedPath;
+
+		bModified = true;
+	}
+
+	if (bModified) {
+		Modify();
+	}
 }
 

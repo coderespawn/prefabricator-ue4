@@ -7,6 +7,7 @@
 #include "Prefab/Random/PrefabSeedLinker.h"
 #include "PrefabEditorCommands.h"
 #include "PrefabEditorStyle.h"
+#include "PrefabricatorEditorModule.h"
 #include "Utils/PrefabEditorTools.h"
 
 #include "AssetToolsModule.h"
@@ -114,6 +115,10 @@ void FEditorUIExtender::Extend()
 			FPlatformProcess::LaunchURL(*URL, nullptr, nullptr);
 		}
 
+		static void UpgradeAssets() {
+			IPrefabricatorEditorModule::Get().UpgradePrefabAssets();
+		}
+
 		static void HandleShowToolbarPrefabSubMenu_Community(FMenuBuilder& MenuBuilder) {
 			MenuBuilder.AddMenuEntry(
 				LOCTEXT("CommunityForumLabel", "Development Forum"),
@@ -128,6 +133,16 @@ void FEditorUIExtender::Extend()
 				FSlateIcon(FPrefabEditorStyle::Get().GetStyleSetName(), "ClassIcon.Discord"),
 				FUIAction(FExecuteAction::CreateStatic(&Local::LaunchURL, PrefabURLs::URL_Discord))
 			);
+		}
+
+		static void HandleShowToolbarPrefabSubMenu_Advanced(FMenuBuilder& MenuBuilder) {
+			MenuBuilder.AddMenuEntry(
+				LOCTEXT("AdvancedUpgradeLabel", "Upgrade assets to latest version"),
+				LOCTEXT("AdvancedUpgradeTooltip", "Upgrades all assets to latest version. Make a backup before proceeding"),
+				FSlateIcon(FPrefabEditorStyle::Get().GetStyleSetName(), "ClassIcon.Unreal"),
+				FUIAction(FExecuteAction::CreateStatic(&Local::UpgradeAssets))
+			);
+
 		}
 
 		static TSharedRef<SWidget> HandleShowToolbarPrefabMenu() {
@@ -160,6 +175,12 @@ void FEditorUIExtender::Extend()
 				LOCTEXT("MenuCommunity", "Community"),
 				LOCTEXT("MenuCommunityTooltip", "Get support from the developer and community"),
 				FNewMenuDelegate::CreateStatic(&Local::HandleShowToolbarPrefabSubMenu_Community)
+			);
+
+			MenuBuilder.AddSubMenu(
+				LOCTEXT("MenuAdvanced", "Advanced"),
+				LOCTEXT("MenuAdvancedTooltip", "Advanced options"),
+				FNewMenuDelegate::CreateStatic(&Local::HandleShowToolbarPrefabSubMenu_Advanced)
 			);
 			MenuBuilder.EndSection();
 
