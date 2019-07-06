@@ -23,9 +23,9 @@ private:
 	UFUNCTION()
 	bool IsConnected() const { return ConnectedSnapPoint.IsValid(); }
 
-	static void ConnectToSnapPoint(AConstructionSnapPoint* A, AConstructionSnapPoint* B);
-	static bool IsSnapped(AConstructionSnapPoint* A, AConstructionSnapPoint* B);
+	static void ConnectSnapPoints(AConstructionSnapPoint* A, AConstructionSnapPoint* B);
 	static void DisconnectSnapPoints(AConstructionSnapPoint* A, AConstructionSnapPoint* B);
+	static bool IsConnected(AConstructionSnapPoint* A, AConstructionSnapPoint* B);
 
 public:
 #if WITH_EDITOR

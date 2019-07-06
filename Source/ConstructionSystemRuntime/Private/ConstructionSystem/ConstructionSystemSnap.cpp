@@ -8,6 +8,7 @@ AConstructionSnapPoint::AConstructionSnapPoint(const FObjectInitializer& ObjectI
 	: Super(ObjectInitializer) 
 {
 	bCanBeDamaged = false;
+	bRelevantForLevelBounds = false;
 
 	OverlapQueryComponent = CreateDefaultSubobject<USphereComponent>(TEXT("OverlapQuery"));
 	OverlapQueryComponent->Mobility = EComponentMobility::Static;
@@ -39,21 +40,27 @@ void AConstructionSnapPoint::PostEditChangeProperty(struct FPropertyChangedEvent
 }
 #endif // WITH_EDITOR
 
-void AConstructionSnapPoint::ConnectToSnapPoint(AConstructionSnapPoint* A, AConstructionSnapPoint* B)
+void AConstructionSnapPoint::ConnectSnapPoints(AConstructionSnapPoint* A, AConstructionSnapPoint* B)
 {
 	check(!A->IsConnected() && !B->IsConnected());
 	A->ConnectedSnapPoint = B;
 	B->ConnectedSnapPoint = A;
-}
 
-bool AConstructionSnapPoint::IsSnapped(AConstructionSnapPoint* A, AConstructionSnapPoint* B)
-{
-	return (A && B && A->ConnectedSnapPoint == B && B->ConnectedSnapPoint == A);
+	A->OverlapQueryComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	B->OverlapQueryComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 void AConstructionSnapPoint::DisconnectSnapPoints(AConstructionSnapPoint* A, AConstructionSnapPoint* B)
 {
-	check(IsSnapped(A, B));
+	check(IsConnected(A, B));
 	A->ConnectedSnapPoint = nullptr;
 	B->ConnectedSnapPoint = nullptr;
+
+	A->OverlapQueryComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	B->OverlapQueryComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+}
+
+bool AConstructionSnapPoint::IsConnected(AConstructionSnapPoint* A, AConstructionSnapPoint* B)
+{
+	return (A && B && A->ConnectedSnapPoint == B && B->ConnectedSnapPoint == A);
 }
