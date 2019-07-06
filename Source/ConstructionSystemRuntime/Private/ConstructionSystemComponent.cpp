@@ -11,23 +11,26 @@
 #include "Components/PrimitiveComponent.h"
 #include "PrefabricatorAsset.h"
 #include "PrefabricatorFunctionLibrary.h"
+#include "ConstructionSystemCursor.h"
 
 
 UConstructionSystemComponent::UConstructionSystemComponent()
-	: CursorGhostActor(nullptr)
 {
 	PrimaryComponentTick.bCanEverTick = true;
 	PrimaryComponentTick.bStartWithTickEnabled = true;
+	Cursor = CreateDefaultSubobject<UConstructionSystemCursor>("Cursor");
 }
 
 void UConstructionSystemComponent::EnableConstructionSystem()
 {
+	Cursor->RecreateCursor(GetWorld(), ActivePrefabAsset, CursorMaterial);
 	TransitionCameraTo(ConstructionCameraActor, ConstructionCameraTransitionTime, ConstructionCameraTransitionExp);
 	bConstructionSystemEnabled = true;
 }
 
 void UConstructionSystemComponent::DisableConstructionSystem()
 {
+	Cursor->DestroyCursor();
 	TransitionCameraTo(GetOwner(), ConstructionCameraTransitionTime, ConstructionCameraTransitionExp);
 	bConstructionSystemEnabled = false;
 }
@@ -35,7 +38,7 @@ void UConstructionSystemComponent::DisableConstructionSystem()
 void UConstructionSystemComponent::SetActivePrefab(UPrefabricatorAssetInterface* InActivePrefabAsset)
 {
 	ActivePrefabAsset = InActivePrefabAsset;
-	RecreateCursorGhost();
+	Cursor->RecreateCursor(GetWorld(), InActivePrefabAsset, CursorMaterial);
 }
 
 void UConstructionSystemComponent::ConstructAtCursor()
@@ -46,15 +49,29 @@ void UConstructionSystemComponent::ConstructAtCursor()
 			return;
 		}
 
-		if (World && CursorGhostActor && ActivePrefabAsset) {
-			FTransform Transform = CursorGhostActor->GetActorTransform();
-			APrefabActor* SpawnedPrefab = UPrefabricatorBlueprintLibrary::SpawnPrefab(World, ActivePrefabAsset, Transform, 0);
+		if (World && ActivePrefabAsset) {
+			FTransform Transform;
+			if (Cursor->GetCursorTransform(Transform)) {
+				APrefabActor* SpawnedPrefab = GetWorld()->SpawnActor<APrefabActor>(APrefabActor::StaticClass(), Transform);
+				SpawnedPrefab->PrefabComponent->PrefabAssetInterface = ActivePrefabAsset;
 
-			if (bRandomizedPlacement) {
+				FRandomStream RandomStream(Cursor->GetCursorSeed());
 				UPrefabricatorBlueprintLibrary::RandomizePrefab(SpawnedPrefab, RandomStream);
 			}
 		}
 	}
+}
+
+void UConstructionSystemComponent::CursorMoveNext()
+{
+	Cursor->IncrementSeed();
+	Cursor->RecreateCursor(GetWorld(), ActivePrefabAsset, CursorMaterial);
+}
+
+void UConstructionSystemComponent::CursorMovePrev()
+{
+	Cursor->DecrementSeed();
+	Cursor->RecreateCursor(GetWorld(), ActivePrefabAsset, CursorMaterial);
 }
 
 void UConstructionSystemComponent::TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction *ThisTickFunction)
@@ -69,10 +86,7 @@ void UConstructionSystemComponent::TickComponent(float DeltaTime, enum ELevelTic
 void UConstructionSystemComponent::DestroyComponent(bool bPromoteChildren /*= false*/)
 {
 	Super::DestroyComponent();
-	if (CursorGhostActor) {
-		CursorGhostActor->Destroy();
-		CursorGhostActor = nullptr;
-	}
+	Cursor->DestroyCursor();
 }
 
 APlayerController* UConstructionSystemComponent::GetPlayerController()
@@ -111,53 +125,18 @@ void UConstructionSystemComponent::UpdateConstructionSystem()
 		FHitResult Hit;
 		FCollisionQueryParams QueryParams = FCollisionQueryParams::DefaultQueryParam;
 		QueryParams.AddIgnoredActor(GetOwner());
-		if (CursorGhostActor) {
-			FPrefabTools::IterateChildrenRecursive(CursorGhostActor, [&QueryParams](AActor* ChildCursorActor) {
+		if (Cursor->GetCursorGhostActor()) {
+			FPrefabTools::IterateChildrenRecursive(Cursor->GetCursorGhostActor(), [&QueryParams](AActor* ChildCursorActor) {
 				QueryParams.AddIgnoredActor(ChildCursorActor);
 			});
 		}
 		FCollisionResponseParams ResponseParams = FCollisionResponseParams::DefaultResponseParam;
 
 		if (World->LineTraceSingleByChannel(Hit, StartLocation, EndLocation, ECC_WorldStatic, QueryParams, ResponseParams)) {
-			if (CursorGhostActor) {
-				CursorGhostActor->SetActorLocation(Hit.ImpactPoint);
-			}
-			DrawDebugPoint(World, Hit.ImpactPoint, 20, FColor::Red);
+			Cursor->SetTransform(Hit.ImpactPoint, Hit.Normal);
 		}
-	}
-}
 
-void UConstructionSystemComponent::RecreateCursorGhost()
-{
-	if (CursorGhostActor) {
-		CursorGhostActor->Destroy();
-		CursorGhostActor = nullptr;
-	}
-
-	if (ActivePrefabAsset) {
-		CursorGhostActor = GetWorld()->SpawnActor<APrefabActor>();
-		CursorGhostActor->PrefabComponent->PrefabAssetInterface = ActivePrefabAsset;
-		CursorGhostActor->LoadPrefab();
-		CursorGhostActor->GetRootComponent()->SetMobility(EComponentMobility::Movable);
-
-		FPrefabTools::IterateChildrenRecursive(CursorGhostActor, [this](AActor* ChildActor) {
-			for (UActorComponent* Component : ChildActor->GetComponents()) {
-				if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component)) {
-					// Disable collision
-					Primitive->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
-					// Set cursor material
-					if (CursorMaterial) {
-						int32 NumMaterials = Primitive->GetNumMaterials();
-						for (int ElementIndex = 0; ElementIndex < NumMaterials; ElementIndex++) {
-							Primitive->SetMaterial(ElementIndex, CursorMaterial);
-						}
-					}
-				}
-			}
-		});
-
-		bool bCursorHidden = !bConstructionSystemEnabled;
-		CursorGhostActor->SetActorHiddenInGame(bCursorHidden);
+		// Draw debug info
+		DrawDebugPoint(World, Hit.ImpactPoint, 20, FColor::Red);
 	}
 }

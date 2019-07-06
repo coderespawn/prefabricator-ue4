@@ -7,6 +7,7 @@
 
 class UPrefabricatorAssetInterface;
 class APrefabActor;
+class UConstructionSystemCursor;
 
 UCLASS(BlueprintType, meta = (BlueprintSpawnableComponent))
 class CONSTRUCTIONSYSTEMRUNTIME_API UConstructionSystemComponent : public UActorComponent {
@@ -26,6 +27,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "ConstructionSystem")
 	void ConstructAtCursor();
 
+	UFUNCTION(BlueprintCallable, Category = "ConstructionSystem")
+	void CursorMoveNext();
+
+	UFUNCTION(BlueprintCallable, Category = "ConstructionSystem")
+	void CursorMovePrev();
+
 	//~ Begin UActorComponent Interface
 	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction *ThisTickFunction) override;
 	virtual void DestroyComponent(bool bPromoteChildren = false) override;
@@ -35,7 +42,6 @@ private:
 	APlayerController* GetPlayerController();
 	void TransitionCameraTo(AActor* InViewTarget, float InBlendTime, float InBlendExp);
 	void UpdateConstructionSystem();
-	void RecreateCursorGhost();
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ConstructionSystem")
@@ -57,12 +63,11 @@ public:
 	float ConstructionCameraTransitionExp = 1.0f;
 
 private:
-	bool bConstructionSystemEnabled = false;
-	FRandomStream RandomStream;
-
 	UPROPERTY(Transient)
-	APrefabActor* CursorGhostActor;
+	UConstructionSystemCursor* Cursor;
 
 	UPROPERTY(Transient)
 	UPrefabricatorAssetInterface* ActivePrefabAsset;
+
+	bool bConstructionSystemEnabled = false;
 };
