@@ -41,7 +41,7 @@ public:
 private:
 	APlayerController* GetPlayerController();
 	void TransitionCameraTo(AActor* InViewTarget, float InBlendTime, float InBlendExp);
-	void UpdateConstructionSystem();
+	void HandleUpdate();
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ConstructionSystem")

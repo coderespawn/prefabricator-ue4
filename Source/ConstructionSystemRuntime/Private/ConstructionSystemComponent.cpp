@@ -79,7 +79,7 @@ void UConstructionSystemComponent::TickComponent(float DeltaTime, enum ELevelTic
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	if (bConstructionSystemEnabled) {
-		UpdateConstructionSystem();
+		HandleUpdate();
 	}
 }
 
@@ -105,7 +105,7 @@ void UConstructionSystemComponent::TransitionCameraTo(AActor* InViewTarget, floa
 	}
 }
 
-void UConstructionSystemComponent::UpdateConstructionSystem()
+void UConstructionSystemComponent::HandleUpdate()
 {
 	UWorld* World = GetWorld();
 	if (!World) {
