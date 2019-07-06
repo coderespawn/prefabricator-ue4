@@ -52,14 +52,16 @@ void UConstructionSystemCursor::DestroyCursor()
 void UConstructionSystemCursor::SetVisiblity(bool bVisible)
 {
 	if (CursorGhostActor) {
-		CursorGhostActor->SetActorHiddenInGame(!bVisible);
+		FPrefabTools::IterateChildrenRecursive(CursorGhostActor, [bVisible](AActor* ChildActor) {
+			ChildActor->SetActorHiddenInGame(!bVisible);
+		});
 	}
 }
 
-void UConstructionSystemCursor::SetTransform(const FVector& Location, const FVector& Normal)
+void UConstructionSystemCursor::SetTransform(const FTransform& InTransform)
 {
 	if (CursorGhostActor) {
-		CursorGhostActor->SetActorLocation(Location);
+		CursorGhostActor->SetActorTransform(InTransform);
 	}
 }
 

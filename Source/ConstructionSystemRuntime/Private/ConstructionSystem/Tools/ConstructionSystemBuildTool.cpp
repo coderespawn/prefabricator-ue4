@@ -74,7 +74,12 @@ void UConstructionSystemBuildTool::Update(UConstructionSystemComponent* Construc
 		UWorld* World = ConstructionComponent->GetWorld();
 
 		if (World && World->LineTraceSingleByChannel(Hit, StartLocation, EndLocation, ECC_WorldStatic, QueryParams, ResponseParams)) {
-			Cursor->SetTransform(Hit.ImpactPoint, Hit.Normal);
+			FQuat CursorRotation = FQuat::FindBetweenNormals(FVector(0, 0, 1), Hit.Normal);
+			CursorRotation = CursorRotation * FQuat::MakeFromEuler(FVector(0, 0, CursorRotationDegrees));
+			FTransform CursorTransform;
+			CursorTransform.SetLocation(Hit.ImpactPoint);
+			CursorTransform.SetRotation(CursorRotation);
+			Cursor->SetTransform(CursorTransform);
 		}
 
 		// Draw debug info
@@ -86,12 +91,23 @@ void UConstructionSystemBuildTool::RegisterInputCallbacks(UInputComponent* Input
 {
 	UConstructionSystemTool::RegisterInputCallbacks(InputComponent);
 
+	InputBindings.BuildAtCursor = InputComponent->BindAction("CSBuiltAtCursor", IE_Pressed, this, &UConstructionSystemBuildTool::ConstructAtCursor);
+	InputBindings.CursorItemNext = InputComponent->BindAction("CSCursorItemNext", IE_Pressed, this, &UConstructionSystemBuildTool::CursorMoveNext);
+	InputBindings.CursorItemPrev = InputComponent->BindAction("CSCursorItemPrev", IE_Pressed, this, &UConstructionSystemBuildTool::CursorMovePrev);
+
+	InputBindings.CursorRotate = InputComponent->BindAxis("CSCursorRotate", this, &UConstructionSystemBuildTool::CursorRotate);
 }
 
 void UConstructionSystemBuildTool::UnregisterInputCallbacks(UInputComponent* InputComponent)
 {
 	UConstructionSystemTool::UnregisterInputCallbacks(InputComponent);
+	
+	InputBindings.BuildAtCursor.ActionDelegate.Unbind();
+	InputBindings.CursorItemNext.ActionDelegate.Unbind();
+	InputBindings.CursorItemPrev.ActionDelegate.Unbind();
+	InputBindings.CursorRotate.AxisDelegate.Unbind();
 
+	InputBindings = FCSBuildToolInputBindings();
 }
 
 
@@ -133,4 +149,9 @@ void UConstructionSystemBuildTool::CursorMovePrev()
 {
 	Cursor->DecrementSeed();
 	Cursor->RecreateCursor(GetWorld(), ActivePrefabAsset);
+}
+
+void UConstructionSystemBuildTool::CursorRotate(float RotationDelta)
+{
+	CursorRotationDegrees += CursorRotationStepAngle * RotationDelta;
 }

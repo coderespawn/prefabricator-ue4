@@ -17,7 +17,7 @@ public:
 	void DestroyCursor();
 	void SetVisiblity(bool bVisible);
 	APrefabActor* GetCursorGhostActor() const { return CursorGhostActor; }
-	void SetTransform(const FVector& Location, const FVector& Normal);
+	void SetTransform(const FTransform& InTransform);
 	bool GetCursorTransform(FTransform& OutTransform) const;
 
 	FORCEINLINE void IncrementSeed() { ++CursorSeed;  }

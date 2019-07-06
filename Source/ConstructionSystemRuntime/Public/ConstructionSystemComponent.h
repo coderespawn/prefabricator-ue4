@@ -18,22 +18,22 @@ public:
 	UConstructionSystemComponent();
 
 	UFUNCTION(BlueprintCallable, Category = "ConstructionSystem")
-	void EnableConstructionSystem();
-
-	UFUNCTION(BlueprintCallable, Category = "ConstructionSystem")
-	void DisableConstructionSystem();
-
+	void ToggleConstructionSystem();
 
 	//~ Begin UActorComponent Interface
 	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction *ThisTickFunction) override;
 	virtual void DestroyComponent(bool bPromoteChildren = false) override;
+	virtual void BeginPlay() override;
 	//~ End UActorComponent Interface
 
 private:
 	APlayerController* GetPlayerController();
 	void TransitionCameraTo(AActor* InViewTarget, float InBlendTime, float InBlendExp);
 	void HandleUpdate();
+	void BindInput();
 
+	void EnableConstructionSystem();
+	void DisableConstructionSystem();
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cursor")
 	UMaterialInterface* CursorMaterial;

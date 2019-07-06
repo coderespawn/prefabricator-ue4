@@ -32,6 +32,13 @@ void UConstructionSystemComponent::DestroyComponent(bool bPromoteChildren /*= fa
 	}
 }
 
+void UConstructionSystemComponent::BeginPlay()
+{
+	Super::BeginPlay();
+
+	BindInput();
+}
+
 void UConstructionSystemComponent::EnableConstructionSystem()
 {
 	TransitionCameraTo(ConstructionCameraActor, ConstructionCameraTransitionTime, ConstructionCameraTransitionExp);
@@ -81,5 +88,23 @@ void UConstructionSystemComponent::HandleUpdate()
 	if (ActiveTool) {
 		ActiveTool->Update(this);
 	}
+}
 
+void UConstructionSystemComponent::BindInput()
+{
+	APawn* Pawn = Cast<APawn>(GetOwner());
+	if (Pawn && Pawn->InputComponent) {
+		UInputComponent* Input = Pawn->InputComponent;
+		Input->BindAction("CSModeToggle", IE_Pressed, this, &UConstructionSystemComponent::ToggleConstructionSystem);
+	}
+}
+
+void UConstructionSystemComponent::ToggleConstructionSystem()
+{
+	if (bConstructionSystemEnabled) {
+		DisableConstructionSystem();
+	}
+	else {
+		EnableConstructionSystem();
+	}
 }

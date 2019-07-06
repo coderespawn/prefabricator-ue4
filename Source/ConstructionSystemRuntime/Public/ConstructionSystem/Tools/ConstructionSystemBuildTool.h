@@ -3,10 +3,18 @@
 #pragma once
 #include "CoreMinimal.h"
 #include "ConstructionSystemTool.h"
+#include "Components/InputComponent.h"
 #include "ConstructionSystemBuildTool.generated.h"
 
 class UPrefabricatorAssetInterface;
 class UConstructionSystemCursor;
+
+struct FCSBuildToolInputBindings {
+	FInputActionBinding BuildAtCursor;
+	FInputActionBinding CursorItemNext;
+	FInputActionBinding CursorItemPrev;
+	FInputAxisBinding CursorRotate;
+};
 
 UCLASS(BlueprintType)
 class CONSTRUCTIONSYSTEMRUNTIME_API UConstructionSystemBuildTool : public UConstructionSystemTool {
@@ -23,14 +31,17 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "ConstructionSystem")
 	void SetActivePrefab(UPrefabricatorAssetInterface* InActivePrefabAsset);
 
-	UFUNCTION(BlueprintCallable, Category = "ConstructionSystem")
+	UFUNCTION()
 	void ConstructAtCursor();
 
-	UFUNCTION(BlueprintCallable, Category = "ConstructionSystem")
+	UFUNCTION()
 	void CursorMoveNext();
 
-	UFUNCTION(BlueprintCallable, Category = "ConstructionSystem")
+	UFUNCTION()
 	void CursorMovePrev();
+
+	UFUNCTION()
+	void CursorRotate(float RotationDelta);
 
 protected: 
 	virtual void RegisterInputCallbacks(UInputComponent* InputComponent) override;
@@ -40,10 +51,17 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ConstructionSystem")
 	float TraceDistance = 4000.0f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ConstructionSystem")
+	float CursorRotationStepAngle = 15.0f;
+
 private:
 	UPROPERTY(Transient)
 	UConstructionSystemCursor* Cursor;
 
 	UPROPERTY(Transient)
 	UPrefabricatorAssetInterface* ActivePrefabAsset;
+
+	FCSBuildToolInputBindings InputBindings;
+
+	float CursorRotationDegrees = 0;
 };
