@@ -5,17 +5,45 @@
 #include "ConstructionSystemTool.h"
 #include "ConstructionSystemBuildTool.generated.h"
 
-UCLASS()
+class UPrefabricatorAssetInterface;
+class UConstructionSystemCursor;
+
+UCLASS(BlueprintType)
 class CONSTRUCTIONSYSTEMRUNTIME_API UConstructionSystemBuildTool : public UConstructionSystemTool {
 	GENERATED_BODY()
 public:
-	virtual void InitializeTool(APawn* Owner) override;
-	virtual void DestroyTool(APawn* Owner) override;
+	//~ Begin UConstructionSystemTool Interface
+	virtual void InitializeTool(UConstructionSystemComponent* ConstructionComponent) override;
+	virtual void DestroyTool(UConstructionSystemComponent* ConstructionComponent) override;
+	virtual void OnToolEnable(UConstructionSystemComponent* ConstructionComponent) override;
+	virtual void OnToolDisable(UConstructionSystemComponent* ConstructionComponent) override;
+	virtual void Update(UConstructionSystemComponent* ConstructionComponent) override;
+	//~ End UConstructionSystemTool Interface
 
-	virtual void OnToolEnable() override;
-	virtual void OnToolDisable() override;
+	UFUNCTION(BlueprintCallable, Category = "ConstructionSystem")
+	void SetActivePrefab(UPrefabricatorAssetInterface* InActivePrefabAsset);
 
-protected:
+	UFUNCTION(BlueprintCallable, Category = "ConstructionSystem")
+	void ConstructAtCursor();
+
+	UFUNCTION(BlueprintCallable, Category = "ConstructionSystem")
+	void CursorMoveNext();
+
+	UFUNCTION(BlueprintCallable, Category = "ConstructionSystem")
+	void CursorMovePrev();
+
+protected: 
 	virtual void RegisterInputCallbacks(UInputComponent* InputComponent) override;
 	virtual void UnregisterInputCallbacks(UInputComponent* InputComponent) override;
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ConstructionSystem")
+	float TraceDistance = 4000.0f;
+
+private:
+	UPROPERTY(Transient)
+	UConstructionSystemCursor* Cursor;
+
+	UPROPERTY(Transient)
+	UPrefabricatorAssetInterface* ActivePrefabAsset;
 };

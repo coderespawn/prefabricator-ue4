@@ -8,6 +8,8 @@
 class UPrefabricatorAssetInterface;
 class APrefabActor;
 class UConstructionSystemCursor;
+class UConstructionSystemTool;
+class UMaterialInterface;
 
 UCLASS(BlueprintType, meta = (BlueprintSpawnableComponent))
 class CONSTRUCTIONSYSTEMRUNTIME_API UConstructionSystemComponent : public UActorComponent {
@@ -21,17 +23,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "ConstructionSystem")
 	void DisableConstructionSystem();
 
-	UFUNCTION(BlueprintCallable, Category = "ConstructionSystem")
-	void SetActivePrefab(UPrefabricatorAssetInterface* InActivePrefabAsset);
-
-	UFUNCTION(BlueprintCallable, Category = "ConstructionSystem")
-	void ConstructAtCursor();
-
-	UFUNCTION(BlueprintCallable, Category = "ConstructionSystem")
-	void CursorMoveNext();
-
-	UFUNCTION(BlueprintCallable, Category = "ConstructionSystem")
-	void CursorMovePrev();
 
 	//~ Begin UActorComponent Interface
 	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction *ThisTickFunction) override;
@@ -44,12 +35,6 @@ private:
 	void HandleUpdate();
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ConstructionSystem")
-	float TraceDistance = 4000.0f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ConstructionSystem")
-	bool bRandomizedPlacement = true;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cursor")
 	UMaterialInterface* CursorMaterial;
 
@@ -62,12 +47,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
 	float ConstructionCameraTransitionExp = 1.0f;
 
+	UPROPERTY(Transient, BlueprintReadOnly, Category = "ConstructionSystem")
+	UConstructionSystemTool* ActiveTool;
+
 private:
-	UPROPERTY(Transient)
-	UConstructionSystemCursor* Cursor;
-
-	UPROPERTY(Transient)
-	UPrefabricatorAssetInterface* ActivePrefabAsset;
-
 	bool bConstructionSystemEnabled = false;
 };

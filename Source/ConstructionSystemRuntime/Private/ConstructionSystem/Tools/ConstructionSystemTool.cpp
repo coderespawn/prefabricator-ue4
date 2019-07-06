@@ -1,17 +1,31 @@
 //$ Copyright 2015-19, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #include "ConstructionSystem/Tools/ConstructionSystemTool.h"
+#include "GameFramework/Pawn.h"
+#include "ConstructionSystemComponent.h"
 
-void UConstructionSystemTool::InitializeTool(APawn* Owner)
+void UConstructionSystemTool::InitializeTool(UConstructionSystemComponent* ConstructionComponent)
 {
-	if (Owner && Owner->InputComponent) {
-		RegisterInputCallbacks(Owner->InputComponent);
+	APawn* Pawn = Cast<APawn>(ConstructionComponent ? ConstructionComponent->GetOwner() : nullptr);
+	if (Pawn && Pawn->InputComponent) {
+		RegisterInputCallbacks(Pawn->InputComponent);
 	}
 }
 
-void UConstructionSystemTool::DestroyTool(APawn* Owner)
+void UConstructionSystemTool::DestroyTool(UConstructionSystemComponent* ConstructionComponent)
 {
-	if (Owner && Owner->InputComponent) {
-		UnregisterInputCallbacks(Owner->InputComponent);
+	APawn* Pawn = Cast<APawn>(ConstructionComponent ? ConstructionComponent->GetOwner() : nullptr);
+	if (Pawn && Pawn->InputComponent) {
+		UnregisterInputCallbacks(Pawn->InputComponent);
 	}
+}
+
+void UConstructionSystemTool::OnToolEnable(UConstructionSystemComponent* ConstructionComponent)
+{
+	bToolEnabled = true;
+}
+
+void UConstructionSystemTool::OnToolDisable(UConstructionSystemComponent* ConstructionComponent)
+{
+	bToolEnabled = false;
 }

@@ -8,10 +8,9 @@
 #include "PrefabComponent.h"
 #include "PrefabricatorFunctionLibrary.h"
 
-void UConstructionSystemCursor::RecreateCursor(UWorld* InWorld, UPrefabricatorAssetInterface* InActivePrefabAsset, UMaterialInterface* InCursorMaterial)
+void UConstructionSystemCursor::RecreateCursor(UWorld* InWorld, UPrefabricatorAssetInterface* InActivePrefabAsset)
 {
 	DestroyCursor();
-
 
 	if (InWorld && InActivePrefabAsset) {
 		CursorGhostActor = InWorld->SpawnActor<APrefabActor>();
@@ -22,17 +21,17 @@ void UConstructionSystemCursor::RecreateCursor(UWorld* InWorld, UPrefabricatorAs
 		UPrefabricatorBlueprintLibrary::RandomizePrefab(CursorGhostActor, RandomStream);
 		CursorGhostActor->GetRootComponent()->SetMobility(EComponentMobility::Movable);
 
-		FPrefabTools::IterateChildrenRecursive(CursorGhostActor, [InCursorMaterial](AActor* ChildActor) {
+		FPrefabTools::IterateChildrenRecursive(CursorGhostActor, [this](AActor* ChildActor) {
 			for (UActorComponent* Component : ChildActor->GetComponents()) {
 				if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component)) {
 					// Disable collision
 					Primitive->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 					// Set cursor material
-					if (InCursorMaterial) {
+					if (CursorMaterial) {
 						int32 NumMaterials = Primitive->GetNumMaterials();
 						for (int ElementIndex = 0; ElementIndex < NumMaterials; ElementIndex++) {
-							Primitive->SetMaterial(ElementIndex, InCursorMaterial);
+							Primitive->SetMaterial(ElementIndex, CursorMaterial);
 						}
 					}
 				}

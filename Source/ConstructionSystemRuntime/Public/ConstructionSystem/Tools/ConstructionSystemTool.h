@@ -5,19 +5,23 @@
 #include "ConstructionSystemTool.generated.h"
 
 class UInputComponent;
-class APawn;
+class UConstructionSystemComponent;
 
-UCLASS()
+UCLASS(BlueprintType)
 class CONSTRUCTIONSYSTEMRUNTIME_API UConstructionSystemTool : public UObject {
 	GENERATED_BODY()
 public:
-	virtual void InitializeTool(APawn* Owner);
-	virtual void DestroyTool(APawn* Owner);
-	
-	virtual void OnToolEnable() {}
-	virtual void OnToolDisable() {}
+	virtual void InitializeTool(UConstructionSystemComponent* ConstructionComponent);
+	virtual void DestroyTool(UConstructionSystemComponent* ConstructionComponent);
+	virtual void OnToolEnable(UConstructionSystemComponent* ConstructionComponent);
+	virtual void OnToolDisable(UConstructionSystemComponent* ConstructionComponent);
+	virtual void Update(UConstructionSystemComponent* ConstructionComponent) {}
 
 protected:
 	virtual void RegisterInputCallbacks(UInputComponent* InputComponent) {}
 	virtual void UnregisterInputCallbacks(UInputComponent* InputComponent) {}
+
+protected:
+	UPROPERTY(Transient)
+	bool bToolEnabled = false;
 };

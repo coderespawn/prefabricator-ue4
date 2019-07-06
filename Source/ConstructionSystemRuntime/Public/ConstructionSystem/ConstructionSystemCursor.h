@@ -6,13 +6,14 @@
 
 class APrefabActor;
 class UPrefabricatorAssetInterface;
+class UMaterialInterface;
 
 UCLASS()
 class CONSTRUCTIONSYSTEMRUNTIME_API UConstructionSystemCursor : public UObject {
 	GENERATED_BODY()
 
 public:
-	void RecreateCursor(UWorld* InWorld, UPrefabricatorAssetInterface* InActivePrefabAsset, UMaterialInterface* InCursorMaterial);
+	void RecreateCursor(UWorld* InWorld, UPrefabricatorAssetInterface* InActivePrefabAsset);
 	void DestroyCursor();
 	void SetVisiblity(bool bVisible);
 	APrefabActor* GetCursorGhostActor() const { return CursorGhostActor; }
@@ -22,6 +23,7 @@ public:
 	FORCEINLINE void IncrementSeed() { ++CursorSeed;  }
 	FORCEINLINE void DecrementSeed() { --CursorSeed; }
 	FORCEINLINE int32 GetCursorSeed() const { return CursorSeed; }
+	FORCEINLINE void SetCursorMaterial(UMaterialInterface* InCursorMaterial) { CursorMaterial = InCursorMaterial; }
 
 private:
 	UPROPERTY(Transient)
@@ -30,5 +32,7 @@ private:
 	UPROPERTY(Transient)
 	int32 CursorSeed = 0;
 
+	UPROPERTY(Transient)
+	UMaterialInterface* CursorMaterial;
 
 };
