@@ -7,6 +7,7 @@
 class APrefabActor;
 class UPrefabricatorAssetInterface;
 class UMaterialInterface;
+class UPrefabricatorConstructionSnapComponent;
 
 UCLASS()
 class CONSTRUCTIONSYSTEMRUNTIME_API UConstructionSystemCursor : public UObject {
@@ -25,6 +26,11 @@ public:
 	FORCEINLINE int32 GetCursorSeed() const { return CursorSeed; }
 	FORCEINLINE void SetCursorMaterial(UMaterialInterface* InCursorMaterial) { CursorMaterial = InCursorMaterial; }
 
+	void MoveToNextSnapComponent();
+	void MoveToPrevSnapComponent();
+
+	UPrefabricatorConstructionSnapComponent* GetActiveSnapComponent();
+
 private:
 	UPROPERTY(Transient)
 	APrefabActor* CursorGhostActor = nullptr;
@@ -35,4 +41,9 @@ private:
 	UPROPERTY(Transient)
 	UMaterialInterface* CursorMaterial;
 
+	UPROPERTY(Transient)
+	TArray<UPrefabricatorConstructionSnapComponent*> SnapComponents;
+
+	UPROPERTY(Transient)
+	int32 ActiveSnapComponentIndex = 0;
 };

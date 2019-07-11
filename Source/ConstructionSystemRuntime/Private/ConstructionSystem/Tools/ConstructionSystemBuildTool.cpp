@@ -13,6 +13,12 @@
 #include "PrefabActor.h"
 #include "PrefabricatorFunctionLibrary.h"
 #include "PrefabComponent.h"
+#include "ConstructionSystemDefs.h"
+#include "ConstructionSystemUtils.h"
+#include "ConstructionSystemSnap.h"
+
+namespace {
+}
 
 void UConstructionSystemBuildTool::InitializeTool(UConstructionSystemComponent* ConstructionComponent)
 {
@@ -20,6 +26,8 @@ void UConstructionSystemBuildTool::InitializeTool(UConstructionSystemComponent* 
 
 	Cursor = NewObject<UConstructionSystemCursor>(this, "Cursor");
 	Cursor->SetCursorMaterial(ConstructionComponent->CursorMaterial);
+
+	PrefabSnapChannel = FConstructionSystemUtils::FindPrefabSnapChannel();
 }
 
 void UConstructionSystemBuildTool::DestroyTool(UConstructionSystemComponent* ConstructionComponent)
@@ -51,6 +59,9 @@ void UConstructionSystemBuildTool::Update(UConstructionSystemComponent* Construc
 {
 	if (!ConstructionComponent) return;
 
+	UWorld* World = ConstructionComponent->GetWorld();
+	if (!World) return;
+
 	APawn* Owner = Cast<APawn>(ConstructionComponent->GetOwner());
 	APlayerController* PlayerController = Owner ? Owner->GetController<APlayerController>() : nullptr;
 	if (PlayerController) {
@@ -62,7 +73,7 @@ void UConstructionSystemBuildTool::Update(UConstructionSystemComponent* Construc
 		FVector CameraDirection = ViewRotation.RotateVector(FVector::ForwardVector);
 		FVector EndLocation = StartLocation + CameraDirection * TraceDistance;
 
-		FHitResult Hit;
+		FCollisionResponseParams ResponseParams = FCollisionResponseParams::DefaultResponseParam;
 		FCollisionQueryParams QueryParams = FCollisionQueryParams::DefaultQueryParam;
 		QueryParams.AddIgnoredActor(ConstructionComponent->GetOwner());
 		if (Cursor->GetCursorGhostActor()) {
@@ -70,20 +81,49 @@ void UConstructionSystemBuildTool::Update(UConstructionSystemComponent* Construc
 				QueryParams.AddIgnoredActor(ChildCursorActor);
 			});
 		}
-		FCollisionResponseParams ResponseParams = FCollisionResponseParams::DefaultResponseParam;
-		UWorld* World = ConstructionComponent->GetWorld();
 
-		if (World && World->LineTraceSingleByChannel(Hit, StartLocation, EndLocation, ECC_WorldStatic, QueryParams, ResponseParams)) {
-			FQuat CursorRotation = FQuat::FindBetweenNormals(FVector(0, 0, 1), Hit.Normal);
-			CursorRotation = CursorRotation * FQuat::MakeFromEuler(FVector(0, 0, CursorRotationDegrees));
-			FTransform CursorTransform;
-			CursorTransform.SetLocation(Hit.ImpactPoint);
-			CursorTransform.SetRotation(CursorRotation);
-			Cursor->SetTransform(CursorTransform);
+		FHitResult Hit;
+		bool bFoundHit = false;
+		bool bHitSnapChannel = false;
+		
+		FCollisionShape SweepShape = FCollisionShape::MakeSphere(FConstructionSystemConstants::BuildToolSweepRadius);
+		if (World->SweepSingleByChannel(Hit, StartLocation, EndLocation, FQuat::Identity, PrefabSnapChannel, SweepShape, QueryParams, ResponseParams)) {
+			bFoundHit = true;
+			bHitSnapChannel = true;
+		}
+		else if (World->LineTraceSingleByChannel(Hit, StartLocation, EndLocation, ECC_WorldStatic, QueryParams, ResponseParams)) {
+			// We did not hit anything. Trace in the static world
+			bFoundHit = true;
 		}
 
-		// Draw debug info
-		DrawDebugPoint(World, Hit.ImpactPoint, 20, FColor::Red);
+		if (bFoundHit) {
+			FVector CursorLocation;
+			FQuat CursorRotation;
+			if (bHitSnapChannel) {
+				// Snap the cursor
+				CursorLocation = Hit.ImpactPoint;
+				CursorRotation = FQuat::Identity;
+				UPrefabricatorConstructionSnapComponent* CursorSnap = Cursor->GetActiveSnapComponent();
+				UPrefabricatorConstructionSnapComponent* HitSnap = Cast<UPrefabricatorConstructionSnapComponent>(Hit.GetComponent());
+				if (CursorSnap && HitSnap) {
+					FBox CursorBoxExtent = CursorSnap->GetScaledBoxExtent();
+				}
+			}
+			else {
+				CursorLocation = Hit.ImpactPoint;
+				CursorRotation = FQuat::FindBetweenNormals(FVector(0, 0, 1), Hit.Normal);
+				CursorRotation = CursorRotation * FQuat::MakeFromEuler(FVector(0, 0, CursorRotationDegrees));
+			}
+			FTransform CursorTransform;
+			CursorTransform.SetLocation(CursorLocation);
+			CursorTransform.SetRotation(CursorRotation);
+			Cursor->SetTransform(CursorTransform);
+
+			// Draw debug info
+			DrawDebugPoint(World, Hit.ImpactPoint, 20, bHitSnapChannel ? FColor::Green : FColor::Red);
+		}
+
+		Cursor->SetVisiblity(bFoundHit);
 	}
 }
 

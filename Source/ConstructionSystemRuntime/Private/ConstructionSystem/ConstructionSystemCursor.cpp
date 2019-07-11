@@ -7,6 +7,7 @@
 #include "PrefabricatorAsset.h"
 #include "PrefabComponent.h"
 #include "PrefabricatorFunctionLibrary.h"
+#include "ConstructionSystemSnap.h"
 
 void UConstructionSystemCursor::RecreateCursor(UWorld* InWorld, UPrefabricatorAssetInterface* InActivePrefabAsset)
 {
@@ -35,16 +36,21 @@ void UConstructionSystemCursor::RecreateCursor(UWorld* InWorld, UPrefabricatorAs
 						}
 					}
 				}
+
+				if (UPrefabricatorConstructionSnapComponent* SnapComponent = Cast<UPrefabricatorConstructionSnapComponent>(Component)) {
+					SnapComponents.Add(SnapComponent);
+				}
 			}
 		});
-
 	}
 }
 
 void UConstructionSystemCursor::DestroyCursor()
 {
 	if (CursorGhostActor) {
+		SnapComponents.Reset();
 		CursorGhostActor->Destroy();
+		ActiveSnapComponentIndex = 0;
 		CursorGhostActor = nullptr;
 	}
 }
@@ -72,4 +78,29 @@ bool UConstructionSystemCursor::GetCursorTransform(FTransform& OutTransform) con
 		return true;
 	}
 	return false;
+}
+
+void UConstructionSystemCursor::MoveToNextSnapComponent()
+{
+	if (SnapComponents.Num() > 0) {
+		ActiveSnapComponentIndex = (ActiveSnapComponentIndex + 1) % SnapComponents.Num();
+	}
+}
+
+void UConstructionSystemCursor::MoveToPrevSnapComponent()
+{
+	if (SnapComponents.Num() > 0) {
+		ActiveSnapComponentIndex = (ActiveSnapComponentIndex - 1);
+		if (ActiveSnapComponentIndex < 0) {
+			ActiveSnapComponentIndex += SnapComponents.Num();
+		}
+	}
+}
+
+UPrefabricatorConstructionSnapComponent* UConstructionSystemCursor::GetActiveSnapComponent()
+{
+	if (ActiveSnapComponentIndex < 0 || ActiveSnapComponentIndex >= SnapComponents.Num()) {
+		return nullptr;
+	}
+	return SnapComponents[ActiveSnapComponentIndex];
 }

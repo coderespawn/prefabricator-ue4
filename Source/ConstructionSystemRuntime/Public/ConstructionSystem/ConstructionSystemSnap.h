@@ -3,39 +3,41 @@
 #pragma once
 #include "CoreMinimal.h"
 #include "Components/SphereComponent.h"
+#include "Components/BoxComponent.h"
 #include "ConstructionSystemSnap.generated.h"
 
 class USphereComponent;
 class UArrowComponent;
 
-UCLASS()
-class CONSTRUCTIONSYSTEMRUNTIME_API AConstructionSnapPoint : public AActor
+UENUM(BlueprintType)
+enum class EPrefabricatorConstructionSnapType : uint8
+{
+	Floor,
+	Wall,
+	Object
+};
+
+
+UCLASS(meta = (BlueprintSpawnableComponent))
+class CONSTRUCTIONSYSTEMRUNTIME_API UPrefabricatorConstructionSnapComponent : public UBoxComponent {
+	GENERATED_UCLASS_BODY()
+public:
+	virtual void OnRegister() override;
+
+	UPROPERTY(EditAnywhere, Category = "Prefabricator")
+	EPrefabricatorConstructionSnapType SnapType;
+};
+
+UCLASS(ConversionRoot, ComponentWrapperClass)
+class CONSTRUCTIONSYSTEMRUNTIME_API APrefabricatorConstructionSnap : public AActor
 {
 	GENERATED_UCLASS_BODY()
 
 private:
-	UPROPERTY()
-	USphereComponent* OverlapQueryComponent;
-
-	UPROPERTY()
-	TWeakObjectPtr<AConstructionSnapPoint> ConnectedSnapPoint;
-
-	UFUNCTION()
-	bool IsConnected() const { return ConnectedSnapPoint.IsValid(); }
-
-	static void ConnectSnapPoints(AConstructionSnapPoint* A, AConstructionSnapPoint* B);
-	static void DisconnectSnapPoints(AConstructionSnapPoint* A, AConstructionSnapPoint* B);
-	static bool IsConnected(AConstructionSnapPoint* A, AConstructionSnapPoint* B);
+	UPROPERTY(Category = "Prefabricator", VisibleAnywhere, BlueprintReadOnly, meta = (ExposeFunctionCategories = "Prefabricator", AllowPrivateAccess = "true"))
+	class UPrefabricatorConstructionSnapComponent* ConstructionSnapComponent;
 
 public:
-#if WITH_EDITOR
-	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& e) override;
-
-	UPROPERTY(EditAnywhere, Category = "ConstructionSystem")
-	float OverlapQueryRadius = 60;
-
-	UPROPERTY()
-	UArrowComponent* ArrowComponent;
-#endif // WITH_EDITOR
-
+	/** Returns StaticMeshComponent subobject **/
+	class UPrefabricatorConstructionSnapComponent* GetSnapComponent() const { return ConstructionSnapComponent; }
 };

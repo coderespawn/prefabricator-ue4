@@ -64,4 +64,6 @@ private:
 	FCSBuildToolInputBindings InputBindings;
 
 	float CursorRotationDegrees = 0;
+
+	ECollisionChannel PrefabSnapChannel;
 };
