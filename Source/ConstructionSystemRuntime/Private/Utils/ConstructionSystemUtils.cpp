@@ -128,5 +128,74 @@ bool FPCSnapUtils::GetSnapPoint(UPrefabricatorConstructionSnapComponent* Src, UP
 		return true;
 	}
 
+	else if (Src->SnapType == EPrefabricatorConstructionSnapType::Floor && Dst->SnapType == EPrefabricatorConstructionSnapType::Floor) {
+		const FVector SrcExtent = Src->GetUnscaledBoxExtent();
+		const FVector DstExtent = Dst->GetUnscaledBoxExtent();
+		const FVector LCur = LocalCursorSnapPosition;
+
+
+		static const FVector Deltas[] = {
+			FVector(1, 0, 0),
+			FVector(-1, 0, 0),
+			FVector(0, 1, 0),
+			FVector(0, -1, 0),
+			FVector(0, 0, 1),
+			FVector(0, 0, -1)
+		};
+		FVector BestLSrcPos = FVector::ZeroVector;
+		FVector BestLDstPos = FVector::ZeroVector;
+		float BestDist = MAX_flt;
+
+		const float HorizontalStackingSensorRadius = FVector2D(SrcExtent.X, SrcExtent.Y).Size() * 0.3f;
+
+		for (int i = 0; i < 6; i++) {
+			const FVector& D = Deltas[i];
+			float Dist = FMath::Abs(FVector::DotProduct(LCur - SrcExtent * D, D));
+			bool bIsBest = false;
+			if (i == 0) {
+				bIsBest = true;
+			}
+			else if (Dist < BestDist) {
+				if (i == 4 || i == 5) {
+					float DistanceFromHCenter = (LCur * FVector(1, 1, 0)).Size();
+					if (DistanceFromHCenter < HorizontalStackingSensorRadius) {
+						bIsBest = true;
+					}
+				}
+				else {
+					bIsBest = true;
+				}
+			}
+
+			if (bIsBest) {
+				BestLSrcPos = D * SrcExtent;
+				BestLDstPos = -D * DstExtent;
+				BestDist = Dist;
+			}
+		}
+
+		FVector TargetSrcSnapLocation = SrcWorldTransform.TransformPosition(BestLSrcPos);
+		FVector TargetDstSnapLocation = DstWorldTransform.TransformPosition(BestLDstPos);
+		FQuat DstRotation = Src->GetComponentRotation().Quaternion();
+		/*
+		bool bCanApplyBaseRotations = false;
+		if (bCanApplyBaseRotations) {
+			FVector UpVector = DstRotation.RotateVector(FVector::UpVector);
+			const FQuat BaseRotations[] = {
+				FQuat::Identity,
+				FQuat(UpVector, PI * 0.5f),
+				FQuat(UpVector, -PI * 0.5f)
+			};
+			FQuat BaseRotation = BaseRotations[FMath::Abs(CursorRotationStep) % 3];
+			DstRotation = BaseRotation * DstRotation;
+		}
+		*/
+
+		TargetDstSnapLocation = DstRotation.RotateVector(TargetDstSnapLocation);
+		FVector DstOffset = TargetSrcSnapLocation - TargetDstSnapLocation;
+		OutTargetSnapTransform = FTransform(DstRotation, DstOffset);
+		return true;
+	}
+
 	return false;
 }
