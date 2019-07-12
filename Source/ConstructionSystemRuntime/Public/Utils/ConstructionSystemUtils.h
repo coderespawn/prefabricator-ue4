@@ -16,6 +16,6 @@ class UPrefabricatorConstructionSnapComponent;
 
 class CONSTRUCTIONSYSTEMRUNTIME_API FPCSnapUtils {
 public:
-	static bool GetSnapPoint(UPrefabricatorConstructionSnapComponent* InFixedSnapComp, UPrefabricatorConstructionSnapComponent* InNewSnapComp, 
-		const FVector& InRequestedSnapLocation, FTransform& OutTargetSnapTransform, float InSnapTolerrance = 200.0f);
+	static bool GetSnapPoint(UPrefabricatorConstructionSnapComponent* InFixedSnapComp, UPrefabricatorConstructionSnapComponent* InNewSnapComp,
+		const FVector& InRequestedSnapLocation, FTransform& OutTargetSnapTransform, int32 CursorRotationStep = 0, float InSnapTolerrance = 200.0f);
 };

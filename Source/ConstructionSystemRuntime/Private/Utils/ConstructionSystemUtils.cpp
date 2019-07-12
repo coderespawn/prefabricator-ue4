@@ -22,17 +22,10 @@ ECollisionChannel FConstructionSystemUtils::FindPrefabSnapChannel()
 }
 
 bool FPCSnapUtils::GetSnapPoint(UPrefabricatorConstructionSnapComponent* Src, UPrefabricatorConstructionSnapComponent* Dst, 
-		const FVector& InRequestedSnapLocation, FTransform& OutTargetSnapTransform, float InSnapTolerrance)
+		const FVector& InRequestedSnapLocation, FTransform& OutTargetSnapTransform, int32 CursorRotationStep, float InSnapTolerrance)
 {
 	FTransform SrcWorldTransform = Src->GetComponentTransform();
-	FTransform SrcWorldToLocal = SrcWorldTransform.Inverse();
-	FVector LocalCursorSnapPosition = SrcWorldToLocal.TransformPosition(InRequestedSnapLocation);
-	// Apply rotation to the local cursor scale
-	{
-		FVector SrcRelativeScale = Src->GetRelativeTransform().GetScale3D();
-		SrcRelativeScale = SrcWorldTransform.GetRotation().RotateVector(SrcRelativeScale);
-		LocalCursorSnapPosition *= SrcRelativeScale;
-	}
+	FVector LocalCursorSnapPosition = SrcWorldTransform.InverseTransformPosition(InRequestedSnapLocation);
 
 	FTransform DstWorldTransform = Dst->GetComponentTransform();
 	{
@@ -47,16 +40,22 @@ bool FPCSnapUtils::GetSnapPoint(UPrefabricatorConstructionSnapComponent* Src, UP
 		}
 	}
 
-	FVector SrcBoxExtent = Src->GetScaledBoxExtent();
-	FVector DstBoxExtent = Dst->GetScaledBoxExtent();
 
 	if (Src->SnapType == EPrefabricatorConstructionSnapType::Wall && Dst->SnapType == EPrefabricatorConstructionSnapType::Wall) {
-		bool bUseSrcXAxis = SrcBoxExtent.X > SrcBoxExtent.Y;
+		bool bUseSrcXAxis, bUseDstXAxis;
+		FVector SrcBoxExtent = Src->GetUnscaledBoxExtent();
+		FVector DstBoxExtent = Dst->GetUnscaledBoxExtent();
+		{
+			FVector SrcScaledBoxExtent = Src->GetScaledBoxExtent();
+			FVector DstScaledBoxExtent = Dst->GetScaledBoxExtent();
+			bUseSrcXAxis = SrcScaledBoxExtent.X > SrcScaledBoxExtent.Y;
+			bUseDstXAxis = DstScaledBoxExtent.X > DstScaledBoxExtent.Y;
+		}
+
 		FVector2D SrcHalfSize2D;
 		SrcHalfSize2D.X = bUseSrcXAxis ? SrcBoxExtent.X : SrcBoxExtent.Y;
 		SrcHalfSize2D.Y = SrcBoxExtent.Z;
 
-		bool bUseDstXAxis = DstBoxExtent.X > DstBoxExtent.Y;
 		FVector2D DstHalfSize2D;
 		DstHalfSize2D.X = bUseDstXAxis ? DstBoxExtent.X : DstBoxExtent.Y;
 		DstHalfSize2D.Y = DstBoxExtent.Z;
@@ -64,6 +63,8 @@ bool FPCSnapUtils::GetSnapPoint(UPrefabricatorConstructionSnapComponent* Src, UP
 		FVector2D Cursor2D;
 		Cursor2D.X = bUseSrcXAxis ? LocalCursorSnapPosition.X : LocalCursorSnapPosition.Y;
 		Cursor2D.Y = LocalCursorSnapPosition.Z;
+
+		bool bCanApplyBaseRotations = false;
 
 		// Top
 		FVector2D BestSrcPos2D = FVector2D(0, SrcHalfSize2D.Y);
@@ -85,6 +86,7 @@ bool FPCSnapUtils::GetSnapPoint(UPrefabricatorConstructionSnapComponent* Src, UP
 			BestSrcSnapDistance = TestDistance;
 			BestSrcPos2D = FVector2D(SrcHalfSize2D.X, 0);
 			BestDstPos2D = FVector2D(-DstHalfSize2D.X, 0);
+			bCanApplyBaseRotations = true;
 		}
 
 		// Left
@@ -93,6 +95,7 @@ bool FPCSnapUtils::GetSnapPoint(UPrefabricatorConstructionSnapComponent* Src, UP
 			BestSrcSnapDistance = TestDistance;
 			BestSrcPos2D = FVector2D(-SrcHalfSize2D.X, 0);
 			BestDstPos2D = FVector2D(DstHalfSize2D.X, 0);
+			bCanApplyBaseRotations = true;
 		}
 
 		FVector BestLocalSrcSnapLocation;
@@ -105,14 +108,21 @@ bool FPCSnapUtils::GetSnapPoint(UPrefabricatorConstructionSnapComponent* Src, UP
 		BestLocalDstSnapLocation.X = bUseDstXAxis ? BestDstPos2D.X : 0;
 		BestLocalDstSnapLocation.Y = bUseDstXAxis ? 0 : BestDstPos2D.X;
 
-		BestLocalSrcSnapLocation /= Src->GetRelativeTransform().GetScale3D();
-		BestLocalDstSnapLocation /= Dst->GetRelativeTransform().GetScale3D();
-
 		FVector TargetSrcSnapLocation = SrcWorldTransform.TransformPosition(BestLocalSrcSnapLocation);
 		FVector TargetDstSnapLocation = DstWorldTransform.TransformPosition(BestLocalDstSnapLocation);
-		FRotator DstRotation = Src->GetComponentRotation();
-		TargetDstSnapLocation = DstRotation.RotateVector(TargetDstSnapLocation);
+		FQuat DstRotation = Src->GetComponentRotation().Quaternion();
+		if (bCanApplyBaseRotations) {
+			FVector UpVector = DstRotation.RotateVector(FVector::UpVector);
+			const FQuat BaseRotations[] = {
+				FQuat::Identity,
+				FQuat(UpVector, PI * 0.5f),
+				FQuat(UpVector, -PI * 0.5f)
+			};
+			FQuat BaseRotation = BaseRotations[FMath::Abs(CursorRotationStep) % 3];
+			DstRotation = BaseRotation * DstRotation;
+		}
 
+		TargetDstSnapLocation = DstRotation.RotateVector(TargetDstSnapLocation);
 		FVector DstOffset = TargetSrcSnapLocation - TargetDstSnapLocation;
 		OutTargetSnapTransform = FTransform(DstRotation, DstOffset);
 		return true;

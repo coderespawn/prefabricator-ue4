@@ -41,7 +41,7 @@ public:
 	void CursorMovePrev();
 
 	UFUNCTION()
-	void CursorRotate(float RotationDelta);
+	void RotateCursorStep(float NumSteps);
 
 protected: 
 	virtual void RegisterInputCallbacks(UInputComponent* InputComponent) override;
@@ -63,7 +63,10 @@ private:
 
 	FCSBuildToolInputBindings InputBindings;
 
-	float CursorRotationDegrees = 0;
+	int32 CursorRotationStep = 0;
 
 	ECollisionChannel PrefabSnapChannel;
+
+	bool bCursorFoundHit = false;
+	bool bCursorModeFreeForm = true;
 };

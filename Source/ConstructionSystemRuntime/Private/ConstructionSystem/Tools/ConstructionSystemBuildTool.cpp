@@ -83,20 +83,22 @@ void UConstructionSystemBuildTool::Update(UConstructionSystemComponent* Construc
 		}
 
 		FHitResult Hit;
-		bool bFoundHit = false;
+		bCursorFoundHit = false;
+		bCursorModeFreeForm = true;
+
 		bool bHitSnapChannel = false;
 		
 		FCollisionShape SweepShape = FCollisionShape::MakeSphere(FConstructionSystemConstants::BuildToolSweepRadius);
 		if (World->SweepSingleByChannel(Hit, StartLocation, EndLocation, FQuat::Identity, PrefabSnapChannel, SweepShape, QueryParams, ResponseParams)) {
-			bFoundHit = true;
+			bCursorFoundHit = true;
 			bHitSnapChannel = true;
 		}
 		else if (World->LineTraceSingleByChannel(Hit, StartLocation, EndLocation, ECC_WorldStatic, QueryParams, ResponseParams)) {
 			// We did not hit anything. Trace in the static world
-			bFoundHit = true;
+			bCursorFoundHit = true;
 		}
 
-		if (bFoundHit) {
+		if (bCursorFoundHit) {
 			FVector CursorLocation;
 			FQuat CursorRotation;
 			if (bHitSnapChannel) {
@@ -105,17 +107,19 @@ void UConstructionSystemBuildTool::Update(UConstructionSystemComponent* Construc
 				UPrefabricatorConstructionSnapComponent* HitSnap = Cast<UPrefabricatorConstructionSnapComponent>(Hit.GetComponent());
 				if (CursorSnap && HitSnap) {
 					FTransform TargetSnapTransform;
-					FPCSnapUtils::GetSnapPoint(HitSnap, CursorSnap, Hit.ImpactPoint, TargetSnapTransform);
+					if (FPCSnapUtils::GetSnapPoint(HitSnap, CursorSnap, Hit.ImpactPoint, TargetSnapTransform, CursorRotationStep, 100)) {
+						bCursorModeFreeForm = false;
+						CursorLocation = TargetSnapTransform.GetLocation();
+						CursorRotation = TargetSnapTransform.GetRotation();
+						DrawDebugPoint(World, CursorLocation, 20, FColor::Blue);
+					}
 
-					CursorLocation = TargetSnapTransform.GetLocation();
-					CursorRotation = TargetSnapTransform.GetRotation();
-
-					DrawDebugPoint(World, CursorLocation, 20, FColor::Blue);
 				}
 			}
 			else {
 				CursorLocation = Hit.ImpactPoint;
 				CursorRotation = FQuat::FindBetweenNormals(FVector(0, 0, 1), Hit.Normal);
+				float CursorRotationDegrees = CursorRotationStep * CursorRotationStepAngle;
 				CursorRotation = CursorRotation * FQuat::MakeFromEuler(FVector(0, 0, CursorRotationDegrees));
 			}
 			FTransform CursorTransform;
@@ -127,7 +131,8 @@ void UConstructionSystemBuildTool::Update(UConstructionSystemComponent* Construc
 			DrawDebugPoint(World, Hit.ImpactPoint, 20, bHitSnapChannel ? FColor::Green : FColor::Red);
 		}
 
-		Cursor->SetVisiblity(bFoundHit);
+		Cursor->SetVisiblity(bCursorFoundHit);
+
 	}
 }
 
@@ -141,7 +146,7 @@ void UConstructionSystemBuildTool::RegisterInputCallbacks(UInputComponent* Input
 
 	// TODO: Map bindings to cursor next/prev snap points
 
-	InputBindings.CursorRotate = InputComponent->BindAxis("CSCursorRotate", this, &UConstructionSystemBuildTool::CursorRotate);
+	InputBindings.CursorRotate = InputComponent->BindAxis("CSCursorRotate", this, &UConstructionSystemBuildTool::RotateCursorStep);
 }
 
 void UConstructionSystemBuildTool::UnregisterInputCallbacks(UInputComponent* InputComponent)
@@ -180,6 +185,11 @@ void UConstructionSystemBuildTool::ConstructAtCursor()
 
 				FRandomStream RandomStream(Cursor->GetCursorSeed());
 				UPrefabricatorBlueprintLibrary::RandomizePrefab(SpawnedPrefab, RandomStream);
+
+				if (!bCursorModeFreeForm) {
+					// A prefab was created at the cursor on a snapped location. Reset the local cursor rotation
+					CursorRotationStep = 0;
+				}
 			}
 		}
 	}
@@ -197,7 +207,7 @@ void UConstructionSystemBuildTool::CursorMovePrev()
 	Cursor->RecreateCursor(GetWorld(), ActivePrefabAsset);
 }
 
-void UConstructionSystemBuildTool::CursorRotate(float RotationDelta)
+void UConstructionSystemBuildTool::RotateCursorStep(float NumSteps)
 {
-	CursorRotationDegrees += CursorRotationStepAngle * RotationDelta;
+	CursorRotationStep += NumSteps;
 }
