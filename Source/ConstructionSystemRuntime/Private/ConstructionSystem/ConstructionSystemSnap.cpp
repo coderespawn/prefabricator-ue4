@@ -9,6 +9,7 @@
 UPrefabricatorConstructionSnapComponent::UPrefabricatorConstructionSnapComponent(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
+	BoxExtent = FVector(100, 100, 100);
 	SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	SetCollisionProfileName("PrefabSnap");
 }

@@ -101,12 +101,16 @@ void UConstructionSystemBuildTool::Update(UConstructionSystemComponent* Construc
 			FQuat CursorRotation;
 			if (bHitSnapChannel) {
 				// Snap the cursor
-				CursorLocation = Hit.ImpactPoint;
-				CursorRotation = FQuat::Identity;
 				UPrefabricatorConstructionSnapComponent* CursorSnap = Cursor->GetActiveSnapComponent();
 				UPrefabricatorConstructionSnapComponent* HitSnap = Cast<UPrefabricatorConstructionSnapComponent>(Hit.GetComponent());
 				if (CursorSnap && HitSnap) {
-					FBox CursorBoxExtent = CursorSnap->GetScaledBoxExtent();
+					FTransform TargetSnapTransform;
+					FPCSnapUtils::GetSnapPoint(HitSnap, CursorSnap, Hit.ImpactPoint, TargetSnapTransform);
+
+					CursorLocation = TargetSnapTransform.GetLocation();
+					CursorRotation = TargetSnapTransform.GetRotation();
+
+					DrawDebugPoint(World, CursorLocation, 20, FColor::Blue);
 				}
 			}
 			else {
@@ -134,6 +138,8 @@ void UConstructionSystemBuildTool::RegisterInputCallbacks(UInputComponent* Input
 	InputBindings.BuildAtCursor = InputComponent->BindAction("CSBuiltAtCursor", IE_Pressed, this, &UConstructionSystemBuildTool::ConstructAtCursor);
 	InputBindings.CursorItemNext = InputComponent->BindAction("CSCursorItemNext", IE_Pressed, this, &UConstructionSystemBuildTool::CursorMoveNext);
 	InputBindings.CursorItemPrev = InputComponent->BindAction("CSCursorItemPrev", IE_Pressed, this, &UConstructionSystemBuildTool::CursorMovePrev);
+
+	// TODO: Map bindings to cursor next/prev snap points
 
 	InputBindings.CursorRotate = InputComponent->BindAxis("CSCursorRotate", this, &UConstructionSystemBuildTool::CursorRotate);
 }
