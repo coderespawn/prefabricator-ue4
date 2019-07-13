@@ -65,8 +65,18 @@ class CONSTRUCTIONSYSTEMRUNTIME_API UPrefabricatorConstructionSnapComponent : pu
 public:
 	virtual void OnRegister() override;
 
+	//~ Begin UPrimitiveComponent Interface.
+	virtual FPrimitiveSceneProxy* CreateSceneProxy() override;
+	//~ End UPrimitiveComponent Interface.
+
 	UPROPERTY(EditAnywhere, Category = "Prefabricator")
 	EPrefabricatorConstructionSnapType SnapType;
+
+	UPROPERTY(EditAnywhere, Category = "Prefabricator")
+	FPCSnapConstraintFloor FloorConstraint;
+
+	UPROPERTY(EditAnywhere, Category = "Prefabricator")
+	FPCSnapConstraintWall WallConstraint;
 };
 
 UCLASS(ConversionRoot, ComponentWrapperClass)
