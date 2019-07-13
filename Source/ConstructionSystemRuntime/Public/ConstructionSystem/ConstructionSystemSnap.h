@@ -18,6 +18,47 @@ enum class EPrefabricatorConstructionSnapType : uint8
 };
 
 
+USTRUCT(BlueprintType)
+struct CONSTRUCTIONSYSTEMRUNTIME_API FPCSnapConstraintFloor {
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, Category = "Prefabricator")
+	bool AttachX = true;
+
+	UPROPERTY(EditAnywhere, Category = "Prefabricator")
+	bool AttachXNegative = true;
+
+	UPROPERTY(EditAnywhere, Category = "Prefabricator")
+	bool AttachY = true;
+
+	UPROPERTY(EditAnywhere, Category = "Prefabricator")
+	bool AttachYNegative = true;
+
+	UPROPERTY(EditAnywhere, Category = "Prefabricator")
+	bool AttachZ = true;
+
+	UPROPERTY(EditAnywhere, Category = "Prefabricator")
+	bool AttachZNegative = true;
+};
+
+USTRUCT(BlueprintType)
+struct CONSTRUCTIONSYSTEMRUNTIME_API FPCSnapConstraintWall {
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, Category = "Prefabricator")
+	bool AttachTop = true;
+
+	UPROPERTY(EditAnywhere, Category = "Prefabricator")
+	bool AttachBottom = true;
+
+	UPROPERTY(EditAnywhere, Category = "Prefabricator")
+	bool AttachLeft = true;
+
+	UPROPERTY(EditAnywhere, Category = "Prefabricator")
+	bool AttachRight = true;
+};
+
+
 UCLASS(meta = (BlueprintSpawnableComponent))
 class CONSTRUCTIONSYSTEMRUNTIME_API UPrefabricatorConstructionSnapComponent : public UBoxComponent {
 	GENERATED_UCLASS_BODY()

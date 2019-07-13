@@ -84,8 +84,8 @@ bool FPCSnapUtils::GetSnapPoint(UPrefabricatorConstructionSnapComponent* Src, UP
 		TestDistance = FMath::Abs(Cursor2D.X - SrcHalfSize2D.X);
 		if (TestDistance < BestSrcSnapDistance) {
 			BestSrcSnapDistance = TestDistance;
-			BestSrcPos2D = FVector2D(SrcHalfSize2D.X, 0);
-			BestDstPos2D = FVector2D(-DstHalfSize2D.X, 0);
+			BestSrcPos2D = FVector2D(SrcHalfSize2D.X, -SrcHalfSize2D.Y);
+			BestDstPos2D = FVector2D(-DstHalfSize2D.X, -DstHalfSize2D.Y);
 			bCanApplyBaseRotations = true;
 		}
 
@@ -93,8 +93,8 @@ bool FPCSnapUtils::GetSnapPoint(UPrefabricatorConstructionSnapComponent* Src, UP
 		TestDistance = FMath::Abs(Cursor2D.X + SrcHalfSize2D.X);
 		if (TestDistance < BestSrcSnapDistance) {
 			BestSrcSnapDistance = TestDistance;
-			BestSrcPos2D = FVector2D(-SrcHalfSize2D.X, 0);
-			BestDstPos2D = FVector2D(DstHalfSize2D.X, 0);
+			BestSrcPos2D = FVector2D(-SrcHalfSize2D.X, -SrcHalfSize2D.Y);
+			BestDstPos2D = FVector2D(DstHalfSize2D.X, -DstHalfSize2D.Y);
 			bCanApplyBaseRotations = true;
 		}
 
@@ -142,6 +142,22 @@ bool FPCSnapUtils::GetSnapPoint(UPrefabricatorConstructionSnapComponent* Src, UP
 			FVector(0, 0, 1),
 			FVector(0, 0, -1)
 		};
+		static const FVector SrcSnapGuides[] = {
+			FVector(1, 0, 1),
+			FVector(-1, 0, 1),
+			FVector(0, 1, 1),
+			FVector(0, -1, 1),
+			FVector(0, 0, 1),
+			FVector(0, 0, -1)
+		};
+		static const FVector DstSnapGuides[] = {
+			FVector(-1, 0, 1),
+			FVector(1, 0, 1),
+			FVector(0, -1, 1),
+			FVector(0, 1, 1),
+			FVector(0, 0, -1),
+			FVector(0, 0, 1)
+		};
 		FVector BestLSrcPos = FVector::ZeroVector;
 		FVector BestLDstPos = FVector::ZeroVector;
 		float BestDist = MAX_flt;
@@ -169,8 +185,8 @@ bool FPCSnapUtils::GetSnapPoint(UPrefabricatorConstructionSnapComponent* Src, UP
 			}
 
 			if (bIsBest) {
-				BestLSrcPos = D * SrcExtent;
-				BestLDstPos = -D * DstExtent;
+				BestLSrcPos = SrcSnapGuides[i] * SrcExtent;
+				BestLDstPos = DstSnapGuides[i] * DstExtent;
 				BestDist = Dist;
 			}
 		}
