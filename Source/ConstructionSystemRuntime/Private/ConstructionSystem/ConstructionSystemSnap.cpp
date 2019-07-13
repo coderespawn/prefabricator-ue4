@@ -39,6 +39,9 @@ FPrimitiveSceneProxy* UPrefabricatorConstructionSnapComponent::CreateSceneProxy(
 			, BoxExtents(InComponent->BoxExtent)
 			, BoxColor(InComponent->ShapeColor)
 			, LineThickness(InComponent->LineThickness)
+			, SnapType(InComponent->SnapType)
+			, FloorConstraint(InComponent->FloorConstraint)
+			, WallConstraint(InComponent->WallConstraint)
 		{
 			bWillEverBeLit = false;
 		}
@@ -59,6 +62,84 @@ FPrimitiveSceneProxy* UPrefabricatorConstructionSnapComponent::CreateSceneProxy(
 
 					FPrimitiveDrawInterface* PDI = Collector.GetPDI(ViewIndex);
 					DrawOrientedWireBox(PDI, LocalToWorld.GetOrigin(), LocalToWorld.GetScaledAxis(EAxis::X), LocalToWorld.GetScaledAxis(EAxis::Y), LocalToWorld.GetScaledAxis(EAxis::Z), BoxExtents, DrawColor, SDPG_World, LineThickness);
+
+					FVector AxisX = LocalToWorld.GetUnitAxis(EAxis::X);
+					FVector AxisY = LocalToWorld.GetUnitAxis(EAxis::Y);
+					FVector AxisZ = LocalToWorld.GetUnitAxis(EAxis::Z);
+					
+					{
+						const float CircleRadius = 10.0f;
+						const int32 NumCircleSegments = 16;
+
+						if (IsSelected()) {
+							bool bXP, bYP, bZP, bXN, bYN, bZN;
+							bXP = bYP = bZP = bXN = bYN = bZN = false;
+
+							if (SnapType == EPrefabricatorConstructionSnapType::Floor) {
+								bXP = FloorConstraint.AttachX;
+								bYP = FloorConstraint.AttachY;
+								bZP = FloorConstraint.AttachZ;
+								bXN = FloorConstraint.AttachXNegative;
+								bYN = FloorConstraint.AttachYNegative;
+								bZN = FloorConstraint.AttachZNegative;
+							}
+							else if (SnapType == EPrefabricatorConstructionSnapType::Wall) {
+								bool bUseXAxis = AxisX.Size() > AxisY.Size();
+
+								bZP = WallConstraint.AttachTop;
+								bZN = WallConstraint.AttachBottom;
+
+								if (bUseXAxis) {
+									bYP = WallConstraint.AttachRight;
+									bYN = WallConstraint.AttachLeft;
+									bXP = false;
+									bXN = false;
+								}
+								else {
+									bXP = WallConstraint.AttachRight;
+									bXN = WallConstraint.AttachLeft;
+									bYP = false;
+									bYN = false;
+								}
+							}
+
+							// X+
+							if (bXP) {
+								FVector CX0 = LocalToWorld.TransformPosition(FVector(BoxExtents.X, 0, 0));
+								DrawCircle(PDI, CX0, AxisY, AxisZ, FColor::Red, CircleRadius, NumCircleSegments, SDPG_Foreground);
+							}
+
+							// X-
+							if (bXN) {
+								FVector CX1 = LocalToWorld.TransformPosition(FVector(-BoxExtents.X, 0, 0));
+								DrawCircle(PDI, CX1, AxisZ, AxisY, FColor::Red, CircleRadius, NumCircleSegments, SDPG_Foreground);
+							}
+
+							// Y+
+							if (bYP) {
+								FVector CY0 = LocalToWorld.TransformPosition(FVector(0, BoxExtents.Y, 0));
+								DrawCircle(PDI, CY0, AxisZ, AxisX, FColor::Red, CircleRadius, NumCircleSegments, SDPG_Foreground);
+							}
+							
+							// Y-
+							if (bYN) {
+								FVector CY1 = LocalToWorld.TransformPosition(FVector(0, -BoxExtents.Y, 0));
+								DrawCircle(PDI, CY1, AxisX, AxisZ, FColor::Red, CircleRadius, NumCircleSegments, SDPG_Foreground);
+							}
+
+							// Z+
+							if (bZP) {
+								FVector CZ0 = LocalToWorld.TransformPosition(FVector(0, 0, BoxExtents.Z));
+								DrawCircle(PDI, CZ0, AxisX, AxisY, FColor::Red, CircleRadius, NumCircleSegments, SDPG_Foreground);
+							}
+
+							// Z-
+							if (bZN) {
+								FVector CZ1 = LocalToWorld.TransformPosition(FVector(0, 0, -BoxExtents.Z));
+								DrawCircle(PDI, CZ1, AxisY, AxisX, FColor::Red, CircleRadius, NumCircleSegments, SDPG_Foreground);
+							}
+						}
+					}
 				}
 			}
 		}
@@ -85,6 +166,9 @@ FPrimitiveSceneProxy* UPrefabricatorConstructionSnapComponent::CreateSceneProxy(
 		const FVector	BoxExtents;
 		const FColor	BoxColor;
 		const float LineThickness;
+		EPrefabricatorConstructionSnapType SnapType;
+		FPCSnapConstraintFloor FloorConstraint;
+		FPCSnapConstraintWall WallConstraint;
 	};
 
 	return new FBoxSceneProxy(this);
