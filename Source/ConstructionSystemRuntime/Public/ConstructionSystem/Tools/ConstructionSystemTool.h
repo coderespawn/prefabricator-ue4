@@ -17,6 +17,12 @@ public:
 	virtual void OnToolDisable(UConstructionSystemComponent* ConstructionComponent);
 	virtual void Update(UConstructionSystemComponent* ConstructionComponent) {}
 
+	//~ Begin UObject Interface
+	virtual bool IsSupportedForNetworking() const override { return true; }
+	//~ End UObject Interface
+
+	bool IsToolEnabled() const { return bToolEnabled; }
+
 protected:
 	virtual void RegisterInputCallbacks(UInputComponent* InputComponent) {}
 	virtual void UnregisterInputCallbacks(UInputComponent* InputComponent) {}

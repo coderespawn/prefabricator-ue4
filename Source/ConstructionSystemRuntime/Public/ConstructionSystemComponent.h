@@ -24,6 +24,8 @@ public:
 	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction *ThisTickFunction) override;
 	virtual void DestroyComponent(bool bPromoteChildren = false) override;
 	virtual void BeginPlay() override;
+	virtual bool ReplicateSubobjects(class UActorChannel *Channel, class FOutBunch *Bunch, FReplicationFlags *RepFlags) override;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	//~ End UActorComponent Interface
 
 private:
@@ -34,6 +36,14 @@ private:
 
 	void EnableConstructionSystem();
 	void DisableConstructionSystem();
+	void CreateTool(TSubclassOf<UConstructionSystemTool> InToolClass);
+
+	UFUNCTION()
+	void CreateTool_Build();
+
+	UFUNCTION()
+	void CreateTool_Remove();
+
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cursor")
 	UMaterialInterface* CursorMaterial;
@@ -47,9 +57,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
 	float ConstructionCameraTransitionExp = 1.0f;
 
-	UPROPERTY(Transient, BlueprintReadOnly, Category = "ConstructionSystem")
+	UPROPERTY(Transient, Replicated, BlueprintReadOnly, Category = "ConstructionSystem")
 	UConstructionSystemTool* ActiveTool;
 
 private:
 	bool bConstructionSystemEnabled = false;
+	bool bInputBound = false;
 };

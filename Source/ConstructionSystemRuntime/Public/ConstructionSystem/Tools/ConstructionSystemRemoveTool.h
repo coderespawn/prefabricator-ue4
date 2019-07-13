@@ -4,13 +4,13 @@
 #include "CoreMinimal.h"
 #include "ConstructionSystemTool.h"
 #include "Components/InputComponent.h"
-#include "ConstructionSystemBuildTool.generated.h"
+#include "ConstructionSystemRemoveTool.generated.h"
 
-class UPrefabricatorAssetInterface;
 class UConstructionSystemCursor;
+class APrefabActor;
 
 UCLASS(BlueprintType)
-class CONSTRUCTIONSYSTEMRUNTIME_API UConstructionSystemBuildTool : public UConstructionSystemTool {
+class CONSTRUCTIONSYSTEMRUNTIME_API UConstructionSystemRemoveTool : public UConstructionSystemTool {
 	GENERATED_BODY()
 public:
 	//~ Begin UConstructionSystemTool Interface
@@ -21,54 +21,31 @@ public:
 	virtual void Update(UConstructionSystemComponent* ConstructionComponent) override;
 	//~ End UConstructionSystemTool Interface
 
-
-	UFUNCTION(BlueprintCallable, Category = "ConstructionSystem")
-	void SetActivePrefab(UPrefabricatorAssetInterface* InActivePrefabAsset);
-
-	UFUNCTION()
-	void ConstructAtCursor();
-
-	UFUNCTION()
-	void CursorMoveNext();
-
-	UFUNCTION()
-	void CursorMovePrev();
-
-	UFUNCTION()
-	void RotateCursorStep(float NumSteps);
-
-	UFUNCTION(Server, Reliable, WithValidation)
-	void ServerConstructAtCursor();
-
-protected: 
+protected:
 	virtual void RegisterInputCallbacks(UInputComponent* InputComponent) override;
 	virtual void UnregisterInputCallbacks(UInputComponent* InputComponent) override;
+
+	UFUNCTION()
+	void RemoveAtCursor();
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ConstructionSystem")
 	float TraceDistance = 4000.0f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ConstructionSystem")
-	float CursorRotationStepAngle = 15.0f;
 
 private:
 	UPROPERTY(Transient)
 	UConstructionSystemCursor* Cursor;
 
 	UPROPERTY(Transient)
-	UPrefabricatorAssetInterface* ActivePrefabAsset;
+	TWeakObjectPtr<APrefabActor> FocusedActor;
 
-	int32 CursorRotationStep = 0;
 	ECollisionChannel PrefabSnapChannel;
 	bool bCursorFoundHit = false;
-	bool bCursorModeFreeForm = true;
 
-
-	struct FCSBuildToolInputBindings {
-		FInputActionBinding BuildAtCursor;
-		FInputActionBinding CursorItemNext;
-		FInputActionBinding CursorItemPrev;
-		FInputAxisBinding CursorRotate;
+private:
+	struct FCSRemoveToolInputBindings {
+		FInputActionBinding RemoveAtCursor;
 	};
-	FCSBuildToolInputBindings InputBindings;
+	FCSRemoveToolInputBindings InputBindings;
+
 };

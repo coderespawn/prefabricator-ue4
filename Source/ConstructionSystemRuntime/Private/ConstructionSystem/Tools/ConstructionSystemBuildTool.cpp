@@ -17,13 +17,11 @@
 #include "ConstructionSystemUtils.h"
 #include "ConstructionSystemSnap.h"
 
-namespace {
-}
 
 void UConstructionSystemBuildTool::InitializeTool(UConstructionSystemComponent* ConstructionComponent)
 {
 	UConstructionSystemTool::InitializeTool(ConstructionComponent);
-
+	
 	Cursor = NewObject<UConstructionSystemCursor>(this, "Cursor");
 	Cursor->SetCursorMaterial(ConstructionComponent->CursorMaterial);
 
@@ -168,14 +166,53 @@ void UConstructionSystemBuildTool::SetActivePrefab(UPrefabricatorAssetInterface*
 	Cursor->RecreateCursor(GetWorld(), InActivePrefabAsset);
 }
 
+void UConstructionSystemBuildTool::CursorMoveNext()
+{
+	Cursor->IncrementSeed();
+	Cursor->RecreateCursor(GetWorld(), ActivePrefabAsset);
+}
+
+void UConstructionSystemBuildTool::CursorMovePrev()
+{
+	Cursor->DecrementSeed();
+	Cursor->RecreateCursor(GetWorld(), ActivePrefabAsset);
+}
+
+void UConstructionSystemBuildTool::RotateCursorStep(float NumSteps)
+{
+	CursorRotationStep += NumSteps;
+}
+
+void UConstructionSystemBuildTool::ServerConstructAtCursor_Implementation()
+{
+	ConstructAtCursor();
+
+}
+
+bool UConstructionSystemBuildTool::ServerConstructAtCursor_Validate()
+{
+	return true;
+}
+
 void UConstructionSystemBuildTool::ConstructAtCursor()
 {
 	UConstructionSystemComponent* ConstructionComponent = Cast<UConstructionSystemComponent>(GetOuter());
-	if (ConstructionComponent && bToolEnabled) {
+	if (!ConstructionComponent) {
+		return;
+	}
+
+	if (bToolEnabled) {
 		UWorld* World = ConstructionComponent->GetWorld();
 		if (!World) {
 			return;
 		}
+
+		/*
+		if (ConstructionComponent->GetOwnerRole() != ROLE_Authority) {
+			ServerConstructAtCursor();
+			return;
+		}
+		*/
 
 		if (World && ActivePrefabAsset) {
 			FTransform Transform;
@@ -193,21 +230,4 @@ void UConstructionSystemBuildTool::ConstructAtCursor()
 			}
 		}
 	}
-}
-
-void UConstructionSystemBuildTool::CursorMoveNext()
-{
-	Cursor->IncrementSeed();
-	Cursor->RecreateCursor(GetWorld(), ActivePrefabAsset);
-}
-
-void UConstructionSystemBuildTool::CursorMovePrev()
-{
-	Cursor->DecrementSeed();
-	Cursor->RecreateCursor(GetWorld(), ActivePrefabAsset);
-}
-
-void UConstructionSystemBuildTool::RotateCursorStep(float NumSteps)
-{
-	CursorRotationStep += NumSteps;
 }

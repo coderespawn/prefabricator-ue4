@@ -6,13 +6,18 @@
 #include "Engine/World.h"
 #include "ConstructionSystemTool.h"
 #include "ConstructionSystemBuildTool.h"
+#include "Engine/ActorChannel.h"
+#include "UnrealNetwork.h"
+#include "ConstructionSystemRemoveTool.h"
 
 
 UConstructionSystemComponent::UConstructionSystemComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 	PrimaryComponentTick.bStartWithTickEnabled = true;
+	bReplicates = true;
 }
+
 
 void UConstructionSystemComponent::TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction *ThisTickFunction)
 {
@@ -20,6 +25,11 @@ void UConstructionSystemComponent::TickComponent(float DeltaTime, enum ELevelTic
 
 	if (bConstructionSystemEnabled) {
 		HandleUpdate();
+	}
+
+	APawn* Owner = Cast<APawn>(GetOwner());
+	if (!bInputBound && Owner->InputEnabled()) {
+		BindInput();
 	}
 }
 
@@ -35,8 +45,25 @@ void UConstructionSystemComponent::DestroyComponent(bool bPromoteChildren /*= fa
 void UConstructionSystemComponent::BeginPlay()
 {
 	Super::BeginPlay();
+}
 
-	BindInput();
+bool UConstructionSystemComponent::ReplicateSubobjects(class UActorChannel *Channel, class FOutBunch *Bunch, FReplicationFlags *RepFlags)
+{
+	bool bResult = Super::ReplicateSubobjects(Channel, Bunch, RepFlags);
+
+	if (ActiveTool)
+	{
+		bResult |= Channel->ReplicateSubobject(ActiveTool, *Bunch, *RepFlags);
+	}
+
+	return bResult;
+}
+
+void UConstructionSystemComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(UConstructionSystemComponent, ActiveTool);
 }
 
 void UConstructionSystemComponent::EnableConstructionSystem()
@@ -44,8 +71,8 @@ void UConstructionSystemComponent::EnableConstructionSystem()
 	TransitionCameraTo(ConstructionCameraActor, ConstructionCameraTransitionTime, ConstructionCameraTransitionExp);
 
 	if (!ActiveTool) {
-		ActiveTool = NewObject<UConstructionSystemBuildTool>(this, "ActiveTool");
-		ActiveTool->InitializeTool(this);
+		// Create a default tool object
+		CreateTool(UConstructionSystemBuildTool::StaticClass());
 	}
 	ActiveTool->OnToolEnable(this);
 
@@ -60,6 +87,32 @@ void UConstructionSystemComponent::DisableConstructionSystem()
 
 	TransitionCameraTo(GetOwner(), ConstructionCameraTransitionTime, ConstructionCameraTransitionExp);
 	bConstructionSystemEnabled = false;
+}
+
+void UConstructionSystemComponent::CreateTool(TSubclassOf<UConstructionSystemTool> InToolClass)
+{
+	if (ActiveTool) {
+		ActiveTool->DestroyTool(this);
+		ActiveTool = nullptr;
+	}
+
+	if (InToolClass) {
+		ActiveTool = NewObject<UConstructionSystemTool>(this, InToolClass);
+		ActiveTool->InitializeTool(this);
+		if (bConstructionSystemEnabled) {
+			ActiveTool->OnToolEnable(this);
+		}
+	}
+}
+
+void UConstructionSystemComponent::CreateTool_Build()
+{
+	CreateTool(UConstructionSystemBuildTool::StaticClass());
+}
+
+void UConstructionSystemComponent::CreateTool_Remove()
+{
+	CreateTool(UConstructionSystemRemoveTool::StaticClass());
 }
 
 APlayerController* UConstructionSystemComponent::GetPlayerController()
@@ -92,10 +145,15 @@ void UConstructionSystemComponent::HandleUpdate()
 
 void UConstructionSystemComponent::BindInput()
 {
-	APawn* Pawn = Cast<APawn>(GetOwner());
-	if (Pawn && Pawn->InputComponent) {
-		UInputComponent* Input = Pawn->InputComponent;
-		Input->BindAction("CSModeToggle", IE_Pressed, this, &UConstructionSystemComponent::ToggleConstructionSystem);
+	if (!bInputBound) {
+		APawn* Pawn = Cast<APawn>(GetOwner());
+		if (Pawn && Pawn->InputComponent) {
+			UInputComponent* Input = Pawn->InputComponent;
+			Input->BindAction("CSModeToggle", IE_Pressed, this, &UConstructionSystemComponent::ToggleConstructionSystem);
+			Input->BindAction("CSModeToolBuild", IE_Pressed, this, &UConstructionSystemComponent::CreateTool_Build);
+			Input->BindAction("CSModeToolRemove", IE_Pressed, this, &UConstructionSystemComponent::CreateTool_Remove);
+			bInputBound = true;
+		}
 	}
 }
 
