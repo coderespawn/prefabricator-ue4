@@ -156,6 +156,7 @@ bool FPCSnapUtils::GetSnapPoint(UPrefabricatorConstructionSnapComponent* Src, UP
 				bIsBest = true;
 			}
 			else if (Dist < BestDist) {
+				// On top and bottom surfaces, only attach if we are within the radius. other attach to sides (by rejecting this)
 				if (i == 4 || i == 5) {
 					float DistanceFromHCenter = (LCur * FVector(1, 1, 0)).Size();
 					if (DistanceFromHCenter < HorizontalStackingSensorRadius) {
@@ -177,8 +178,128 @@ bool FPCSnapUtils::GetSnapPoint(UPrefabricatorConstructionSnapComponent* Src, UP
 		FVector TargetSrcSnapLocation = SrcWorldTransform.TransformPosition(BestLSrcPos);
 		FVector TargetDstSnapLocation = DstWorldTransform.TransformPosition(BestLDstPos);
 		FQuat DstRotation = Src->GetComponentRotation().Quaternion();
-		/*
-		bool bCanApplyBaseRotations = false;
+
+		TargetDstSnapLocation = DstRotation.RotateVector(TargetDstSnapLocation);
+		FVector DstOffset = TargetSrcSnapLocation - TargetDstSnapLocation;
+		OutTargetSnapTransform = FTransform(DstRotation, DstOffset);
+		return true;
+	}
+
+	else if (Src->SnapType == EPrefabricatorConstructionSnapType::Floor && Dst->SnapType == EPrefabricatorConstructionSnapType::Wall) {
+		const FVector SrcExtent = Src->GetUnscaledBoxExtent();
+		const FVector DstExtent = Dst->GetUnscaledBoxExtent();
+		const FVector LCur = LocalCursorSnapPosition;
+
+		bool bUseDstXAxis;
+		{
+			FVector DstScaledBoxExtent = Dst->GetScaledBoxExtent();
+			bUseDstXAxis = DstScaledBoxExtent.X > DstScaledBoxExtent.Y;
+		}
+
+		FVector2D DstHalfSize2D;
+		DstHalfSize2D.X = bUseDstXAxis ? DstExtent.X : DstExtent.Y;
+		DstHalfSize2D.Y = DstExtent.Z;
+
+
+		static const FVector Deltas[] = {
+			FVector(1, 0, 0),
+			FVector(-1, 0, 0),
+			FVector(0, 1, 0),
+			FVector(0, -1, 0)
+		};
+		static const FVector SnapPoints[] = {
+			FVector(1, 0, 1),
+			FVector(-1, 0, 1),
+			FVector(0, 1, 1),
+			FVector(0, -1, 1)
+		};
+		static const FQuat SnapRotations[] = {
+			FQuat(FVector::UpVector, PI * 0.5f),
+			FQuat(FVector::UpVector, PI * 1.5f),
+			FQuat(FVector::UpVector, PI * 1.0f),
+			FQuat(FVector::UpVector, PI * 0.0f)
+		};
+
+		FVector BestLSrcPos = FVector::ZeroVector;
+		FVector2D BestLDstPos2D = FVector2D(0, -DstHalfSize2D.Y);
+		float BestDist = MAX_flt;
+		FQuat BestLDstRot = FQuat::Identity;
+
+		for (int i = 0; i < 4; i++) {
+			const FVector& D = Deltas[i];
+			float Dist = FMath::Abs(FVector::DotProduct(LCur - SrcExtent * D, D));
+			if (i == 0 || Dist < BestDist) {
+				const FVector& SnapPointMult = SnapPoints[i];
+				BestLSrcPos = SnapPointMult * SrcExtent;
+				BestLDstRot = SnapRotations[i];
+				BestDist = Dist;
+			}
+		}
+
+		FVector BestLDstPos;
+		BestLDstPos.Z = BestLDstPos2D.Y;
+		BestLDstPos.X = bUseDstXAxis ? BestLDstPos2D.X : 0;
+		BestLDstPos.Y = bUseDstXAxis ? 0 : BestLDstPos2D.X;
+
+		FVector TargetSrcSnapLocation = SrcWorldTransform.TransformPosition(BestLSrcPos);
+		FVector TargetDstSnapLocation = DstWorldTransform.TransformPosition(BestLDstPos);
+		FQuat DstRotation = BestLDstRot * Src->GetComponentRotation().Quaternion();
+
+		TargetDstSnapLocation = DstRotation.RotateVector(TargetDstSnapLocation);
+		FVector DstOffset = TargetSrcSnapLocation - TargetDstSnapLocation;
+		OutTargetSnapTransform = FTransform(DstRotation, DstOffset);
+		return true;
+	}
+
+
+	else if (Src->SnapType == EPrefabricatorConstructionSnapType::Wall && Dst->SnapType == EPrefabricatorConstructionSnapType::Floor) {
+		bool bUseSrcXAxis;
+		FVector SrcBoxExtent = Src->GetUnscaledBoxExtent();
+		FVector DstBoxExtent = Dst->GetUnscaledBoxExtent();
+		{
+			FVector SrcScaledBoxExtent = Src->GetScaledBoxExtent();
+			bUseSrcXAxis = SrcScaledBoxExtent.X > SrcScaledBoxExtent.Y;
+		}
+
+		FVector2D SrcHalfSize2D;
+		SrcHalfSize2D.X = bUseSrcXAxis ? SrcBoxExtent.X : SrcBoxExtent.Y;
+		SrcHalfSize2D.Y = SrcBoxExtent.Z;
+
+		FVector2D Cursor2D;
+		Cursor2D.X = bUseSrcXAxis ? LocalCursorSnapPosition.X : LocalCursorSnapPosition.Y;
+		Cursor2D.Y = LocalCursorSnapPosition.Z;
+
+
+		// Top
+		FVector2D BestSrcPos2D = FVector2D(0, SrcHalfSize2D.Y);
+		float BestSrcSnapDistance = FMath::Abs(Cursor2D.Y - SrcHalfSize2D.Y);
+		FVector BestDstPos = FVector(0, -DstBoxExtent.Y, DstBoxExtent.Z);
+
+		// Bottom
+		float TestDistance = FMath::Abs(Cursor2D.Y + SrcHalfSize2D.Y);
+		if (TestDistance < BestSrcSnapDistance) {
+			BestSrcSnapDistance = TestDistance;
+			BestSrcPos2D = FVector2D(0, -SrcHalfSize2D.Y);
+			BestDstPos = FVector(0, -DstBoxExtent.Y, DstBoxExtent.Z);
+		}
+
+		FVector BestSrcPos;
+		BestSrcPos.Z = BestSrcPos2D.Y;
+		BestSrcPos.X = bUseSrcXAxis ? BestSrcPos2D.X : 0;
+		BestSrcPos.Y = bUseSrcXAxis ? 0 : BestSrcPos2D.X;
+
+		if (bUseSrcXAxis && LocalCursorSnapPosition.Y < 0) {
+			BestDstPos.Y = -BestDstPos.Y;
+		}
+		else if (!bUseSrcXAxis && LocalCursorSnapPosition.X < 0) {
+			BestDstPos.Y = -BestDstPos.Y;
+		}
+
+		FVector TargetSrcSnapLocation = SrcWorldTransform.TransformPosition(BestSrcPos);
+		FVector TargetDstSnapLocation = DstWorldTransform.TransformPosition(BestDstPos);
+		FQuat DstRotation = Src->GetComponentRotation().Quaternion();
+
+		const bool bCanApplyBaseRotations = true;
 		if (bCanApplyBaseRotations) {
 			FVector UpVector = DstRotation.RotateVector(FVector::UpVector);
 			const FQuat BaseRotations[] = {
@@ -189,13 +310,13 @@ bool FPCSnapUtils::GetSnapPoint(UPrefabricatorConstructionSnapComponent* Src, UP
 			FQuat BaseRotation = BaseRotations[FMath::Abs(CursorRotationStep) % 3];
 			DstRotation = BaseRotation * DstRotation;
 		}
-		*/
 
 		TargetDstSnapLocation = DstRotation.RotateVector(TargetDstSnapLocation);
 		FVector DstOffset = TargetSrcSnapLocation - TargetDstSnapLocation;
 		OutTargetSnapTransform = FTransform(DstRotation, DstOffset);
 		return true;
 	}
+
 
 	return false;
 }

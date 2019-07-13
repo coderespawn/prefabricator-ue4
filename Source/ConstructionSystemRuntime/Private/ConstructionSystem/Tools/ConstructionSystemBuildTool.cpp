@@ -69,9 +69,9 @@ void UConstructionSystemBuildTool::Update(UConstructionSystemComponent* Construc
 		FRotator ViewRotation;
 		PlayerController->GetPlayerViewPoint(ViewLocation, ViewRotation);
 
-		FVector StartLocation = ViewLocation;
 		FVector CameraDirection = ViewRotation.RotateVector(FVector::ForwardVector);
-		FVector EndLocation = StartLocation + CameraDirection * TraceDistance;
+		FVector StartLocation = ViewLocation + CameraDirection * FConstructionSystemConstants::BuildToolSweepRadius;
+		FVector EndLocation = ViewLocation + CameraDirection * (TraceDistance + FConstructionSystemConstants::BuildToolSweepRadius);
 
 		FCollisionResponseParams ResponseParams = FCollisionResponseParams::DefaultResponseParam;
 		FCollisionQueryParams QueryParams = FCollisionQueryParams::DefaultQueryParam;
