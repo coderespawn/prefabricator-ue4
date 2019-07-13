@@ -241,6 +241,10 @@ bool FPCSnapUtils::GetSnapPoint(UPrefabricatorConstructionSnapComponent* Src, UP
 		BestLDstPos.X = bUseDstXAxis ? BestLDstPos2D.X : 0;
 		BestLDstPos.Y = bUseDstXAxis ? 0 : BestLDstPos2D.X;
 
+		if (LCur.Z < 0) {
+			BestLDstPos.Z = -BestLDstPos.Z;
+		}
+
 		FVector TargetSrcSnapLocation = SrcWorldTransform.TransformPosition(BestLSrcPos);
 		FVector TargetDstSnapLocation = DstWorldTransform.TransformPosition(BestLDstPos);
 		FQuat DstRotation = BestLDstRot * Src->GetComponentRotation().Quaternion();
