@@ -256,8 +256,14 @@ void FPrefabTools::SaveStateToPrefabAsset(APrefabActor* PrefabActor)
 }
 
 namespace {
-	void GetPropertyData(UProperty* Property, UObject* Obj, FString& OutPropertyData) {
-		Property->ExportTextItem(OutPropertyData, Property->ContainerPtrToValuePtr<void>(Obj), nullptr, Obj, PPF_None);
+	bool GetPropertyData(const UProperty* Property, UObject* Obj, FString& OutPropertyData) {
+		if (!Obj || !Property) return false;
+		UClass* ObjClass = Obj->GetClass();
+		if (!ObjClass) return false;
+		UObject* CDO = ObjClass->GetDefaultObject();
+		if (!CDO) return false;
+		Property->ExportTextItem(OutPropertyData, Property->ContainerPtrToValuePtr<void>(Obj), Property->ContainerPtrToValuePtr<void>(CDO), Obj, PPF_Copy);
+		return true;
 	}
 
 	bool ContainsOuterParent(UObject* ObjectToTest, UObject* Outer) {
@@ -363,7 +369,7 @@ namespace {
 
 			PrefabProperty = NewObject<UPrefabricatorProperty>(PrefabAsset);
 			PrefabProperty->PropertyName = PropertyName;
-			PropertyPathHelpers::GetPropertyValueAsString(ObjToSerialize, PropertyName, PrefabProperty->ExportedValue);
+			GetPropertyData(Property, ObjToSerialize, PrefabProperty->ExportedValue);
 			PrefabProperty->SaveReferencedAssetValues();
 			OutProperties.Add(PrefabProperty);
 		}
