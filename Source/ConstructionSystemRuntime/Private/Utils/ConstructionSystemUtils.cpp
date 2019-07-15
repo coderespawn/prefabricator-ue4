@@ -69,33 +69,47 @@ bool FPCSnapUtils::GetSnapPoint(UPrefabricatorConstructionSnapComponent* Src, UP
 		// Top
 		FVector2D BestSrcPos2D = FVector2D(0, SrcHalfSize2D.Y);
 		float BestSrcSnapDistance = FMath::Abs(Cursor2D.Y - SrcHalfSize2D.Y);
-
 		FVector2D BestDstPos2D = FVector2D(0, -DstHalfSize2D.Y);
 
+		bool bFoundBest = Src->WallConstraint.AttachTop && Dst->WallConstraint.AttachBottom;
+
 		// Bottom
-		float TestDistance = FMath::Abs(Cursor2D.Y + SrcHalfSize2D.Y);
-		if (TestDistance < BestSrcSnapDistance) {
-			BestSrcSnapDistance = TestDistance;
-			BestSrcPos2D = FVector2D(0, -SrcHalfSize2D.Y);
-			BestDstPos2D = FVector2D(0, DstHalfSize2D.Y);
+		if (Src->WallConstraint.AttachBottom && Dst->WallConstraint.AttachTop) {
+			float TestDistance = FMath::Abs(Cursor2D.Y + SrcHalfSize2D.Y);
+			if (!bFoundBest || TestDistance < BestSrcSnapDistance) {
+				BestSrcSnapDistance = TestDistance;
+				BestSrcPos2D = FVector2D(0, -SrcHalfSize2D.Y);
+				BestDstPos2D = FVector2D(0, DstHalfSize2D.Y);
+				bFoundBest = true;
+			}
 		}
 
 		// Right
-		TestDistance = FMath::Abs(Cursor2D.X - SrcHalfSize2D.X);
-		if (TestDistance < BestSrcSnapDistance) {
-			BestSrcSnapDistance = TestDistance;
-			BestSrcPos2D = FVector2D(SrcHalfSize2D.X, -SrcHalfSize2D.Y);
-			BestDstPos2D = FVector2D(-DstHalfSize2D.X, -DstHalfSize2D.Y);
-			bCanApplyBaseRotations = true;
+		if (Src->WallConstraint.AttachRight && Dst->WallConstraint.AttachLeft) {
+			float TestDistance = FMath::Abs(Cursor2D.X - SrcHalfSize2D.X);
+			if (!bFoundBest || TestDistance < BestSrcSnapDistance) {
+				BestSrcSnapDistance = TestDistance;
+				BestSrcPos2D = FVector2D(SrcHalfSize2D.X, -SrcHalfSize2D.Y);
+				BestDstPos2D = FVector2D(-DstHalfSize2D.X, -DstHalfSize2D.Y);
+				bCanApplyBaseRotations = true;
+				bFoundBest = true;
+			}
 		}
 
 		// Left
-		TestDistance = FMath::Abs(Cursor2D.X + SrcHalfSize2D.X);
-		if (TestDistance < BestSrcSnapDistance) {
-			BestSrcSnapDistance = TestDistance;
-			BestSrcPos2D = FVector2D(-SrcHalfSize2D.X, -SrcHalfSize2D.Y);
-			BestDstPos2D = FVector2D(DstHalfSize2D.X, -DstHalfSize2D.Y);
-			bCanApplyBaseRotations = true;
+		if (Src->WallConstraint.AttachLeft && Dst->WallConstraint.AttachRight) {
+			float TestDistance = FMath::Abs(Cursor2D.X + SrcHalfSize2D.X);
+			if (!bFoundBest || TestDistance < BestSrcSnapDistance) {
+				BestSrcSnapDistance = TestDistance;
+				BestSrcPos2D = FVector2D(-SrcHalfSize2D.X, -SrcHalfSize2D.Y);
+				BestDstPos2D = FVector2D(DstHalfSize2D.X, -DstHalfSize2D.Y);
+				bCanApplyBaseRotations = true;
+				bFoundBest = true;
+			}
+		}
+
+		if (!bFoundBest) {
+			return false;
 		}
 
 		FVector BestLocalSrcSnapLocation;

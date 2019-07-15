@@ -84,22 +84,24 @@ FPrimitiveSceneProxy* UPrefabricatorConstructionSnapComponent::CreateSceneProxy(
 								bZN = FloorConstraint.AttachZNegative;
 							}
 							else if (SnapType == EPrefabricatorConstructionSnapType::Wall) {
-								bool bUseXAxis = AxisX.Size() > AxisY.Size();
+								FVector VX = LocalToWorld.TransformVector(FVector(BoxExtents.X, 0, 0));
+								FVector VY = LocalToWorld.TransformVector(FVector(0, BoxExtents.Y, 0));
+								bool bUseXAxis = VX.Size() > VY.Size();
 
 								bZP = WallConstraint.AttachTop;
 								bZN = WallConstraint.AttachBottom;
 
 								if (bUseXAxis) {
-									bYP = WallConstraint.AttachRight;
-									bYN = WallConstraint.AttachLeft;
-									bXP = false;
-									bXN = false;
-								}
-								else {
 									bXP = WallConstraint.AttachRight;
 									bXN = WallConstraint.AttachLeft;
 									bYP = false;
 									bYN = false;
+								}
+								else {
+									bYP = WallConstraint.AttachRight;
+									bYN = WallConstraint.AttachLeft;
+									bXP = false;
+									bXN = false;
 								}
 							}
 
