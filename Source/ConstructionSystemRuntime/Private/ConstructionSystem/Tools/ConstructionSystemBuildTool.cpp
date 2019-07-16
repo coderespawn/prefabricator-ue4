@@ -289,7 +289,10 @@ void UConstructionSystemBuildTool::ConstructAtCursor()
 			return;
 		}
 		*/
-
+		if (Cursor->GetVisiblity() != EConstructionSystemCursorVisiblity::Visible) {
+			// Current cursor location is invalid
+			return;
+		}
 		if (World && ActivePrefabAsset) {
 			FTransform Transform;
 			if (Cursor->GetCursorTransform(Transform)) {

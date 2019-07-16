@@ -12,6 +12,7 @@
 #include "PrefabActor.h"
 #include "DrawDebugHelpers.h"
 #include "PrefabTools.h"
+#include "ConstructionSystemSnap.h"
 
 
 void UConstructionSystemRemoveTool::InitializeTool(UConstructionSystemComponent* ConstructionComponent)
@@ -77,17 +78,20 @@ void UConstructionSystemRemoveTool::Update(UConstructionSystemComponent* Constru
 		FCollisionQueryParams QueryParams = FCollisionQueryParams::DefaultQueryParam;
 		FHitResult Hit;
 		if (World->LineTraceSingleByChannel(Hit, StartLocation, EndLocation, PrefabSnapChannel, QueryParams, ResponseParams)) {
-			// find the prefab actor
-			AActor* CurrentActor = Hit.GetActor();
-			while (APrefabActor* ParentPrefab = Cast<APrefabActor>(CurrentActor->GetAttachParentActor())) {
-				FocusedActor = ParentPrefab;
-				CurrentActor = ParentPrefab;
-				bCursorFoundHit = true;
+			UPrefabricatorConstructionSnapComponent* SnapComponent = Cast<UPrefabricatorConstructionSnapComponent>(Hit.GetComponent());
+			if (SnapComponent) {
+				// find the prefab actor
+				AActor* CurrentActor = Hit.GetActor();
+				while (APrefabActor* ParentPrefab = Cast<APrefabActor>(CurrentActor->GetAttachParentActor())) {
+					FocusedActor = ParentPrefab;
+					CurrentActor = ParentPrefab;
+					bCursorFoundHit = true;
 
+				}
+				DrawDebugPoint(World, Hit.ImpactPoint, 20, FColor::Blue);
+				FBox Bounds = FPrefabTools::GetPrefabBounds(FocusedActor.Get());
+				DrawDebugBox(World, Bounds.GetCenter(), Bounds.GetExtent(), FColor::Red);
 			}
-			DrawDebugPoint(World, Hit.ImpactPoint, 20, FColor::Blue);
-			FBox Bounds = FPrefabTools::GetPrefabBounds(FocusedActor.Get());
-			DrawDebugBox(World, Bounds.GetCenter(), Bounds.GetExtent(), FColor::Red);
 		}
 	}
 

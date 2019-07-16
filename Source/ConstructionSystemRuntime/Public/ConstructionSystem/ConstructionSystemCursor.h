@@ -24,6 +24,8 @@ public:
 	void RecreateCursor(UWorld* InWorld, UPrefabricatorAssetInterface* InActivePrefabAsset);
 	void DestroyCursor();
 	void SetVisiblity(EConstructionSystemCursorVisiblity InVisiblity, bool bForce = false);
+	EConstructionSystemCursorVisiblity GetVisiblity() const { return Visiblity;	}
+
 	APrefabActor* GetCursorGhostActor() const { return CursorGhostActor; }
 	void SetTransform(const FTransform& InTransform);
 	bool GetCursorTransform(FTransform& OutTransform) const;
