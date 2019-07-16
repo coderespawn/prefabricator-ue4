@@ -149,34 +149,47 @@ void UConstructionSystemBuildTool::Update(UConstructionSystemComponent* Construc
 					for (const FOverlapResult& Overlap : Overlaps) {
 						if (UPrefabricatorConstructionSnapComponent* OverlapSnap = Cast<UPrefabricatorConstructionSnapComponent>(Overlap.GetComponent())) {
 							if (ActiveCursorSnap->SnapType == EPrefabricatorConstructionSnapType::Wall && OverlapSnap->SnapType == EPrefabricatorConstructionSnapType::Wall) {
-								// Check if the walls are placed on the same plane
-								FVector CursorZ = ActiveCursorSnap->GetComponentTransform().GetUnitAxis(EAxis::Z);
-								FVector TestZ = OverlapSnap->GetComponentTransform().GetUnitAxis(EAxis::Z);
-								if (CursorZ.Equals(TestZ)) {
-									// The walls are on the same plane.  Check if the lines intersect
-									FPlane TestPlane;
-									{
-										FTransform TestTransform = OverlapSnap->GetComponentTransform();
-										FVector TestBounds = OverlapSnap->GetScaledBoxExtent();
-										FVector LTestPlaneOrigin = FVector::ZeroVector;
-										FVector LTestPlaneNormal = (TestBounds.X > TestBounds.Y) ? FVector(0, 1, 0) : FVector(1, 0, 0);
+								FTransform TestTransform = OverlapSnap->GetComponentTransform();
+								FTransform CursorTransform = ActiveCursorSnap->GetComponentTransform();
+								FVector TestBounds = OverlapSnap->GetScaledBoxExtent();
 
-										FVector TestPlaneOrigin = TestTransform.TransformPosition(LTestPlaneOrigin);
-										FVector TestPlaneNormal = TestTransform.TransformVector(LTestPlaneNormal);
-										TestPlaneNormal.Normalize();
-										TestPlane = FPlane(TestPlaneOrigin, TestPlaneNormal);
+								// Check if they are parallel
+								bool bParallel = false;
+								{
+									FVector SideAxisA = TestTransform.GetUnitAxis((TestBounds.X > TestBounds.Y) ? EAxis::X : EAxis::Y);
+									FVector SideAxisB = CursorTransform.GetUnitAxis((BoxExtent.X > BoxExtent.Y) ? EAxis::X : EAxis::Y);
+									if (SideAxisA.Equals(SideAxisB)) {
+										bParallel = true;
 									}
+								}
 
-									float CHalfSize = FMath::Max(BoxExtent.X, BoxExtent.Y);
-									FTransform CursorTransform = ActiveCursorSnap->GetComponentTransform();
-									FVector RayOrigin = CursorTransform.TransformPosition(FVector::ZeroVector);
-									FVector LRayDir = (BoxExtent.X > BoxExtent.Y) ? FVector(1, 0, 0) : FVector(0, 1, 0);
-									FVector RayDir = CursorTransform.TransformVector(LRayDir);
-									RayDir.Normalize();
-									FVector PointOfIntersection = FMath::RayPlaneIntersection(RayOrigin, RayDir, TestPlane);
-									float DistanceToIntersection = (RayOrigin - PointOfIntersection).Size();
-									if (DistanceToIntersection >= CHalfSize - 1) {
-										continue;
+								if (!bParallel) {
+									// Check if the walls are placed on the same plane
+									FVector CursorZ = ActiveCursorSnap->GetComponentTransform().GetUnitAxis(EAxis::Z);
+									FVector TestZ = OverlapSnap->GetComponentTransform().GetUnitAxis(EAxis::Z);
+									if (CursorZ.Equals(TestZ)) {
+										// The walls are on the same plane.  Check if the lines intersect
+										FPlane TestPlane;
+										{
+											FVector LTestPlaneOrigin = FVector::ZeroVector;
+											FVector LTestPlaneNormal = (TestBounds.X > TestBounds.Y) ? FVector(0, 1, 0) : FVector(1, 0, 0);
+
+											FVector TestPlaneOrigin = TestTransform.TransformPosition(LTestPlaneOrigin);
+											FVector TestPlaneNormal = TestTransform.TransformVector(LTestPlaneNormal);
+											TestPlaneNormal.Normalize();
+											TestPlane = FPlane(TestPlaneOrigin, TestPlaneNormal);
+										}
+
+										float CHalfSize = FMath::Max(BoxExtent.X, BoxExtent.Y);
+										FVector RayOrigin = CursorTransform.TransformPosition(FVector::ZeroVector);
+										FVector LRayDir = (BoxExtent.X > BoxExtent.Y) ? FVector(1, 0, 0) : FVector(0, 1, 0);
+										FVector RayDir = CursorTransform.TransformVector(LRayDir);
+										RayDir.Normalize();
+										FVector PointOfIntersection = FMath::RayPlaneIntersection(RayOrigin, RayDir, TestPlane);
+										float DistanceToIntersection = (RayOrigin - PointOfIntersection).Size();
+										if (DistanceToIntersection >= CHalfSize - 1) {
+											continue;
+										}
 									}
 								}
 							}
