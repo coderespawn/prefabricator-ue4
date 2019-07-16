@@ -48,6 +48,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cursor")
 	UMaterialInterface* CursorMaterial;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cursor")
+	UMaterialInterface* CursorInvalidMaterial;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
 	AActor* ConstructionCameraActor;
 

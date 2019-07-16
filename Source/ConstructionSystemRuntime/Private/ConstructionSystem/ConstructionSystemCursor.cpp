@@ -25,20 +25,33 @@ void UConstructionSystemCursor::RecreateCursor(UWorld* InWorld, UPrefabricatorAs
 		FPrefabTools::IterateChildrenRecursive(CursorGhostActor, [this](AActor* ChildActor) {
 			for (UActorComponent* Component : ChildActor->GetComponents()) {
 				if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component)) {
-					// Disable collision
-					Primitive->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
-					// Set cursor material
-					if (CursorMaterial) {
-						int32 NumMaterials = Primitive->GetNumMaterials();
-						for (int ElementIndex = 0; ElementIndex < NumMaterials; ElementIndex++) {
-							Primitive->SetMaterial(ElementIndex, CursorMaterial);
-						}
+					if (!Primitive->IsA<UPrefabricatorConstructionSnapComponent>()) {
+						// Disable collision
+						Primitive->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 					}
 				}
 
 				if (UPrefabricatorConstructionSnapComponent* SnapComponent = Cast<UPrefabricatorConstructionSnapComponent>(Component)) {
 					SnapComponents.Add(SnapComponent);
+				}
+			}
+		});
+	}
+
+	SetVisiblity(EConstructionSystemCursorVisiblity::Hidden, true);
+}
+
+void UConstructionSystemCursor::AssignMaterialRecursive(UMaterialInterface* InMaterial) const
+{
+	if (CursorGhostActor && InMaterial) {
+		FPrefabTools::IterateChildrenRecursive(CursorGhostActor, [this, InMaterial](AActor* ChildActor) {
+			for (UActorComponent* Component : ChildActor->GetComponents()) {
+				if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component)) {
+					// Set cursor material
+					int32 NumMaterials = Primitive->GetNumMaterials();
+					for (int ElementIndex = 0; ElementIndex < NumMaterials; ElementIndex++) {
+						Primitive->SetMaterial(ElementIndex, InMaterial);
+					}
 				}
 			}
 		});
@@ -55,12 +68,22 @@ void UConstructionSystemCursor::DestroyCursor()
 	}
 }
 
-void UConstructionSystemCursor::SetVisiblity(bool bVisible)
+void UConstructionSystemCursor::SetVisiblity(EConstructionSystemCursorVisiblity InVisiblity, bool bForce)
 {
+	if (!bForce && Visiblity == InVisiblity) {
+		return;
+	}
+	Visiblity = InVisiblity;
+
 	if (CursorGhostActor) {
-		FPrefabTools::IterateChildrenRecursive(CursorGhostActor, [bVisible](AActor* ChildActor) {
-			ChildActor->SetActorHiddenInGame(!bVisible);
+		FPrefabTools::IterateChildrenRecursive(CursorGhostActor, [this, InVisiblity](AActor* ChildActor) {
+			ChildActor->SetActorHiddenInGame(InVisiblity == EConstructionSystemCursorVisiblity::Hidden);
 		});
+		if (Visiblity != EConstructionSystemCursorVisiblity::Hidden) {
+			// Update the material
+			UMaterialInterface* Material = (Visiblity == EConstructionSystemCursorVisiblity::VisibleInvalid) ? CursorInvalidMaterial : CursorMaterial;
+			AssignMaterialRecursive(Material);
+		}
 	}
 }
 

@@ -3,5 +3,5 @@
 #include "ConstructionSystemDefs.h"
 
 const FName FConstructionSystemConstants::PrefabSnapChannelName = FName("PrefabSnapChannel");
-const float FConstructionSystemConstants::BuildToolSweepRadius = 20;
+const float FConstructionSystemConstants::BuildToolSweepRadius = 60;
 

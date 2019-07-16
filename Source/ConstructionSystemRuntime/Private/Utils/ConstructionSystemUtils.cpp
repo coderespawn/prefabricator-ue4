@@ -21,6 +21,17 @@ ECollisionChannel FConstructionSystemUtils::FindPrefabSnapChannel()
 	return ECollisionChannel::ECC_WorldStatic;
 }
 
+APrefabActor* FConstructionSystemUtils::FindTopMostPrefabActor(UPrefabricatorConstructionSnapComponent* SnapComponent)
+{
+	AActor* Owner = SnapComponent->GetOwner();
+	APrefabActor* TopmostPrefab = nullptr;
+	while (APrefabActor* PrefabActor = Cast<APrefabActor>(Owner->GetAttachParentActor())) {
+		TopmostPrefab = PrefabActor;
+		Owner = PrefabActor;
+	}
+	return TopmostPrefab;
+}
+
 bool FPCSnapUtils::GetSnapPoint(UPrefabricatorConstructionSnapComponent* Src, UPrefabricatorConstructionSnapComponent* Dst, 
 		const FVector& InRequestedSnapLocation, FTransform& OutTargetSnapTransform, int32 CursorRotationStep, float InSnapTolerrance)
 {
@@ -29,12 +40,7 @@ bool FPCSnapUtils::GetSnapPoint(UPrefabricatorConstructionSnapComponent* Src, UP
 
 	FTransform DstWorldTransform = Dst->GetComponentTransform();
 	{
-		AActor* Owner = Dst->GetOwner();
-		APrefabActor* TopmostPrefab = nullptr;
-		while (APrefabActor* PrefabActor = Cast<APrefabActor>(Owner->GetAttachParentActor())) {
-			TopmostPrefab = PrefabActor;
-			Owner = PrefabActor;
-		}
+		APrefabActor* TopmostPrefab = FConstructionSystemUtils::FindTopMostPrefabActor(Dst);
 		if (TopmostPrefab) {
 			DstWorldTransform = DstWorldTransform * TopmostPrefab->GetActorTransform().Inverse();
 		}

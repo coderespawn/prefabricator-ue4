@@ -9,6 +9,13 @@ class UPrefabricatorAssetInterface;
 class UMaterialInterface;
 class UPrefabricatorConstructionSnapComponent;
 
+UENUM()
+enum class EConstructionSystemCursorVisiblity : uint8 {
+	Visible,
+	VisibleInvalid,
+	Hidden
+};
+
 UCLASS()
 class CONSTRUCTIONSYSTEMRUNTIME_API UConstructionSystemCursor : public UObject {
 	GENERATED_BODY()
@@ -16,7 +23,7 @@ class CONSTRUCTIONSYSTEMRUNTIME_API UConstructionSystemCursor : public UObject {
 public:
 	void RecreateCursor(UWorld* InWorld, UPrefabricatorAssetInterface* InActivePrefabAsset);
 	void DestroyCursor();
-	void SetVisiblity(bool bVisible);
+	void SetVisiblity(EConstructionSystemCursorVisiblity InVisiblity, bool bForce = false);
 	APrefabActor* GetCursorGhostActor() const { return CursorGhostActor; }
 	void SetTransform(const FTransform& InTransform);
 	bool GetCursorTransform(FTransform& OutTransform) const;
@@ -24,12 +31,17 @@ public:
 	FORCEINLINE void IncrementSeed() { ++CursorSeed;  }
 	FORCEINLINE void DecrementSeed() { --CursorSeed; }
 	FORCEINLINE int32 GetCursorSeed() const { return CursorSeed; }
+
 	FORCEINLINE void SetCursorMaterial(UMaterialInterface* InCursorMaterial) { CursorMaterial = InCursorMaterial; }
+	FORCEINLINE void SetCursorInvalidMaterial(UMaterialInterface* InCursorInvalidMaterial) { CursorInvalidMaterial = InCursorInvalidMaterial; }
 
 	void MoveToNextSnapComponent();
 	void MoveToPrevSnapComponent();
 
 	UPrefabricatorConstructionSnapComponent* GetActiveSnapComponent();
+
+private:
+	void AssignMaterialRecursive(UMaterialInterface* Material) const;
 
 private:
 	UPROPERTY(Transient)
@@ -42,8 +54,13 @@ private:
 	UMaterialInterface* CursorMaterial;
 
 	UPROPERTY(Transient)
+	UMaterialInterface* CursorInvalidMaterial;
+
+	UPROPERTY(Transient)
 	TArray<UPrefabricatorConstructionSnapComponent*> SnapComponents;
 
 	UPROPERTY(Transient)
 	int32 ActiveSnapComponentIndex = 0;
+
+	EConstructionSystemCursorVisiblity Visiblity = EConstructionSystemCursorVisiblity::Visible;
 };

@@ -24,6 +24,7 @@ void UConstructionSystemBuildTool::InitializeTool(UConstructionSystemComponent* 
 	
 	Cursor = NewObject<UConstructionSystemCursor>(this, "Cursor");
 	Cursor->SetCursorMaterial(ConstructionComponent->CursorMaterial);
+	Cursor->SetCursorInvalidMaterial(ConstructionComponent->CursorInvalidMaterial);
 
 	PrefabSnapChannel = FConstructionSystemUtils::FindPrefabSnapChannel();
 }
@@ -40,7 +41,7 @@ void UConstructionSystemBuildTool::OnToolEnable(UConstructionSystemComponent* Co
 {
 	UConstructionSystemTool::OnToolEnable(ConstructionComponent);
 	if (Cursor) {
-		Cursor->SetVisiblity(true);
+		Cursor->SetVisiblity(EConstructionSystemCursorVisiblity::Visible);
 	}
 }
 
@@ -49,7 +50,7 @@ void UConstructionSystemBuildTool::OnToolDisable(UConstructionSystemComponent* C
 	UConstructionSystemTool::OnToolDisable(ConstructionComponent);
 
 	if (Cursor) {
-		Cursor->SetVisiblity(false);
+		Cursor->SetVisiblity(EConstructionSystemCursorVisiblity::Hidden);
 	}
 }
 
@@ -129,8 +130,70 @@ void UConstructionSystemBuildTool::Update(UConstructionSystemComponent* Construc
 			DrawDebugPoint(World, Hit.ImpactPoint, 20, bHitSnapChannel ? FColor::Green : FColor::Red);
 		}
 
-		Cursor->SetVisiblity(bCursorFoundHit);
+		EConstructionSystemCursorVisiblity CursorVisiblity = EConstructionSystemCursorVisiblity::Visible;
+		if (bCursorFoundHit) {
 
+			UPrefabricatorConstructionSnapComponent* ActiveCursorSnap = Cursor->GetActiveSnapComponent();
+			if (ActiveCursorSnap) {
+				FVector BoxLocation = ActiveCursorSnap->GetComponentLocation();
+				FRotator BoxRotation = ActiveCursorSnap->GetComponentRotation();
+				FVector BoxExtent = ActiveCursorSnap->GetScaledBoxExtent();
+				{
+					FBox Box(-BoxExtent, BoxExtent);
+					Box = Box.ExpandBy(-2);
+					BoxExtent = Box.GetExtent();
+				}
+
+				TArray<FOverlapResult> Overlaps;
+				if (World->OverlapMultiByChannel(Overlaps, BoxLocation, BoxRotation.Quaternion(), PrefabSnapChannel, FCollisionShape::MakeBox(BoxExtent), QueryParams)) {
+					for (const FOverlapResult& Overlap : Overlaps) {
+						if (UPrefabricatorConstructionSnapComponent* OverlapSnap = Cast<UPrefabricatorConstructionSnapComponent>(Overlap.GetComponent())) {
+							if (ActiveCursorSnap->SnapType == EPrefabricatorConstructionSnapType::Wall && OverlapSnap->SnapType == EPrefabricatorConstructionSnapType::Wall) {
+								// Check if the walls are placed on the same plane
+								FVector CursorZ = ActiveCursorSnap->GetComponentTransform().GetUnitAxis(EAxis::Z);
+								FVector TestZ = OverlapSnap->GetComponentTransform().GetUnitAxis(EAxis::Z);
+								if (CursorZ.Equals(TestZ)) {
+									// The walls are on the same plane.  Check if the lines intersect
+									FPlane TestPlane;
+									{
+										FTransform TestTransform = OverlapSnap->GetComponentTransform();
+										FVector TestBounds = OverlapSnap->GetScaledBoxExtent();
+										FVector LTestPlaneOrigin = FVector::ZeroVector;
+										FVector LTestPlaneNormal = (TestBounds.X > TestBounds.Y) ? FVector(0, 1, 0) : FVector(1, 0, 0);
+
+										FVector TestPlaneOrigin = TestTransform.TransformPosition(LTestPlaneOrigin);
+										FVector TestPlaneNormal = TestTransform.TransformVector(LTestPlaneNormal);
+										TestPlaneNormal.Normalize();
+										TestPlane = FPlane(TestPlaneOrigin, TestPlaneNormal);
+									}
+
+									float CHalfSize = FMath::Max(BoxExtent.X, BoxExtent.Y);
+									FTransform CursorTransform = ActiveCursorSnap->GetComponentTransform();
+									FVector RayOrigin = CursorTransform.TransformPosition(FVector::ZeroVector);
+									FVector LRayDir = (BoxExtent.X > BoxExtent.Y) ? FVector(1, 0, 0) : FVector(0, 1, 0);
+									FVector RayDir = CursorTransform.TransformVector(LRayDir);
+									RayDir.Normalize();
+									FVector PointOfIntersection = FMath::RayPlaneIntersection(RayOrigin, RayDir, TestPlane);
+									float DistanceToIntersection = (RayOrigin - PointOfIntersection).Size();
+									if (DistanceToIntersection >= CHalfSize - 1) {
+										continue;
+									}
+								}
+							}
+
+							CursorVisiblity = EConstructionSystemCursorVisiblity::VisibleInvalid;
+							break;
+						}
+					}
+				}
+				//DrawDebugBox(World, BoxLocation, BoxExtent, BoxRotation.Quaternion(), FColor::Red);
+			}
+		}
+		else {
+			CursorVisiblity = EConstructionSystemCursorVisiblity::Hidden;
+		}
+
+		Cursor->SetVisiblity(CursorVisiblity);
 	}
 }
 

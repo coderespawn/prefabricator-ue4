@@ -20,6 +20,7 @@ void UConstructionSystemRemoveTool::InitializeTool(UConstructionSystemComponent*
 
 	Cursor = NewObject<UConstructionSystemCursor>(this, "Cursor");
 	Cursor->SetCursorMaterial(ConstructionComponent->CursorMaterial);
+	Cursor->SetCursorInvalidMaterial(ConstructionComponent->CursorInvalidMaterial);
 
 	PrefabSnapChannel = FConstructionSystemUtils::FindPrefabSnapChannel();
 }
@@ -36,7 +37,7 @@ void UConstructionSystemRemoveTool::OnToolEnable(UConstructionSystemComponent* C
 {
 	UConstructionSystemTool::OnToolEnable(ConstructionComponent);
 	if (Cursor) {
-		Cursor->SetVisiblity(true);
+		Cursor->SetVisiblity(EConstructionSystemCursorVisiblity::Visible);
 	}
 }
 
@@ -45,7 +46,7 @@ void UConstructionSystemRemoveTool::OnToolDisable(UConstructionSystemComponent* 
 	UConstructionSystemTool::OnToolDisable(ConstructionComponent);
 
 	if (Cursor) {
-		Cursor->SetVisiblity(false);
+		Cursor->SetVisiblity(EConstructionSystemCursorVisiblity::Hidden);
 	}
 }
 
