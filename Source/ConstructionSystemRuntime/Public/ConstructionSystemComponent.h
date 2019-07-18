@@ -10,6 +10,7 @@ class APrefabActor;
 class UConstructionSystemCursor;
 class UConstructionSystemTool;
 class UMaterialInterface;
+class UConstructionSystemUIAsset;
 
 UCLASS(BlueprintType, meta = (BlueprintSpawnableComponent))
 class CONSTRUCTIONSYSTEMRUNTIME_API UConstructionSystemComponent : public UActorComponent {
@@ -34,6 +35,7 @@ private:
 	void HandleUpdate();
 	void BindInput();
 
+	void ToggleBuildUI();
 	void EnableConstructionSystem();
 	void DisableConstructionSystem();
 	void CreateTool(TSubclassOf<UConstructionSystemTool> InToolClass);
@@ -43,6 +45,10 @@ private:
 
 	UFUNCTION()
 	void CreateTool_Remove();
+
+	void CreateBuildMenu();
+	void ShowBuildMenu();
+	void HideBuildMenu();
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cursor")
@@ -59,6 +65,15 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
 	float ConstructionCameraTransitionExp = 1.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
+	TSubclassOf<UUserWidget> BuildMenuUI;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
+	UConstructionSystemUIAsset* BuildMenuData;
+
+	UPROPERTY(Transient)
+	UUserWidget* BuildMenuUIInstance;
 
 	UPROPERTY(Transient, Replicated, BlueprintReadOnly, Category = "ConstructionSystem")
 	UConstructionSystemTool* ActiveTool;

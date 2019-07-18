@@ -9,7 +9,10 @@
 #include "Engine/ActorChannel.h"
 #include "UnrealNetwork.h"
 #include "ConstructionSystemRemoveTool.h"
+#include "UserWidget.h"
+#include "ConstructionSystemUI.h"
 
+DEFINE_LOG_CATEGORY_STATIC(LogConstructionSystem, Log, All);
 
 UConstructionSystemComponent::UConstructionSystemComponent()
 {
@@ -30,6 +33,8 @@ void UConstructionSystemComponent::TickComponent(float DeltaTime, enum ELevelTic
 	APawn* Owner = Cast<APawn>(GetOwner());
 	if (!bInputBound && Owner->InputEnabled()) {
 		BindInput();
+		CreateBuildMenu();
+		bInputBound = true;
 	}
 }
 
@@ -145,14 +150,67 @@ void UConstructionSystemComponent::HandleUpdate()
 
 void UConstructionSystemComponent::BindInput()
 {
-	if (!bInputBound) {
-		APawn* Pawn = Cast<APawn>(GetOwner());
-		if (Pawn && Pawn->InputComponent) {
-			UInputComponent* Input = Pawn->InputComponent;
-			Input->BindAction("CSModeToggle", IE_Pressed, this, &UConstructionSystemComponent::ToggleConstructionSystem);
-			Input->BindAction("CSModeToolBuild", IE_Pressed, this, &UConstructionSystemComponent::CreateTool_Build);
-			Input->BindAction("CSModeToolRemove", IE_Pressed, this, &UConstructionSystemComponent::CreateTool_Remove);
-			bInputBound = true;
+	APawn* Pawn = Cast<APawn>(GetOwner());
+	if (Pawn && Pawn->InputComponent) {
+		UInputComponent* Input = Pawn->InputComponent;
+		Input->BindAction("CSModeToggle", IE_Pressed, this, &UConstructionSystemComponent::ToggleConstructionSystem);
+		Input->BindAction("CSModeToolBuild", IE_Pressed, this, &UConstructionSystemComponent::CreateTool_Build);
+		Input->BindAction("CSModeToolRemove", IE_Pressed, this, &UConstructionSystemComponent::CreateTool_Remove);
+		Input->BindAction("CSToggleBuildUI", IE_Pressed, this, &UConstructionSystemComponent::ToggleBuildUI);
+	}
+}
+
+void UConstructionSystemComponent::CreateBuildMenu()
+{
+	if (BuildMenuUI) {
+		APlayerController* PlayerController = GetPlayerController();
+		if (PlayerController) {
+			BuildMenuUIInstance = CreateWidget(PlayerController, BuildMenuUI);
+			if (BuildMenuUIInstance) {
+				bool bImplementsInterface = BuildMenuUI->ImplementsInterface(UConstructionSystemBuildUI::StaticClass());
+				if (!bImplementsInterface) {
+					UE_LOG(LogConstructionSystem, Error, TEXT("Build Menu UI does not implement the interface ConstructionSystemBuildUI"));
+				}
+				IConstructionSystemBuildUI::Execute_SetConstructionSystem(BuildMenuUIInstance, this);
+				IConstructionSystemBuildUI::Execute_SetUIAsset(BuildMenuUIInstance, BuildMenuData);
+			}
+		}
+	}
+}
+
+void UConstructionSystemComponent::ShowBuildMenu()
+{
+	if (BuildMenuUIInstance) {
+		BuildMenuUIInstance->AddToViewport();
+		APlayerController* PlayerController = GetPlayerController();
+		if (PlayerController) {
+			PlayerController->SetInputMode(FInputModeUIOnly());
+			PlayerController->bShowMouseCursor = true;
+		}
+	}
+}
+
+void UConstructionSystemComponent::HideBuildMenu()
+{
+	if (BuildMenuUIInstance) {
+		BuildMenuUIInstance->RemoveFromParent();
+		APlayerController* PlayerController = GetPlayerController();
+		if (PlayerController) {
+			PlayerController->SetInputMode(FInputModeGameOnly());
+			PlayerController->bShowMouseCursor = false;
+		}
+	}
+}
+
+void UConstructionSystemComponent::ToggleBuildUI()
+{
+
+	if (BuildMenuUIInstance) {
+		if (BuildMenuUIInstance->IsInViewport()) {
+			HideBuildMenu();
+		}
+		else {
+			ShowBuildMenu();
 		}
 	}
 }

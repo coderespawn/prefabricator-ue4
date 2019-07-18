@@ -18,8 +18,9 @@ namespace UnrealBuildTool.Rules
 				new string[]
 				{
 					"Core",
-					"CoreUObject",
-				    "Engine",
+                    "CoreUObject",
+                    "UMG",
+                    "Engine",
 					// ... add other public dependencies that you statically link with here ...
 				}
 				);
