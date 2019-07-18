@@ -19,8 +19,64 @@ UConstructionSystemComponent::UConstructionSystemComponent()
 	PrimaryComponentTick.bCanEverTick = true;
 	PrimaryComponentTick.bStartWithTickEnabled = true;
 	bReplicates = true;
+	bConstructionSystemEnabled = false;
 }
 
+void UConstructionSystemComponent::BeginPlay()
+{
+	Super::BeginPlay();
+
+	bInputBound = false;
+	CreateTools();
+}
+
+void UConstructionSystemComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+
+	DestroyTools();
+}
+
+void UConstructionSystemComponent::SetActiveTool(EConstructionSystemToolType InToolType)
+{
+	UConstructionSystemTool* OldTool = nullptr;
+	UConstructionSystemTool* NewTool = nullptr;
+	{
+		EConstructionSystemToolType OldToolType = ActiveToolType;
+		EConstructionSystemToolType NewToolType = InToolType;
+
+		UConstructionSystemTool** OldToolPtr = Tools.Find(OldToolType);
+		UConstructionSystemTool** NewToolPtr = Tools.Find(NewToolType);
+
+		OldTool = OldToolPtr ? *OldToolPtr : nullptr;
+		NewTool = NewToolPtr ? *NewToolPtr : nullptr;
+	}
+	ActiveToolType = InToolType;
+	if (!NewTool) {
+		UE_LOG(LogConstructionSystem, Error, TEXT("Unsupported tool type. Cannot set active tool"));
+	}
+
+	if (bConstructionSystemEnabled) {
+		if (OldTool) {
+			OldTool->OnToolDisable(this);
+		}
+
+		if (NewTool) {
+			NewTool->OnToolEnable(this);
+		}
+	}
+}
+
+UConstructionSystemTool* UConstructionSystemComponent::GetActiveTool()
+{
+	return GetTool(ActiveToolType);
+}
+
+UConstructionSystemTool* UConstructionSystemComponent::GetTool(EConstructionSystemToolType InToolType)
+{
+	UConstructionSystemTool** ToolPtr = Tools.Find(InToolType);
+	return ToolPtr ? *ToolPtr : nullptr;
+}
 
 void UConstructionSystemComponent::TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction *ThisTickFunction)
 {
@@ -38,86 +94,53 @@ void UConstructionSystemComponent::TickComponent(float DeltaTime, enum ELevelTic
 	}
 }
 
-void UConstructionSystemComponent::DestroyComponent(bool bPromoteChildren /*= false*/)
+void UConstructionSystemComponent::EnableConstructionSystem(EConstructionSystemToolType InToolType)
 {
-	Super::DestroyComponent();
-	if (ActiveTool) {
-		ActiveTool->DestroyTool(this);
-		ActiveTool = nullptr;
+	if (!bConstructionSystemEnabled) {
+		TransitionCameraTo(ConstructionCameraActor, ConstructionCameraTransitionTime, ConstructionCameraTransitionExp);
+		bConstructionSystemEnabled = true;
 	}
-}
-
-void UConstructionSystemComponent::BeginPlay()
-{
-	Super::BeginPlay();
-}
-
-bool UConstructionSystemComponent::ReplicateSubobjects(class UActorChannel *Channel, class FOutBunch *Bunch, FReplicationFlags *RepFlags)
-{
-	bool bResult = Super::ReplicateSubobjects(Channel, Bunch, RepFlags);
-
-	if (ActiveTool)
-	{
-		bResult |= Channel->ReplicateSubobject(ActiveTool, *Bunch, *RepFlags);
-	}
-
-	return bResult;
-}
-
-void UConstructionSystemComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	DOREPLIFETIME(UConstructionSystemComponent, ActiveTool);
-}
-
-void UConstructionSystemComponent::EnableConstructionSystem()
-{
-	TransitionCameraTo(ConstructionCameraActor, ConstructionCameraTransitionTime, ConstructionCameraTransitionExp);
-
-	if (!ActiveTool) {
-		// Create a default tool object
-		CreateTool(UConstructionSystemBuildTool::StaticClass());
-	}
-	ActiveTool->OnToolEnable(this);
-
-	bConstructionSystemEnabled = true;
+	SetActiveTool(InToolType);
 }
 
 void UConstructionSystemComponent::DisableConstructionSystem()
 {
-	if (ActiveTool) {
-		ActiveTool->OnToolDisable(this);
-	}
+	if (bConstructionSystemEnabled) {
+		UConstructionSystemTool* ActiveTool = GetActiveTool();
+		if (ActiveTool) {
+			ActiveTool->OnToolDisable(this);
+		}
 
-	TransitionCameraTo(GetOwner(), ConstructionCameraTransitionTime, ConstructionCameraTransitionExp);
-	bConstructionSystemEnabled = false;
+		TransitionCameraTo(GetOwner(), ConstructionCameraTransitionTime, ConstructionCameraTransitionExp);
+		bConstructionSystemEnabled = false;
+	}
 }
 
-void UConstructionSystemComponent::CreateTool(TSubclassOf<UConstructionSystemTool> InToolClass)
+void UConstructionSystemComponent::CreateTools()
 {
-	if (ActiveTool) {
-		ActiveTool->DestroyTool(this);
-		ActiveTool = nullptr;
-	}
+	_CreateTool(EConstructionSystemToolType::BuildTool, UConstructionSystemBuildTool::StaticClass());
+	_CreateTool(EConstructionSystemToolType::RemoveTool, UConstructionSystemRemoveTool::StaticClass());
+}
 
-	if (InToolClass) {
-		ActiveTool = NewObject<UConstructionSystemTool>(this, InToolClass);
-		ActiveTool->InitializeTool(this);
-		if (bConstructionSystemEnabled) {
-			ActiveTool->OnToolEnable(this);
+void UConstructionSystemComponent::DestroyTools()
+{
+	for (auto& Entry : Tools) {
+		UConstructionSystemTool* Tool = Entry.Value;
+		if (Tool) {
+			Tool->DestroyTool(this);
 		}
 	}
+	Tools.Reset();
 }
 
-void UConstructionSystemComponent::CreateTool_Build()
+void UConstructionSystemComponent::_CreateTool(EConstructionSystemToolType ToolType, TSubclassOf<UConstructionSystemTool> InToolClass)
 {
-	CreateTool(UConstructionSystemBuildTool::StaticClass());
-}
-
-void UConstructionSystemComponent::CreateTool_Remove()
-{
-	CreateTool(UConstructionSystemRemoveTool::StaticClass());
+	UConstructionSystemTool* Tool = NewObject<UConstructionSystemTool>(this, InToolClass);
+	if (Tool) {
+		Tool->InitializeTool(this);
+		UConstructionSystemTool*& ToolRef = Tools.FindOrAdd(ToolType);
+		ToolRef = Tool;
+	}
 }
 
 APlayerController* UConstructionSystemComponent::GetPlayerController()
@@ -143,6 +166,7 @@ void UConstructionSystemComponent::HandleUpdate()
 		return;
 	}
 
+	UConstructionSystemTool* ActiveTool = GetActiveTool();
 	if (ActiveTool) {
 		ActiveTool->Update(this);
 	}
@@ -154,9 +178,9 @@ void UConstructionSystemComponent::BindInput()
 	if (Pawn && Pawn->InputComponent) {
 		UInputComponent* Input = Pawn->InputComponent;
 		Input->BindAction("CSModeToggle", IE_Pressed, this, &UConstructionSystemComponent::ToggleConstructionSystem);
-		Input->BindAction("CSModeToolBuild", IE_Pressed, this, &UConstructionSystemComponent::CreateTool_Build);
-		Input->BindAction("CSModeToolRemove", IE_Pressed, this, &UConstructionSystemComponent::CreateTool_Remove);
 		Input->BindAction("CSToggleBuildUI", IE_Pressed, this, &UConstructionSystemComponent::ToggleBuildUI);
+		Input->BindAction<FSetToolDelegate>("CSModeToolBuild", IE_Pressed, this, &UConstructionSystemComponent::EnableConstructionSystem, EConstructionSystemToolType::BuildTool);
+		Input->BindAction<FSetToolDelegate>("CSModeToolRemove", IE_Pressed, this, &UConstructionSystemComponent::EnableConstructionSystem, EConstructionSystemToolType::RemoveTool);
 	}
 }
 
@@ -221,6 +245,6 @@ void UConstructionSystemComponent::ToggleConstructionSystem()
 		DisableConstructionSystem();
 	}
 	else {
-		EnableConstructionSystem();
+		EnableConstructionSystem(ActiveToolType);
 	}
 }
