@@ -320,6 +320,9 @@ namespace {
 	}
 
 	void SerializeFields(UObject* ObjToSerialize, APrefabActor* PrefabActor, TArray<UPrefabricatorProperty*>& OutProperties) {
+		if (!ObjToSerialize || !PrefabActor) {
+			return;
+		}
 
 		UPrefabricatorAsset* PrefabAsset = Cast<UPrefabricatorAsset>(PrefabActor->PrefabComponent->PrefabAssetInterface.LoadSynchronous());
 
