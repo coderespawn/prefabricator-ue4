@@ -468,6 +468,9 @@ void FPrefabTools::SaveStateToPrefabAsset(AActor* InActor, APrefabActor* PrefabA
 
 void FPrefabTools::LoadStateFromPrefabAsset(AActor* InActor, const FPrefabricatorActorData& InActorData, const FPrefabLoadSettings& InSettings)
 {
+	if (!InActor) {
+		return;
+	}
 
 	TSharedPtr<IPrefabricatorService> Service = FPrefabricatorService::Get();
 	if (Service.IsValid()) {
@@ -623,31 +626,33 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 			ChildActor = World->SpawnActor<AActor>(ActorClass, SpawnParams);
 		}
 
-		// Load the saved data into the actor
-		LoadStateFromPrefabAsset(ChildActor, ActorItemData, InSettings);
-		
-		ParentActors(PrefabActor, ChildActor);
-		AssignAssetUserData(ChildActor, ActorItemData.PrefabItemID, PrefabActor);
+		if (ChildActor) {
+			// Load the saved data into the actor
+			LoadStateFromPrefabAsset(ChildActor, ActorItemData, InSettings);
 
-		// Set the transform
-		FTransform WorldTransform = ActorItemData.RelativeTransform * PrefabActor->GetTransform();
-		if (ChildActor->GetRootComponent()) {
-			EComponentMobility::Type OldChildMobility = EComponentMobility::Movable;
+			ParentActors(PrefabActor, ChildActor);
+			AssignAssetUserData(ChildActor, ActorItemData.PrefabItemID, PrefabActor);
+
+			// Set the transform
+			FTransform WorldTransform = ActorItemData.RelativeTransform * PrefabActor->GetTransform();
 			if (ChildActor->GetRootComponent()) {
-				OldChildMobility = ChildActor->GetRootComponent()->Mobility;
+				EComponentMobility::Type OldChildMobility = EComponentMobility::Movable;
+				if (ChildActor->GetRootComponent()) {
+					OldChildMobility = ChildActor->GetRootComponent()->Mobility;
+				}
+				ChildActor->GetRootComponent()->SetMobility(EComponentMobility::Movable);
+				ChildActor->SetActorTransform(WorldTransform);
+				ChildActor->GetRootComponent()->SetMobility(OldChildMobility);
 			}
-			ChildActor->GetRootComponent()->SetMobility(EComponentMobility::Movable);
-			ChildActor->SetActorTransform(WorldTransform);
-			ChildActor->GetRootComponent()->SetMobility(OldChildMobility);
-		}
 
-		if (APrefabActor* ChildPrefab = Cast<APrefabActor>(ChildActor)) {
-			if (InSettings.bRandomizeNestedSeed && InSettings.Random) {
-				// This is a nested child prefab.  Randomize the seed of the child prefab
-				ChildPrefab->Seed = FPrefabTools::GetRandomSeed(*InSettings.Random);
-			}
-			if (InSettings.bSynchronousBuild) {
-				LoadStateFromPrefabAsset(ChildPrefab, InSettings);
+			if (APrefabActor* ChildPrefab = Cast<APrefabActor>(ChildActor)) {
+				if (InSettings.bRandomizeNestedSeed && InSettings.Random) {
+					// This is a nested child prefab.  Randomize the seed of the child prefab
+					ChildPrefab->Seed = FPrefabTools::GetRandomSeed(*InSettings.Random);
+				}
+				if (InSettings.bSynchronousBuild) {
+					LoadStateFromPrefabAsset(ChildPrefab, InSettings);
+				}
 			}
 		}
 	}
