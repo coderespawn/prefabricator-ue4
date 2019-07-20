@@ -61,8 +61,7 @@ void UConstructionSystemBuildTool::Update(UConstructionSystemComponent* Construc
 	UWorld* World = ConstructionComponent->GetWorld();
 	if (!World) return;
 
-	APawn* Owner = Cast<APawn>(ConstructionComponent->GetOwner());
-	APlayerController* PlayerController = Owner ? Owner->GetController<APlayerController>() : nullptr;
+	APlayerController* PlayerController = Cast<APlayerController>(ConstructionComponent->GetOwner());
 	if (PlayerController) {
 		FVector ViewLocation;
 		FRotator ViewRotation;
@@ -74,7 +73,7 @@ void UConstructionSystemBuildTool::Update(UConstructionSystemComponent* Construc
 
 		FCollisionResponseParams ResponseParams = FCollisionResponseParams::DefaultResponseParam;
 		FCollisionQueryParams QueryParams = FCollisionQueryParams::DefaultQueryParam;
-		QueryParams.AddIgnoredActor(ConstructionComponent->GetOwner());
+		QueryParams.AddIgnoredActor(PlayerController->GetPawn());
 		if (Cursor->GetCursorGhostActor()) {
 			FPrefabTools::IterateChildrenRecursive(Cursor->GetCursorGhostActor(), [&QueryParams](AActor* ChildCursorActor) {
 				QueryParams.AddIgnoredActor(ChildCursorActor);
@@ -283,12 +282,6 @@ void UConstructionSystemBuildTool::ConstructAtCursor()
 			return;
 		}
 
-		/*
-		if (ConstructionComponent->GetOwnerRole() != ROLE_Authority) {
-			ServerConstructAtCursor();
-			return;
-		}
-		*/
 		if (Cursor->GetVisiblity() != EConstructionSystemCursorVisiblity::Visible) {
 			// Current cursor location is invalid
 			return;

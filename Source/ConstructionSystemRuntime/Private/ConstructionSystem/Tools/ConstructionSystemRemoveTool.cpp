@@ -59,8 +59,7 @@ void UConstructionSystemRemoveTool::Update(UConstructionSystemComponent* Constru
 	UWorld* World = ConstructionComponent->GetWorld();
 	if (!World) return;
 
-	APawn* Owner = Cast<APawn>(ConstructionComponent->GetOwner());
-	APlayerController* PlayerController = Owner ? Owner->GetController<APlayerController>() : nullptr;
+	APlayerController* PlayerController = Cast<APlayerController>(ConstructionComponent->GetOwner());
 
 	bCursorFoundHit = false;
 	FocusedActor = nullptr;
@@ -76,6 +75,8 @@ void UConstructionSystemRemoveTool::Update(UConstructionSystemComponent* Constru
 
 		FCollisionResponseParams ResponseParams = FCollisionResponseParams::DefaultResponseParam;
 		FCollisionQueryParams QueryParams = FCollisionQueryParams::DefaultQueryParam;
+		QueryParams.AddIgnoredActor(PlayerController->GetPawn());
+
 		FHitResult Hit;
 		if (World->LineTraceSingleByChannel(Hit, StartLocation, EndLocation, PrefabSnapChannel, QueryParams, ResponseParams)) {
 			UPrefabricatorConstructionSnapComponent* SnapComponent = Cast<UPrefabricatorConstructionSnapComponent>(Hit.GetComponent());

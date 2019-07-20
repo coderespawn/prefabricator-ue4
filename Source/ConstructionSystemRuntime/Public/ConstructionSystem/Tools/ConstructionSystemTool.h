@@ -21,7 +21,8 @@ public:
 	virtual bool IsSupportedForNetworking() const override { return true; }
 	//~ End UObject Interface
 
-	bool IsToolEnabled() const { return bToolEnabled; }
+	FORCEINLINE void BindInput(UInputComponent* InputComponent) { RegisterInputCallbacks(InputComponent); }
+	FORCEINLINE bool IsToolEnabled() const { return bToolEnabled; }
 
 protected:
 	virtual void RegisterInputCallbacks(UInputComponent* InputComponent) {}

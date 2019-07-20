@@ -86,9 +86,9 @@ void UConstructionSystemComponent::TickComponent(float DeltaTime, enum ELevelTic
 		HandleUpdate();
 	}
 
-	APawn* Owner = Cast<APawn>(GetOwner());
-	if (!bInputBound && Owner->InputEnabled()) {
-		BindInput();
+	APlayerController* PC = GetPlayerController();
+	if (!bInputBound && PC && PC->InputEnabled()) {
+		BindInput(PC->InputComponent);
 		CreateBuildMenu();
 		bInputBound = true;
 	}
@@ -111,7 +111,8 @@ void UConstructionSystemComponent::DisableConstructionSystem()
 			ActiveTool->OnToolDisable(this);
 		}
 
-		TransitionCameraTo(GetOwner(), ConstructionCameraTransitionTime, ConstructionCameraTransitionExp);
+		APawn* ViewTarget = GetControlledPawn();
+		TransitionCameraTo(ViewTarget, ConstructionCameraTransitionTime, ConstructionCameraTransitionExp);
 		bConstructionSystemEnabled = false;
 	}
 }
@@ -145,8 +146,13 @@ void UConstructionSystemComponent::_CreateTool(EConstructionSystemToolType ToolT
 
 APlayerController* UConstructionSystemComponent::GetPlayerController()
 {
-	APawn* Owner = Cast<APawn>(GetOwner());
-	return Owner ? Owner->GetController<APlayerController>() : nullptr; 
+	return Cast<APlayerController>(GetOwner());
+}
+
+APawn* UConstructionSystemComponent::GetControlledPawn()
+{
+	APlayerController* PC = GetPlayerController();
+	return PC ? PC->GetPawn() : nullptr;
 }
 
 void UConstructionSystemComponent::TransitionCameraTo(AActor* InViewTarget, float InBlendTime, float InBlendExp)
@@ -172,15 +178,19 @@ void UConstructionSystemComponent::HandleUpdate()
 	}
 }
 
-void UConstructionSystemComponent::BindInput()
+void UConstructionSystemComponent::BindInput(UInputComponent* InputComponent)
 {
-	APawn* Pawn = Cast<APawn>(GetOwner());
-	if (Pawn && Pawn->InputComponent) {
-		UInputComponent* Input = Pawn->InputComponent;
-		Input->BindAction("CSModeToggle", IE_Pressed, this, &UConstructionSystemComponent::ToggleConstructionSystem);
-		Input->BindAction("CSToggleBuildUI", IE_Pressed, this, &UConstructionSystemComponent::ToggleBuildUI);
-		Input->BindAction<FSetToolDelegate>("CSModeToolBuild", IE_Pressed, this, &UConstructionSystemComponent::EnableConstructionSystem, EConstructionSystemToolType::BuildTool);
-		Input->BindAction<FSetToolDelegate>("CSModeToolRemove", IE_Pressed, this, &UConstructionSystemComponent::EnableConstructionSystem, EConstructionSystemToolType::RemoveTool);
+	if (InputComponent) {
+		InputComponent->BindAction("CSModeToggle", IE_Pressed, this, &UConstructionSystemComponent::ToggleConstructionSystem);
+		InputComponent->BindAction("CSToggleBuildUI", IE_Pressed, this, &UConstructionSystemComponent::ToggleBuildUI);
+		InputComponent->BindAction<FSetToolDelegate>("CSModeToolBuild", IE_Pressed, this, &UConstructionSystemComponent::EnableConstructionSystem, EConstructionSystemToolType::BuildTool);
+		InputComponent->BindAction<FSetToolDelegate>("CSModeToolRemove", IE_Pressed, this, &UConstructionSystemComponent::EnableConstructionSystem, EConstructionSystemToolType::RemoveTool);
+
+		// Bind the tool inputs
+		for (auto& Entry : Tools) {
+			UConstructionSystemTool* Tool = Entry.Value;
+			Tool->BindInput(InputComponent);
+		}
 	}
 }
 
@@ -208,7 +218,7 @@ void UConstructionSystemComponent::ShowBuildMenu()
 		BuildMenuUIInstance->AddToViewport();
 		APlayerController* PlayerController = GetPlayerController();
 		if (PlayerController) {
-			PlayerController->SetInputMode(FInputModeUIOnly());
+			PlayerController->SetInputMode(FInputModeGameAndUI());
 			PlayerController->bShowMouseCursor = true;
 		}
 	}

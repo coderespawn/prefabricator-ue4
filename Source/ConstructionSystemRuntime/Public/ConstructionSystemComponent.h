@@ -11,6 +11,7 @@ class UConstructionSystemCursor;
 class UConstructionSystemTool;
 class UMaterialInterface;
 class UConstructionSystemUIAsset;
+class UInputComponent;
 
 UENUM(BlueprintType)
 enum class EConstructionSystemToolType : uint8 {
@@ -32,6 +33,12 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "ConstructionSystem")
 	void DisableConstructionSystem();
+
+	UFUNCTION(BlueprintCallable, Category = "ConstructionSystem")
+	void ShowBuildMenu();
+
+	UFUNCTION(BlueprintCallable, Category = "ConstructionSystem")
+	void HideBuildMenu();
 
 	//~ Begin UActorComponent Interface
 	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction *ThisTickFunction) override;
@@ -55,9 +62,10 @@ public:
 
 private:
 	APlayerController* GetPlayerController();
+	APawn* GetControlledPawn();
 	void TransitionCameraTo(AActor* InViewTarget, float InBlendTime, float InBlendExp);
 	void HandleUpdate();
-	void BindInput();
+	void BindInput(UInputComponent* InputComponent);
 
 	void ToggleBuildUI();
 	void CreateTools();
@@ -65,8 +73,6 @@ private:
 	void _CreateTool(EConstructionSystemToolType ToolType, TSubclassOf<UConstructionSystemTool> InToolClass);
 
 	void CreateBuildMenu();
-	void ShowBuildMenu();
-	void HideBuildMenu();
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cursor")
