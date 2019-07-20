@@ -57,8 +57,8 @@ void UConstructionSystemRemoveTool::Update(UConstructionSystemComponent* Constru
 		FRotator ViewRotation;
 		PlayerController->GetPlayerViewPoint(ViewLocation, ViewRotation);
 		FVector CameraDirection = ViewRotation.RotateVector(FVector::ForwardVector);
-		FVector StartLocation = ViewLocation + CameraDirection * FConstructionSystemConstants::BuildToolSweepRadius;
-		FVector EndLocation = ViewLocation + CameraDirection * (TraceDistance + FConstructionSystemConstants::BuildToolSweepRadius);
+		FVector StartLocation = ViewLocation + CameraDirection * ConstructionComponent->TraceStartDistance;
+		FVector EndLocation = ViewLocation + CameraDirection * (TraceDistance + ConstructionComponent->TraceStartDistance);
 
 
 		FCollisionResponseParams ResponseParams = FCollisionResponseParams::DefaultResponseParam;

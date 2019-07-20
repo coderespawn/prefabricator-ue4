@@ -6,5 +6,4 @@
 
 struct CONSTRUCTIONSYSTEMRUNTIME_API FConstructionSystemConstants {
 	static const FName PrefabSnapChannelName;
-	static const float BuildToolSweepRadius;
 };

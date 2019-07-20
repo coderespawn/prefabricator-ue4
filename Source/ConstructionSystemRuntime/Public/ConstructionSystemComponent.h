@@ -81,6 +81,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cursor")
 	UMaterialInterface* CursorInvalidMaterial;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cursor")
+	float TraceStartDistance = 100;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cursor")
+	float TraceSweepRadius = 100;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
 	AActor* ConstructionCameraActor;
 

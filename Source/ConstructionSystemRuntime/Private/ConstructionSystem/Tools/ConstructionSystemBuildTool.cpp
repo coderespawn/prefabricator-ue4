@@ -70,8 +70,8 @@ void UConstructionSystemBuildTool::Update(UConstructionSystemComponent* Construc
 		PlayerController->GetPlayerViewPoint(ViewLocation, ViewRotation);
 
 		FVector CameraDirection = ViewRotation.RotateVector(FVector::ForwardVector);
-		FVector StartLocation = ViewLocation + CameraDirection * FConstructionSystemConstants::BuildToolSweepRadius;
-		FVector EndLocation = ViewLocation + CameraDirection * (TraceDistance + FConstructionSystemConstants::BuildToolSweepRadius);
+		FVector StartLocation = ViewLocation + CameraDirection * ConstructionComponent->TraceStartDistance;
+		FVector EndLocation = ViewLocation + CameraDirection * (TraceDistance + ConstructionComponent->TraceStartDistance);
 
 		FCollisionResponseParams ResponseParams = FCollisionResponseParams::DefaultResponseParam;
 		FCollisionQueryParams QueryParams = FCollisionQueryParams::DefaultQueryParam;
@@ -88,7 +88,7 @@ void UConstructionSystemBuildTool::Update(UConstructionSystemComponent* Construc
 
 		bool bHitSnapChannel = false;
 		
-		FCollisionShape SweepShape = FCollisionShape::MakeSphere(FConstructionSystemConstants::BuildToolSweepRadius);
+		FCollisionShape SweepShape = FCollisionShape::MakeSphere(ConstructionComponent->TraceSweepRadius);
 		if (World->SweepSingleByChannel(Hit, StartLocation, EndLocation, FQuat::Identity, PrefabSnapChannel, SweepShape, QueryParams, ResponseParams)) {
 			bCursorFoundHit = true;
 			bHitSnapChannel = true;
