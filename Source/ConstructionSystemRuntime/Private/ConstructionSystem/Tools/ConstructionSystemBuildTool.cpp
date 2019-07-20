@@ -322,11 +322,7 @@ void UConstructionSystemBuildTool::ConstructAtCursor()
 	if (World && ActivePrefabAsset) {
 		FTransform Transform;
 		if (Cursor->GetCursorTransform(Transform)) {
-			APrefabActor* SpawnedPrefab = GetWorld()->SpawnActor<APrefabActor>(APrefabActor::StaticClass(), Transform);
-			SpawnedPrefab->PrefabComponent->PrefabAssetInterface = ActivePrefabAsset;
-
-			FRandomStream RandomStream(Cursor->GetCursorSeed());
-			UPrefabricatorBlueprintLibrary::RandomizePrefab(SpawnedPrefab, RandomStream);
+			APrefabActor* SpawnedPrefab = ConstructionComponent->ConstructPrefabItem(ActivePrefabAsset, Transform, Cursor->GetCursorSeed());
 
 			if (!bCursorModeFreeForm) {
 				// A prefab was created at the cursor on a snapped location. Reset the local cursor rotation

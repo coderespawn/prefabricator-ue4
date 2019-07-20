@@ -4,6 +4,7 @@
 #include "CoreMinimal.h"
 #include "ConstructionSystemTool.h"
 #include "Components/InputComponent.h"
+#include "Engine/AssetUserData.h"
 #include "ConstructionSystemBuildTool.generated.h"
 
 class UPrefabricatorAssetInterface;
@@ -76,3 +77,13 @@ private:
 	};
 	FCSBuildToolInputBindings InputBindings;
 };
+
+
+UCLASS()
+class CONSTRUCTIONSYSTEMRUNTIME_API UConstructionSystemItemUserData : public UAssetUserData {
+	GENERATED_BODY()
+public:
+	UPROPERTY(VisibleAnywhere, Category = "Prefabricator")
+	int32 Seed;
+};
+

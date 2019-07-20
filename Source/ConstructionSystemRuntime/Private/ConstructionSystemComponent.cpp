@@ -11,6 +11,10 @@
 #include "ConstructionSystemRemoveTool.h"
 #include "UserWidget.h"
 #include "ConstructionSystemUI.h"
+#include "PrefabActor.h"
+#include "PrefabricatorFunctionLibrary.h"
+#include "PrefabComponent.h"
+#include "PrefabricatorAsset.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogConstructionSystem, Log, All);
 
@@ -76,6 +80,22 @@ UConstructionSystemTool* UConstructionSystemComponent::GetTool(EConstructionSyst
 {
 	UConstructionSystemTool** ToolPtr = Tools.Find(InToolType);
 	return ToolPtr ? *ToolPtr : nullptr;
+}
+
+APrefabActor* UConstructionSystemComponent::ConstructPrefabItem(UPrefabricatorAssetInterface* InPrefabAsset, const FTransform& InTransform, int32 InSeed) const
+{
+	UWorld* World = GetWorld();
+	APrefabActor* SpawnedPrefab = World->SpawnActor<APrefabActor>(APrefabActor::StaticClass(), InTransform);
+	SpawnedPrefab->PrefabComponent->PrefabAssetInterface = InPrefabAsset;
+
+	FRandomStream RandomStream(InSeed);
+	UPrefabricatorBlueprintLibrary::RandomizePrefab(SpawnedPrefab, RandomStream);
+
+	UConstructionSystemItemUserData* UserData = NewObject<UConstructionSystemItemUserData>(SpawnedPrefab->GetRootComponent());
+	UserData->Seed = InSeed;
+	SpawnedPrefab->GetRootComponent()->AddAssetUserData(UserData);
+
+	return SpawnedPrefab;
 }
 
 void UConstructionSystemComponent::TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction *ThisTickFunction)
