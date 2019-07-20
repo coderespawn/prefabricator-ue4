@@ -1,5 +1,9 @@
 CHANGELOG: Prefabricator
 ========================
+Version 1.2.1-hf1
+-----------------
+* Fix: Added null pointer checks while serializing / deserializing prefabs to avoid crash issues with stale uobjects
+
 Version 1.2.0
 -------------
 * New: Prefabs now store soft refernces to assets and the references can be viewed from the reference viewer. This keeps the prefab from breaking when the assets are moved around
