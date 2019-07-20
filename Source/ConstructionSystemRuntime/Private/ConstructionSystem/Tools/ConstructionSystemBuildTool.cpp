@@ -262,17 +262,6 @@ void UConstructionSystemBuildTool::RotateCursorStep(float NumSteps)
 	CursorRotationStep += NumSteps;
 }
 
-void UConstructionSystemBuildTool::ServerConstructAtCursor_Implementation()
-{
-	ConstructAtCursor();
-
-}
-
-bool UConstructionSystemBuildTool::ServerConstructAtCursor_Validate()
-{
-	return true;
-}
-
 void UConstructionSystemBuildTool::HandleInput_ConstructAtCursor()
 {
 	if (!bInputPaused) {

@@ -15,6 +15,10 @@
 #include "PrefabricatorFunctionLibrary.h"
 #include "PrefabComponent.h"
 #include "PrefabricatorAsset.h"
+#include "ConstructionSystemSaveGame.h"
+#include "Kismet/GameplayStatics.h"
+#include "EngineUtils.h"
+#include "Engine/Engine.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogConstructionSystem, Log, All);
 
@@ -282,6 +286,64 @@ void UConstructionSystemComponent::HideBuildMenu()
 			}
 		}
 
+	}
+}
+
+void UConstructionSystemComponent::SaveLevel(const FString& InSaveSlotName, int32 InUserIndex)
+{
+	if (!GEngine) return;
+
+	UWorld* World = GetWorld();
+	UConstructionSystemSaveGame* SaveGameInstance = Cast<UConstructionSystemSaveGame>(UGameplayStatics::CreateSaveGameObject(UConstructionSystemSaveGame::StaticClass()));
+	SaveGameInstance->SaveSlotName = InSaveSlotName;
+	SaveGameInstance->UserIndex = InUserIndex;
+
+	for (TActorIterator<APrefabActor> It(World); It; ++It) {
+		APrefabActor* PrefabActor = *It;
+		if (PrefabActor && PrefabActor->GetRootComponent()) {
+			if (UConstructionSystemItemUserData* UserData = Cast<UConstructionSystemItemUserData>(
+				PrefabActor->GetRootComponent()->GetAssetUserDataOfClass(UConstructionSystemItemUserData::StaticClass()))) {
+				// This prefab actor was created using the construction system
+				FConstructionSystemSaveConstructedItem Item;
+				Item.PrefabAsset = PrefabActor->GetPrefabAsset();
+				Item.Seed = UserData->Seed;
+				Item.Transform = PrefabActor->GetActorTransform();
+				SaveGameInstance->ConstructedItems.Add(Item);
+			}
+		}
+	}
+
+	UGameplayStatics::SaveGameToSlot(SaveGameInstance, SaveGameInstance->SaveSlotName, SaveGameInstance->UserIndex);
+}
+
+void UConstructionSystemComponent::LoadLevel(const FString& InSaveSlotName, int32 InUserIndex)
+{
+	// Destroy all the constructed items
+	UWorld* World = GetWorld();
+	{
+		TArray<APrefabActor*> ActorsToDestroy;
+		for (TActorIterator<APrefabActor> It(World); It; ++It) {
+			APrefabActor* PrefabActor = *It;
+			if (PrefabActor && PrefabActor->GetRootComponent()) {
+				if (UConstructionSystemItemUserData* UserData = Cast<UConstructionSystemItemUserData>(
+						PrefabActor->GetRootComponent()->GetAssetUserDataOfClass(UConstructionSystemItemUserData::StaticClass()))) {
+					ActorsToDestroy.Add(PrefabActor);
+				}
+			}
+		}
+
+		for (APrefabActor* PrefabActor : ActorsToDestroy) {
+			PrefabActor->Destroy();
+		}
+	}
+
+	UConstructionSystemSaveGame* LoadGameInstance = Cast<UConstructionSystemSaveGame>(UGameplayStatics::CreateSaveGameObject(UConstructionSystemSaveGame::StaticClass()));
+	LoadGameInstance = Cast<UConstructionSystemSaveGame>(UGameplayStatics::LoadGameFromSlot(InSaveSlotName, InUserIndex));
+
+	if (LoadGameInstance) {
+		for (const FConstructionSystemSaveConstructedItem& Item : LoadGameInstance->ConstructedItems) {
+			ConstructPrefabItem(Item.PrefabAsset, Item.Transform, Item.Seed);
+		}
 	}
 }
 

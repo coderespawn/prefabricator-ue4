@@ -40,6 +40,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "ConstructionSystem")
 	void HideBuildMenu();
 
+	UFUNCTION(BlueprintCallable, Category = "ConstructionSystem")
+	void SaveLevel(const FString& InSaveSlotName, int32 InUserIndex);
+
+	UFUNCTION(BlueprintCallable, Category = "ConstructionSystem")
+	void LoadLevel(const FString& InSaveSlotName, int32 InUserIndex);
+
 	//~ Begin UActorComponent Interface
 	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction *ThisTickFunction) override;
 	virtual void BeginPlay() override;
@@ -117,3 +123,13 @@ private:
 	bool bConstructionSystemEnabled = false;
 	bool bInputBound = false;
 };
+
+
+UCLASS()
+class CONSTRUCTIONSYSTEMRUNTIME_API UConstructionSystemItemUserData : public UAssetUserData {
+	GENERATED_BODY()
+public:
+	UPROPERTY(VisibleAnywhere, Category = "Prefabricator")
+	int32 Seed;
+};
+

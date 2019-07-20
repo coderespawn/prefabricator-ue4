@@ -26,9 +26,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "ConstructionSystem")
 	void SetActivePrefab(UPrefabricatorAssetInterface* InActivePrefabAsset);
 
-	UFUNCTION(Server, Reliable, WithValidation)
-	void ServerConstructAtCursor();
-
 protected: 
 	virtual void RegisterInputCallbacks(UInputComponent* InputComponent) override;
 	virtual void UnregisterInputCallbacks(UInputComponent* InputComponent) override;
@@ -76,14 +73,5 @@ private:
 		FInputAxisBinding CursorRotate;
 	};
 	FCSBuildToolInputBindings InputBindings;
-};
-
-
-UCLASS()
-class CONSTRUCTIONSYSTEMRUNTIME_API UConstructionSystemItemUserData : public UAssetUserData {
-	GENERATED_BODY()
-public:
-	UPROPERTY(VisibleAnywhere, Category = "Prefabricator")
-	int32 Seed;
 };
 
