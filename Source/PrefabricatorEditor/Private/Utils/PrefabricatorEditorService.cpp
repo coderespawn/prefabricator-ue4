@@ -18,6 +18,9 @@
 #include "PropertyEditorModule.h"
 #include "ScopedTransaction.h"
 #include "ThumbnailRendering/SceneThumbnailInfo.h"
+#include "ActorFactories/ActorFactory.h"
+#include "ComponentAssetBroker.h"
+#include "ActorFactories/ActorFactoryBoxVolume.h"
 
 void FPrefabricatorEditorService::ParentActors(AActor* ParentActor, AActor* ChildActor)
 {
@@ -86,6 +89,19 @@ void FPrefabricatorEditorService::SetDetailsViewObject(UObject* InObject)
 	PropertyEditorModule.UpdatePropertyViews(ObjectList);
 }
 
+
+AActor* FPrefabricatorEditorService::SpawnActor(TSubclassOf<AActor> InActorClass, const FTransform& InTransform, ULevel* InLevel)
+{
+	if (GEditor) {
+		UActorFactory* ActorFactory = GEditor->FindActorFactoryByClassForActorClass(UActorFactoryBoxVolume::StaticClass(), InActorClass);
+		if (ActorFactory) {
+			FAssetData AssetData(InActorClass);
+			return ActorFactory->CreateActor(AssetData.GetAsset(), InLevel, InTransform);
+		}
+	}
+
+	return IPrefabricatorService::SpawnActor(InActorClass, InTransform, InLevel);
+}
 
 namespace {
 	/**
