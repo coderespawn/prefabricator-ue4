@@ -3,6 +3,7 @@
 #include "Utils/PrefabricatorService.h"
 
 #include "Engine/EngineTypes.h"
+#include "Engine/World.h"
 
 /////////////////////////// FPrefabricatorService /////////////////////////// 
 
@@ -18,6 +19,19 @@ void FPrefabricatorService::Set(TSharedPtr<IPrefabricatorService> InInstance)
 	Instance = InInstance;
 }
 
+
+/////////////////////////// IPrefabricatorService /////////////////////////// 
+AActor* IPrefabricatorService::SpawnActor(TSubclassOf<AActor> InClass, const FTransform& InTransform, ULevel* InLevel)
+{
+	if (!InClass || !InLevel) {
+		return nullptr;
+	}
+
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.OverrideLevel = InLevel;
+	UWorld* World = InLevel->GetWorld();
+	return World->SpawnActor<AActor>(InClass, InTransform, SpawnParams);
+}
 
 /////////////////////////// FPrefabricatorRuntimeService /////////////////////////// 
 void FPrefabricatorRuntimeService::ParentActors(AActor* ParentActor, AActor* ChildActor)
