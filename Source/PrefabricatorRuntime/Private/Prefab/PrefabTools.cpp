@@ -295,6 +295,8 @@ namespace {
 	}
 
 	void DeserializeFields(UObject* InObjToDeserialize, const TArray<UPrefabricatorProperty*>& InProperties) {
+		if (!InObjToDeserialize) return;
+
 		TMap<FString, UPrefabricatorProperty*> PropertiesByName;
 		for (UPrefabricatorProperty* Property : InProperties) {
 			if (!Property) continue;
