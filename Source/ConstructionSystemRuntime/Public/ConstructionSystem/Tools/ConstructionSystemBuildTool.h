@@ -25,24 +25,28 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "ConstructionSystem")
 	void SetActivePrefab(UPrefabricatorAssetInterface* InActivePrefabAsset);
 
-	UFUNCTION()
-	void ConstructAtCursor();
-
-	UFUNCTION()
-	void CursorMoveNext();
-
-	UFUNCTION()
-	void CursorMovePrev();
-
-	UFUNCTION()
-	void RotateCursorStep(float NumSteps);
-
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerConstructAtCursor();
 
 protected: 
 	virtual void RegisterInputCallbacks(UInputComponent* InputComponent) override;
 	virtual void UnregisterInputCallbacks(UInputComponent* InputComponent) override;
+
+private:
+	// Input callback handlers
+	UFUNCTION()
+	void HandleInput_ConstructAtCursor();
+	UFUNCTION()
+	void HandleInput_CursorMoveNext();
+	UFUNCTION()
+	void HandleInput_CursorMovePrev();
+	UFUNCTION()
+	void HandleInput_RotateCursorStep(float NumSteps);
+
+	void ConstructAtCursor();
+	void CursorMoveNext();
+	void CursorMovePrev();
+	void RotateCursorStep(float NumSteps);
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ConstructionSystem")

@@ -26,6 +26,8 @@ protected:
 	virtual void UnregisterInputCallbacks(UInputComponent* InputComponent) override;
 
 	UFUNCTION()
+	void HandleInput_RemoveAtCursor();
+
 	void RemoveAtCursor();
 
 public:

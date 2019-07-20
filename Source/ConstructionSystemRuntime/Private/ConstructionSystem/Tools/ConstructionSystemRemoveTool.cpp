@@ -98,6 +98,13 @@ void UConstructionSystemRemoveTool::Update(UConstructionSystemComponent* Constru
 
 }
 
+void UConstructionSystemRemoveTool::HandleInput_RemoveAtCursor()
+{
+	if (!bInputPaused) {
+		RemoveAtCursor();
+	}
+}
+
 void UConstructionSystemRemoveTool::RemoveAtCursor()
 {
 	if (bCursorFoundHit && FocusedActor.IsValid()) {
@@ -111,7 +118,7 @@ void UConstructionSystemRemoveTool::RegisterInputCallbacks(UInputComponent* Inpu
 {
 	UConstructionSystemTool::RegisterInputCallbacks(InputComponent);
 
-	InputBindings.RemoveAtCursor = InputComponent->BindAction("CSRemoveAtCursor", IE_Pressed, this, &UConstructionSystemRemoveTool::RemoveAtCursor);
+	InputBindings.RemoveAtCursor = InputComponent->BindAction("CSRemoveAtCursor", IE_Pressed, this, &UConstructionSystemRemoveTool::HandleInput_RemoveAtCursor);
 
 }
 

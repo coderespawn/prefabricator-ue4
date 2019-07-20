@@ -227,6 +227,14 @@ void UConstructionSystemComponent::ShowBuildMenu()
 				ControlledPawn->DisableInput(PlayerController);
 			}
 		}
+
+		// Pause all the input on the tools
+		for (auto& Entry : Tools) {
+			UConstructionSystemTool* Tool = Entry.Value;
+			if (Tool) {
+				Tool->SetInputPaused(true);
+			}
+		}
 	}
 }
 
@@ -244,8 +252,16 @@ void UConstructionSystemComponent::HideBuildMenu()
 			if (ControlledPawn) {
 				ControlledPawn->EnableInput(PlayerController);
 			}
-
 		}
+
+		// Unpause all the input on the tools
+		for (auto& Entry : Tools) {
+			UConstructionSystemTool* Tool = Entry.Value;
+			if (Tool) {
+				Tool->SetInputPaused(false);
+			}
+		}
+
 	}
 }
 

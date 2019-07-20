@@ -23,12 +23,12 @@ public:
 
 	FORCEINLINE void BindInput(UInputComponent* InputComponent) { RegisterInputCallbacks(InputComponent); }
 	FORCEINLINE bool IsToolEnabled() const { return bToolEnabled; }
-
+	FORCEINLINE void SetInputPaused(bool bInInputPaused) { bInputPaused = bInInputPaused; }
 protected:
 	virtual void RegisterInputCallbacks(UInputComponent* InputComponent) {}
 	virtual void UnregisterInputCallbacks(UInputComponent* InputComponent) {}
 
 protected:
-	UPROPERTY(Transient)
 	bool bToolEnabled = false;
+	bool bInputPaused = false;
 };

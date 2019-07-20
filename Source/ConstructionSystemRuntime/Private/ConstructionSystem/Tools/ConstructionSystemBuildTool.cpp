@@ -213,13 +213,12 @@ void UConstructionSystemBuildTool::RegisterInputCallbacks(UInputComponent* Input
 {
 	UConstructionSystemTool::RegisterInputCallbacks(InputComponent);
 
-	InputBindings.BuildAtCursor = InputComponent->BindAction("CSBuiltAtCursor", IE_Pressed, this, &UConstructionSystemBuildTool::ConstructAtCursor);
-	InputBindings.CursorItemNext = InputComponent->BindAction("CSCursorItemNext", IE_Pressed, this, &UConstructionSystemBuildTool::CursorMoveNext);
-	InputBindings.CursorItemPrev = InputComponent->BindAction("CSCursorItemPrev", IE_Pressed, this, &UConstructionSystemBuildTool::CursorMovePrev);
+	InputBindings.BuildAtCursor = InputComponent->BindAction("CSBuiltAtCursor", IE_Pressed, this, &UConstructionSystemBuildTool::HandleInput_ConstructAtCursor);
+	InputBindings.CursorItemNext = InputComponent->BindAction("CSCursorItemNext", IE_Pressed, this, &UConstructionSystemBuildTool::HandleInput_CursorMoveNext);
+	InputBindings.CursorItemPrev = InputComponent->BindAction("CSCursorItemPrev", IE_Pressed, this, &UConstructionSystemBuildTool::HandleInput_CursorMovePrev);
+	InputBindings.CursorRotate = InputComponent->BindAxis("CSCursorRotate", this, &UConstructionSystemBuildTool::HandleInput_RotateCursorStep);
 
 	// TODO: Map bindings to cursor next/prev snap points
-
-	InputBindings.CursorRotate = InputComponent->BindAxis("CSCursorRotate", this, &UConstructionSystemBuildTool::RotateCursorStep);
 }
 
 void UConstructionSystemBuildTool::UnregisterInputCallbacks(UInputComponent* InputComponent)
@@ -267,6 +266,34 @@ void UConstructionSystemBuildTool::ServerConstructAtCursor_Implementation()
 bool UConstructionSystemBuildTool::ServerConstructAtCursor_Validate()
 {
 	return true;
+}
+
+void UConstructionSystemBuildTool::HandleInput_ConstructAtCursor()
+{
+	if (!bInputPaused) {
+		ConstructAtCursor();
+	}
+}
+
+void UConstructionSystemBuildTool::HandleInput_CursorMoveNext()
+{
+	if (!bInputPaused) {
+		CursorMoveNext();
+	}
+}
+
+void UConstructionSystemBuildTool::HandleInput_CursorMovePrev()
+{
+	if (!bInputPaused) {
+		CursorMovePrev();
+	}
+}
+
+void UConstructionSystemBuildTool::HandleInput_RotateCursorStep(float NumSteps)
+{
+	if (!bInputPaused) {
+		RotateCursorStep(NumSteps);
+	}
 }
 
 void UConstructionSystemBuildTool::ConstructAtCursor()
