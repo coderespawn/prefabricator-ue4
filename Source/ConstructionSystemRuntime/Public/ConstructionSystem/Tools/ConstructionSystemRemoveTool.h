@@ -36,9 +36,6 @@ public:
 
 private:
 	UPROPERTY(Transient)
-	UConstructionSystemCursor* Cursor;
-
-	UPROPERTY(Transient)
 	TWeakObjectPtr<APrefabActor> FocusedActor;
 
 	ECollisionChannel PrefabSnapChannel;

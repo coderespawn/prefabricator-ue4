@@ -9,36 +9,45 @@
 #include "PrefabricatorFunctionLibrary.h"
 #include "ConstructionSystemSnap.h"
 
-void UConstructionSystemCursor::RecreateCursor(UWorld* InWorld, UPrefabricatorAssetInterface* InActivePrefabAsset)
+void UConstructionSystemCursor::RecreateCursor(UWorld* InWorld, UPrefabricatorAssetInterface* InCursorPrefab)
 {
 	DestroyCursor();
 
-	if (InWorld && InActivePrefabAsset) {
-		CursorGhostActor = InWorld->SpawnActor<APrefabActor>();
-		CursorGhostActor->PrefabComponent->PrefabAssetInterface = InActivePrefabAsset;
+	if (InWorld) {
+		if (InCursorPrefab) {
+			CursorGhostActor = InWorld->SpawnActor<APrefabActor>();
+			CursorGhostActor->PrefabComponent->PrefabAssetInterface = InCursorPrefab;
 
 
-		FRandomStream RandomStream(CursorSeed);
-		UPrefabricatorBlueprintLibrary::RandomizePrefab(CursorGhostActor, RandomStream);
-		CursorGhostActor->GetRootComponent()->SetMobility(EComponentMobility::Movable);
+			FRandomStream RandomStream(CursorSeed);
+			UPrefabricatorBlueprintLibrary::RandomizePrefab(CursorGhostActor, RandomStream);
+			CursorGhostActor->GetRootComponent()->SetMobility(EComponentMobility::Movable);
 
-		FPrefabTools::IterateChildrenRecursive(CursorGhostActor, [this](AActor* ChildActor) {
-			for (UActorComponent* Component : ChildActor->GetComponents()) {
-				if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component)) {
-					if (!Primitive->IsA<UPrefabricatorConstructionSnapComponent>()) {
-						// Disable collision
-						Primitive->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			FPrefabTools::IterateChildrenRecursive(CursorGhostActor, [this](AActor* ChildActor) {
+				for (UActorComponent* Component : ChildActor->GetComponents()) {
+					if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component)) {
+						if (!Primitive->IsA<UPrefabricatorConstructionSnapComponent>()) {
+							// Disable collision
+							Primitive->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+						}
+					}
+
+					if (UPrefabricatorConstructionSnapComponent* SnapComponent = Cast<UPrefabricatorConstructionSnapComponent>(Component)) {
+						SnapComponents.Add(SnapComponent);
 					}
 				}
-
-				if (UPrefabricatorConstructionSnapComponent* SnapComponent = Cast<UPrefabricatorConstructionSnapComponent>(Component)) {
-					SnapComponents.Add(SnapComponent);
-				}
+			});
+		}
+		else {
+			// No active prefab. destroy the cursor actors
+			if (CursorGhostActor) {
+				CursorGhostActor->Destroy();
+				CursorGhostActor = nullptr;
 			}
-		});
+		}
 	}
 
-	SetVisiblity(EConstructionSystemCursorVisiblity::Hidden, true);
+	SetVisiblity(EConstructionSystemCursorVisiblity::Visible, true);
 }
 
 void UConstructionSystemCursor::AssignMaterialRecursive(UMaterialInterface* InMaterial) const

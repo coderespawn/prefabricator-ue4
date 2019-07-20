@@ -41,6 +41,7 @@ void UConstructionSystemBuildTool::OnToolEnable(UConstructionSystemComponent* Co
 {
 	UConstructionSystemTool::OnToolEnable(ConstructionComponent);
 	if (Cursor) {
+		Cursor->RecreateCursor(ConstructionComponent->GetWorld(), ActivePrefabAsset);
 		Cursor->SetVisiblity(EConstructionSystemCursorVisiblity::Visible);
 	}
 }
@@ -50,6 +51,7 @@ void UConstructionSystemBuildTool::OnToolDisable(UConstructionSystemComponent* C
 	UConstructionSystemTool::OnToolDisable(ConstructionComponent);
 
 	if (Cursor) {
+		Cursor->DestroyCursor();
 		Cursor->SetVisiblity(EConstructionSystemCursorVisiblity::Hidden);
 	}
 }
@@ -242,18 +244,21 @@ void UConstructionSystemBuildTool::SetActivePrefab(UPrefabricatorAssetInterface*
 
 void UConstructionSystemBuildTool::CursorMoveNext()
 {
+	if (!bToolEnabled) return;
 	Cursor->IncrementSeed();
 	Cursor->RecreateCursor(GetWorld(), ActivePrefabAsset);
 }
 
 void UConstructionSystemBuildTool::CursorMovePrev()
 {
+	if (!bToolEnabled) return;
 	Cursor->DecrementSeed();
 	Cursor->RecreateCursor(GetWorld(), ActivePrefabAsset);
 }
 
 void UConstructionSystemBuildTool::RotateCursorStep(float NumSteps)
 {
+	if (!bToolEnabled) return;
 	CursorRotationStep += NumSteps;
 }
 
@@ -298,34 +303,34 @@ void UConstructionSystemBuildTool::HandleInput_RotateCursorStep(float NumSteps)
 
 void UConstructionSystemBuildTool::ConstructAtCursor()
 {
+	if (!bToolEnabled) return;
+
 	UConstructionSystemComponent* ConstructionComponent = Cast<UConstructionSystemComponent>(GetOuter());
 	if (!ConstructionComponent) {
 		return;
 	}
 
-	if (bToolEnabled) {
-		UWorld* World = ConstructionComponent->GetWorld();
-		if (!World) {
-			return;
-		}
+	UWorld* World = ConstructionComponent->GetWorld();
+	if (!World) {
+		return;
+	}
 
-		if (Cursor->GetVisiblity() != EConstructionSystemCursorVisiblity::Visible) {
-			// Current cursor location is invalid
-			return;
-		}
-		if (World && ActivePrefabAsset) {
-			FTransform Transform;
-			if (Cursor->GetCursorTransform(Transform)) {
-				APrefabActor* SpawnedPrefab = GetWorld()->SpawnActor<APrefabActor>(APrefabActor::StaticClass(), Transform);
-				SpawnedPrefab->PrefabComponent->PrefabAssetInterface = ActivePrefabAsset;
+	if (Cursor->GetVisiblity() != EConstructionSystemCursorVisiblity::Visible) {
+		// Current cursor location is invalid
+		return;
+	}
+	if (World && ActivePrefabAsset) {
+		FTransform Transform;
+		if (Cursor->GetCursorTransform(Transform)) {
+			APrefabActor* SpawnedPrefab = GetWorld()->SpawnActor<APrefabActor>(APrefabActor::StaticClass(), Transform);
+			SpawnedPrefab->PrefabComponent->PrefabAssetInterface = ActivePrefabAsset;
 
-				FRandomStream RandomStream(Cursor->GetCursorSeed());
-				UPrefabricatorBlueprintLibrary::RandomizePrefab(SpawnedPrefab, RandomStream);
+			FRandomStream RandomStream(Cursor->GetCursorSeed());
+			UPrefabricatorBlueprintLibrary::RandomizePrefab(SpawnedPrefab, RandomStream);
 
-				if (!bCursorModeFreeForm) {
-					// A prefab was created at the cursor on a snapped location. Reset the local cursor rotation
-					CursorRotationStep = 0;
-				}
+			if (!bCursorModeFreeForm) {
+				// A prefab was created at the cursor on a snapped location. Reset the local cursor rotation
+				CursorRotationStep = 0;
 			}
 		}
 	}

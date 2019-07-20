@@ -19,36 +19,24 @@ void UConstructionSystemRemoveTool::InitializeTool(UConstructionSystemComponent*
 {
 	UConstructionSystemTool::InitializeTool(ConstructionComponent);
 
-	Cursor = NewObject<UConstructionSystemCursor>(this, "Cursor");
-	Cursor->SetCursorMaterial(ConstructionComponent->CursorMaterial);
-	Cursor->SetCursorInvalidMaterial(ConstructionComponent->CursorInvalidMaterial);
-
 	PrefabSnapChannel = FConstructionSystemUtils::FindPrefabSnapChannel();
 }
 
 void UConstructionSystemRemoveTool::DestroyTool(UConstructionSystemComponent* ConstructionComponent)
 {
 	UConstructionSystemTool::DestroyTool(ConstructionComponent);
-	if (Cursor) {
-		Cursor->DestroyCursor();
-	}
 }
 
 void UConstructionSystemRemoveTool::OnToolEnable(UConstructionSystemComponent* ConstructionComponent)
 {
 	UConstructionSystemTool::OnToolEnable(ConstructionComponent);
-	if (Cursor) {
-		Cursor->SetVisiblity(EConstructionSystemCursorVisiblity::Visible);
-	}
+
 }
 
 void UConstructionSystemRemoveTool::OnToolDisable(UConstructionSystemComponent* ConstructionComponent)
 {
 	UConstructionSystemTool::OnToolDisable(ConstructionComponent);
 
-	if (Cursor) {
-		Cursor->SetVisiblity(EConstructionSystemCursorVisiblity::Hidden);
-	}
 }
 
 void UConstructionSystemRemoveTool::Update(UConstructionSystemComponent* ConstructionComponent)
@@ -107,7 +95,7 @@ void UConstructionSystemRemoveTool::HandleInput_RemoveAtCursor()
 
 void UConstructionSystemRemoveTool::RemoveAtCursor()
 {
-	if (bCursorFoundHit && FocusedActor.IsValid()) {
+	if (bToolEnabled && bCursorFoundHit && FocusedActor.IsValid()) {
 		FocusedActor->Destroy();
 		FocusedActor = nullptr;
 		bCursorFoundHit = false;

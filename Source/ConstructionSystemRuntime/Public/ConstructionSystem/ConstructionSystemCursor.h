@@ -21,7 +21,7 @@ class CONSTRUCTIONSYSTEMRUNTIME_API UConstructionSystemCursor : public UObject {
 	GENERATED_BODY()
 
 public:
-	void RecreateCursor(UWorld* InWorld, UPrefabricatorAssetInterface* InActivePrefabAsset);
+	void RecreateCursor(UWorld* InWorld, UPrefabricatorAssetInterface* InCursorPrefab);
 	void DestroyCursor();
 	void SetVisiblity(EConstructionSystemCursorVisiblity InVisiblity, bool bForce = false);
 	EConstructionSystemCursorVisiblity GetVisiblity() const { return Visiblity;	}
