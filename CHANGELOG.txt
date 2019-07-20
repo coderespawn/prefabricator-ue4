@@ -1,6 +1,6 @@
 CHANGELOG: Prefabricator
 ========================
-Version 1.2.1-hf1
+Version 1.2.0.hf1
 -----------------
 * Fix: Added null pointer checks while serializing / deserializing prefabs to avoid crash issues with stale uobjects
 
