@@ -220,6 +220,12 @@ void UConstructionSystemComponent::ShowBuildMenu()
 		if (PlayerController) {
 			PlayerController->SetInputMode(FInputModeGameAndUI());
 			PlayerController->bShowMouseCursor = true;
+
+			// Disable the pawn's input
+			APawn* ControlledPawn = PlayerController->GetPawn();
+			if (ControlledPawn) {
+				ControlledPawn->DisableInput(PlayerController);
+			}
 		}
 	}
 }
@@ -232,6 +238,13 @@ void UConstructionSystemComponent::HideBuildMenu()
 		if (PlayerController) {
 			PlayerController->SetInputMode(FInputModeGameOnly());
 			PlayerController->bShowMouseCursor = false;
+			
+			// Enable the pawn's input
+			APawn* ControlledPawn = PlayerController->GetPawn();
+			if (ControlledPawn) {
+				ControlledPawn->EnableInput(PlayerController);
+			}
+
 		}
 	}
 }
