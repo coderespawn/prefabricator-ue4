@@ -339,7 +339,7 @@ bool FPCSnapUtils::GetSnapPoint(UPrefabricatorConstructionSnapComponent* Src, UP
 
 		FVector TargetSrcSnapLocation = SrcWorldTransform.TransformPosition(BestLSrcPos);
 		FVector TargetDstSnapLocation = DstWorldTransform.TransformPosition(BestLDstPos);
-		FQuat DstRotation = BestLDstRot * Src->GetComponentRotation().Quaternion();
+		FQuat DstRotation = Src->GetComponentRotation().Quaternion() * BestLDstRot;
 
 		TargetDstSnapLocation = DstRotation.RotateVector(TargetDstSnapLocation);
 		FVector DstOffset = TargetSrcSnapLocation - TargetDstSnapLocation;

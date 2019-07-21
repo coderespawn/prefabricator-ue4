@@ -77,6 +77,9 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Prefabricator")
 	FPCSnapConstraintWall WallConstraint;
+
+	UPROPERTY(EditAnywhere, Category = "Prefabricator")
+	bool bAlignToGroundSlope = false;
 };
 
 UCLASS(ConversionRoot, ComponentWrapperClass)

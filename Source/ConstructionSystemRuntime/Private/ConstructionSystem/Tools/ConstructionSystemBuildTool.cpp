@@ -101,9 +101,9 @@ void UConstructionSystemBuildTool::Update(UConstructionSystemComponent* Construc
 		if (bCursorFoundHit) {
 			FVector CursorLocation;
 			FQuat CursorRotation;
+			UPrefabricatorConstructionSnapComponent* CursorSnap = Cursor->GetActiveSnapComponent();
 			if (bHitSnapChannel) {
 				// Snap the cursor
-				UPrefabricatorConstructionSnapComponent* CursorSnap = Cursor->GetActiveSnapComponent();
 				UPrefabricatorConstructionSnapComponent* HitSnap = Cast<UPrefabricatorConstructionSnapComponent>(Hit.GetComponent());
 				if (CursorSnap && HitSnap) {
 					FTransform TargetSnapTransform;
@@ -118,7 +118,10 @@ void UConstructionSystemBuildTool::Update(UConstructionSystemComponent* Construc
 			}
 			else {
 				CursorLocation = Hit.ImpactPoint;
-				CursorRotation = FQuat::FindBetweenNormals(FVector(0, 0, 1), Hit.Normal);
+				
+				CursorRotation = (CursorSnap && CursorSnap->bAlignToGroundSlope)
+						? FQuat::FindBetweenNormals(FVector(0, 0, 1), Hit.Normal)
+						: FQuat::Identity;
 				float CursorRotationDegrees = CursorRotationStep * CursorRotationStepAngle;
 				CursorRotation = CursorRotation * FQuat::MakeFromEuler(FVector(0, 0, CursorRotationDegrees));
 			}
