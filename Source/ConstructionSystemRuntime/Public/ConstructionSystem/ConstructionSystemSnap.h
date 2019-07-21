@@ -80,6 +80,12 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Prefabricator")
 	bool bAlignToGroundSlope = false;
+
+	UPROPERTY(EditAnywhere, Category = "Prefabricator")
+	bool bUseMaxGroundSlopeConstraint = false;
+
+	UPROPERTY(EditAnywhere, Category = "Prefabricator", Meta=(EditCondition="bUseMaxGroundSlopeConstraint"))
+	float MaxGroundPlacementSlope = 60.0f;
 };
 
 UCLASS(ConversionRoot, ComponentWrapperClass)

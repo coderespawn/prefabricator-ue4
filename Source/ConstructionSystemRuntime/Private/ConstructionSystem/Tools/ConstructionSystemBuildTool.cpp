@@ -118,7 +118,6 @@ void UConstructionSystemBuildTool::Update(UConstructionSystemComponent* Construc
 			}
 			else {
 				CursorLocation = Hit.ImpactPoint;
-				
 				CursorRotation = (CursorSnap && CursorSnap->bAlignToGroundSlope)
 						? FQuat::FindBetweenNormals(FVector(0, 0, 1), Hit.Normal)
 						: FQuat::Identity;
@@ -139,6 +138,7 @@ void UConstructionSystemBuildTool::Update(UConstructionSystemComponent* Construc
 
 			UPrefabricatorConstructionSnapComponent* ActiveCursorSnap = Cursor->GetActiveSnapComponent();
 			if (ActiveCursorSnap) {
+				// Check if we overlap with existing geometry
 				FVector BoxLocation = ActiveCursorSnap->GetComponentLocation();
 				FRotator BoxRotation = ActiveCursorSnap->GetComponentRotation();
 				FVector BoxExtent = ActiveCursorSnap->GetScaledBoxExtent();
@@ -198,12 +198,24 @@ void UConstructionSystemBuildTool::Update(UConstructionSystemComponent* Construc
 								}
 							}
 
+							// TODO: Emit out the reason (encroaching on existing geometry)
 							CursorVisiblity = EConstructionSystemCursorVisiblity::VisibleInvalid;
 							break;
 						}
 					}
 				}
 				//DrawDebugBox(World, BoxLocation, BoxExtent, BoxRotation.Quaternion(), FColor::Red);
+
+				// Check if the ground slope is too steep, while placing in world static geometry
+				if (ActiveCursorSnap->bUseMaxGroundSlopeConstraint && !bHitSnapChannel) {
+					float Dot = FVector::DotProduct(FVector(0, 0, 1), Hit.ImpactNormal);
+					float AngleRad = FMath::Acos(Dot);
+					float AngleDeg = FMath::RadiansToDegrees(AngleRad);
+					if (AngleDeg > ActiveCursorSnap->MaxGroundPlacementSlope) {
+						// TODO: Emit out the reason (Floor to steep)
+						CursorVisiblity = EConstructionSystemCursorVisiblity::VisibleInvalid;
+					}
+				}
 			}
 		}
 		else {
