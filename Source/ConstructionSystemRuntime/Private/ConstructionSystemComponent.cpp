@@ -19,6 +19,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "EngineUtils.h"
 #include "Engine/Engine.h"
+#include "ConstructionSystemUtils.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogConstructionSystem, Log, All);
 
@@ -84,22 +85,6 @@ UConstructionSystemTool* UConstructionSystemComponent::GetTool(EConstructionSyst
 {
 	UConstructionSystemTool** ToolPtr = Tools.Find(InToolType);
 	return ToolPtr ? *ToolPtr : nullptr;
-}
-
-APrefabActor* UConstructionSystemComponent::ConstructPrefabItem(UPrefabricatorAssetInterface* InPrefabAsset, const FTransform& InTransform, int32 InSeed) const
-{
-	UWorld* World = GetWorld();
-	APrefabActor* SpawnedPrefab = World->SpawnActor<APrefabActor>(APrefabActor::StaticClass(), InTransform);
-	SpawnedPrefab->PrefabComponent->PrefabAssetInterface = InPrefabAsset;
-
-	FRandomStream RandomStream(InSeed);
-	UPrefabricatorBlueprintLibrary::RandomizePrefab(SpawnedPrefab, RandomStream);
-
-	UConstructionSystemItemUserData* UserData = NewObject<UConstructionSystemItemUserData>(SpawnedPrefab->GetRootComponent());
-	UserData->Seed = InSeed;
-	SpawnedPrefab->GetRootComponent()->AddAssetUserData(UserData);
-
-	return SpawnedPrefab;
 }
 
 void UConstructionSystemComponent::TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction *ThisTickFunction)
@@ -291,29 +276,7 @@ void UConstructionSystemComponent::HideBuildMenu()
 
 void UConstructionSystemComponent::SaveLevel(const FString& InSaveSlotName, int32 InUserIndex)
 {
-	if (!GEngine) return;
-
-	UWorld* World = GetWorld();
-	UConstructionSystemSaveGame* SaveGameInstance = Cast<UConstructionSystemSaveGame>(UGameplayStatics::CreateSaveGameObject(UConstructionSystemSaveGame::StaticClass()));
-	SaveGameInstance->SaveSlotName = InSaveSlotName;
-	SaveGameInstance->UserIndex = InUserIndex;
-
-	for (TActorIterator<APrefabActor> It(World); It; ++It) {
-		APrefabActor* PrefabActor = *It;
-		if (PrefabActor && PrefabActor->GetRootComponent()) {
-			if (UConstructionSystemItemUserData* UserData = Cast<UConstructionSystemItemUserData>(
-				PrefabActor->GetRootComponent()->GetAssetUserDataOfClass(UConstructionSystemItemUserData::StaticClass()))) {
-				// This prefab actor was created using the construction system
-				FConstructionSystemSaveConstructedItem Item;
-				Item.PrefabAsset = PrefabActor->GetPrefabAsset();
-				Item.Seed = UserData->Seed;
-				Item.Transform = PrefabActor->GetActorTransform();
-				SaveGameInstance->ConstructedItems.Add(Item);
-			}
-		}
-	}
-
-	UGameplayStatics::SaveGameToSlot(SaveGameInstance, SaveGameInstance->SaveSlotName, SaveGameInstance->UserIndex);
+	FConstructionSystemSaveSystem::SaveLevel(GetWorld(), InSaveSlotName, InUserIndex);
 }
 
 void UConstructionSystemComponent::LoadLevel(const FString& InSaveSlotName, int32 InUserIndex)
@@ -342,7 +305,7 @@ void UConstructionSystemComponent::LoadLevel(const FString& InSaveSlotName, int3
 
 	if (LoadGameInstance) {
 		for (const FConstructionSystemSaveConstructedItem& Item : LoadGameInstance->ConstructedItems) {
-			ConstructPrefabItem(Item.PrefabAsset, Item.Transform, Item.Seed);
+			FConstructionSystemUtils::ConstructPrefabItem(GetWorld(), Item.PrefabAsset, Item.Transform, Item.Seed);
 		}
 	}
 }

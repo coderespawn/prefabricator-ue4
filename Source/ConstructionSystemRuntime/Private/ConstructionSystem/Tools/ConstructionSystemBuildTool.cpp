@@ -107,7 +107,7 @@ void UConstructionSystemBuildTool::Update(UConstructionSystemComponent* Construc
 				UPrefabricatorConstructionSnapComponent* HitSnap = Cast<UPrefabricatorConstructionSnapComponent>(Hit.GetComponent());
 				if (CursorSnap && HitSnap) {
 					FTransform TargetSnapTransform;
-					if (FPCSnapUtils::GetSnapPoint(HitSnap, CursorSnap, Hit.ImpactPoint, TargetSnapTransform, CursorRotationStep, 100)) {
+					if (FConstructionSystemUtils::GetSnapPoint(HitSnap, CursorSnap, Hit.ImpactPoint, TargetSnapTransform, CursorRotationStep, 100)) {
 						bCursorModeFreeForm = false;
 						CursorLocation = TargetSnapTransform.GetLocation();
 						CursorRotation = TargetSnapTransform.GetRotation();
@@ -326,7 +326,7 @@ void UConstructionSystemBuildTool::ConstructAtCursor()
 	if (World && ActivePrefabAsset) {
 		FTransform Transform;
 		if (Cursor->GetCursorTransform(Transform)) {
-			APrefabActor* SpawnedPrefab = ConstructionComponent->ConstructPrefabItem(ActivePrefabAsset, Transform, Cursor->GetCursorSeed());
+			APrefabActor* SpawnedPrefab = FConstructionSystemUtils::ConstructPrefabItem(ConstructionComponent->GetWorld(), ActivePrefabAsset, Transform, Cursor->GetCursorSeed());
 
 			if (!bCursorModeFreeForm) {
 				// A prefab was created at the cursor on a snapped location. Reset the local cursor rotation

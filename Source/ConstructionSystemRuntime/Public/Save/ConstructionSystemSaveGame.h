@@ -21,6 +21,17 @@ struct CONSTRUCTIONSYSTEMRUNTIME_API FConstructionSystemSaveConstructedItem {
 	FTransform Transform;
 };
 
+USTRUCT()
+struct CONSTRUCTIONSYSTEMRUNTIME_API FConstructionSystemSavePlayerInfo {
+	GENERATED_BODY()
+
+	UPROPERTY()
+	bool bRestorePlayerInfo = false;
+
+	UPROPERTY()
+	FTransform Transform = FTransform::Identity;
+};
+
 UCLASS()
 class CONSTRUCTIONSYSTEMRUNTIME_API UConstructionSystemSaveGame : public USaveGame {
 	GENERATED_BODY()
@@ -31,6 +42,15 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "ConstructionSystem")
 	uint32 UserIndex;
 
+	UPROPERTY(VisibleAnywhere, Category = "ConstructionSystem")
+	FConstructionSystemSavePlayerInfo PlayerInfo;
+
 	UPROPERTY()
 	TArray<FConstructionSystemSaveConstructedItem> ConstructedItems;
+};
+
+class CONSTRUCTIONSYSTEMRUNTIME_API FConstructionSystemSaveSystem {
+public:
+	static void SaveLevel(UWorld* InWorld, const FString& InSaveSlotName, int32 InUserIndex);
+	static void LoadLevel(UWorld* InWorld, const FString& InSaveSlotName, int32 InUserIndex);
 };

@@ -6,17 +6,15 @@
 
 class APrefabActor;
 class UPrefabricatorConstructionSnapComponent;
+class UPrefabricatorAssetInterface;
 
 class CONSTRUCTIONSYSTEMRUNTIME_API FConstructionSystemUtils {
 public:
 	static ECollisionChannel FindPrefabSnapChannel();
 	static APrefabActor* FindTopMostPrefabActor(UPrefabricatorConstructionSnapComponent* SnapComponent);
-};
-
-
-class CONSTRUCTIONSYSTEMRUNTIME_API FPCSnapUtils {
-public:
+	static APrefabActor* ConstructPrefabItem(UWorld* InWorld, UPrefabricatorAssetInterface* InPrefabAsset, const FTransform& InTransform, int32 InSeed);
 	static bool GetSnapPoint(UPrefabricatorConstructionSnapComponent* InFixedSnapComp, UPrefabricatorConstructionSnapComponent* InNewSnapComp,
 		const FVector& InRequestedSnapLocation, FTransform& OutTargetSnapTransform, int32 CursorRotationStep = 0, float InSnapTolerrance = 200.0f);
 
 };
+

@@ -5,6 +5,10 @@
 #include "ConstructionSystemDefs.h"
 #include "ConstructionSystemSnap.h"
 #include "PrefabActor.h"
+#include "PrefabricatorAsset.h"
+#include "PrefabComponent.h"
+#include "PrefabricatorFunctionLibrary.h"
+#include "ConstructionSystemComponent.h"
 
 ECollisionChannel FConstructionSystemUtils::FindPrefabSnapChannel()
 {
@@ -32,7 +36,7 @@ APrefabActor* FConstructionSystemUtils::FindTopMostPrefabActor(UPrefabricatorCon
 	return TopmostPrefab;
 }
 
-bool FPCSnapUtils::GetSnapPoint(UPrefabricatorConstructionSnapComponent* Src, UPrefabricatorConstructionSnapComponent* Dst, 
+bool FConstructionSystemUtils::GetSnapPoint(UPrefabricatorConstructionSnapComponent* Src, UPrefabricatorConstructionSnapComponent* Dst, 
 		const FVector& InRequestedSnapLocation, FTransform& OutTargetSnapTransform, int32 CursorRotationStep, float InSnapTolerrance)
 {
 	FTransform SrcWorldTransform = Src->GetComponentTransform();
@@ -425,4 +429,21 @@ bool FPCSnapUtils::GetSnapPoint(UPrefabricatorConstructionSnapComponent* Src, UP
 
 
 	return false;
+}
+
+
+
+APrefabActor* FConstructionSystemUtils::ConstructPrefabItem(UWorld* InWorld, UPrefabricatorAssetInterface* InPrefabAsset, const FTransform& InTransform, int32 InSeed)
+{
+	APrefabActor* SpawnedPrefab = InWorld->SpawnActor<APrefabActor>(APrefabActor::StaticClass(), InTransform);
+	SpawnedPrefab->PrefabComponent->PrefabAssetInterface = InPrefabAsset;
+
+	FRandomStream RandomStream(InSeed);
+	UPrefabricatorBlueprintLibrary::RandomizePrefab(SpawnedPrefab, RandomStream);
+
+	UConstructionSystemItemUserData* UserData = NewObject<UConstructionSystemItemUserData>(SpawnedPrefab->GetRootComponent());
+	UserData->Seed = InSeed;
+	SpawnedPrefab->GetRootComponent()->AddAssetUserData(UserData);
+
+	return SpawnedPrefab;
 }

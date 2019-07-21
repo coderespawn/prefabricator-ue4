@@ -66,7 +66,6 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "ConstructionSystem")
 	UConstructionSystemTool* GetTool(EConstructionSystemToolType InToolType);
 
-	APrefabActor* ConstructPrefabItem(UPrefabricatorAssetInterface* InPrefabAsset, const FTransform& InTransform, int32 InSeed) const;
 
 private:
 	APlayerController* GetPlayerController();
