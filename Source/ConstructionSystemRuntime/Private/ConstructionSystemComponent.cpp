@@ -274,45 +274,8 @@ void UConstructionSystemComponent::HideBuildMenu()
 	}
 }
 
-void UConstructionSystemComponent::SaveLevel(const FString& InSaveSlotName, int32 InUserIndex)
-{
-	FConstructionSystemSaveSystem::SaveLevel(GetWorld(), InSaveSlotName, InUserIndex);
-}
-
-void UConstructionSystemComponent::LoadLevel(const FString& InSaveSlotName, int32 InUserIndex)
-{
-	// Destroy all the constructed items
-	UWorld* World = GetWorld();
-	{
-		TArray<APrefabActor*> ActorsToDestroy;
-		for (TActorIterator<APrefabActor> It(World); It; ++It) {
-			APrefabActor* PrefabActor = *It;
-			if (PrefabActor && PrefabActor->GetRootComponent()) {
-				if (UConstructionSystemItemUserData* UserData = Cast<UConstructionSystemItemUserData>(
-						PrefabActor->GetRootComponent()->GetAssetUserDataOfClass(UConstructionSystemItemUserData::StaticClass()))) {
-					ActorsToDestroy.Add(PrefabActor);
-				}
-			}
-		}
-
-		for (APrefabActor* PrefabActor : ActorsToDestroy) {
-			PrefabActor->Destroy();
-		}
-	}
-
-	UConstructionSystemSaveGame* LoadGameInstance = Cast<UConstructionSystemSaveGame>(UGameplayStatics::CreateSaveGameObject(UConstructionSystemSaveGame::StaticClass()));
-	LoadGameInstance = Cast<UConstructionSystemSaveGame>(UGameplayStatics::LoadGameFromSlot(InSaveSlotName, InUserIndex));
-
-	if (LoadGameInstance) {
-		for (const FConstructionSystemSaveConstructedItem& Item : LoadGameInstance->ConstructedItems) {
-			FConstructionSystemUtils::ConstructPrefabItem(GetWorld(), Item.PrefabAsset, Item.Transform, Item.Seed);
-		}
-	}
-}
-
 void UConstructionSystemComponent::ToggleBuildUI()
 {
-
 	if (BuildMenuUIInstance) {
 		if (BuildMenuUIInstance->IsInViewport()) {
 			HideBuildMenu();

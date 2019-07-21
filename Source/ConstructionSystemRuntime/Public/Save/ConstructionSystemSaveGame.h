@@ -30,6 +30,9 @@ struct CONSTRUCTIONSYSTEMRUNTIME_API FConstructionSystemSavePlayerInfo {
 
 	UPROPERTY()
 	FTransform Transform = FTransform::Identity;
+
+	UPROPERTY()
+	FRotator ControlRotation = FRotator::ZeroRotator;
 };
 
 UCLASS()
@@ -49,8 +52,16 @@ public:
 	TArray<FConstructionSystemSaveConstructedItem> ConstructedItems;
 };
 
-class CONSTRUCTIONSYSTEMRUNTIME_API FConstructionSystemSaveSystem {
+UCLASS()
+class CONSTRUCTIONSYSTEMRUNTIME_API UConstructionSystemSaveSystem : public UBlueprintFunctionLibrary {
+	GENERATED_BODY()
 public:
-	static void SaveLevel(UWorld* InWorld, const FString& InSaveSlotName, int32 InUserIndex);
-	static void LoadLevel(UWorld* InWorld, const FString& InSaveSlotName, int32 InUserIndex);
+	UFUNCTION(BlueprintCallable, Category = "ConstructionSystem")
+	static void SaveConstructionSystemLevel(const UObject* WorldContextObject, const FString& SaveSlotName, int32 UserIndex, bool bSavePlayerState);
+
+	UFUNCTION(BlueprintCallable, Category = "ConstructionSystem")
+	static void LoadConstructionSystemLevel(const UObject* WorldContextObject, const FName& LevelName, bool bAbsolute, const FString& SaveSlotName, int32 UserIndex);
+
+	UFUNCTION(BlueprintCallable, Category = "ConstructionSystem")
+	static void HandleConstructionSystemLevelLoad(const UObject* WorldContextObject);
 };
