@@ -17,3 +17,11 @@ public:
 		const FVector& InRequestedSnapLocation, FTransform& OutTargetSnapTransform, int32 CursorRotationStep = 0, float InSnapTolerrance = 200.0f);
 };
 
+class CONSTRUCTIONSYSTEMRUNTIME_API FConstructionSystemCollision {
+public:
+	static bool WallWallCollision(const FVector& ExtentA, const FTransform& TransformA, const FVector& ExtentB, const FTransform& TransformB);
+	static bool WallBoxCollision(const FVector& WallExtent, const FTransform& WallTransform, const FVector& BoxExtent, const FTransform& BoxTransform);
+
+private:
+	static bool WallWallCollisionOneSide(const FVector& ExtentA, const FTransform& TransformA, const FVector& ExtentB, const FTransform& TransformB);
+};

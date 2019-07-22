@@ -79,24 +79,6 @@ void UConstructionSystemSaveSystem::HandleConstructionSystemLevelLoad(const UObj
 		return;
 	}
 
-	// Destroy all the constructed items
-	{
-		TArray<APrefabActor*> ActorsToDestroy;
-		for (TActorIterator<APrefabActor> It(World); It; ++It) {
-			APrefabActor* PrefabActor = *It;
-			if (PrefabActor && PrefabActor->GetRootComponent()) {
-				if (UConstructionSystemItemUserData* UserData = Cast<UConstructionSystemItemUserData>(
-					PrefabActor->GetRootComponent()->GetAssetUserDataOfClass(UConstructionSystemItemUserData::StaticClass()))) {
-					ActorsToDestroy.Add(PrefabActor);
-				}
-			}
-		}
-
-		for (APrefabActor* PrefabActor : ActorsToDestroy) {
-			PrefabActor->Destroy();
-		}
-	}
-
 	UConstructionSystemSaveGame* LoadGameInstance = Cast<UConstructionSystemSaveGame>(UGameplayStatics::CreateSaveGameObject(UConstructionSystemSaveGame::StaticClass()));
 	LoadGameInstance = Cast<UConstructionSystemSaveGame>(UGameplayStatics::LoadGameFromSlot(SaveSlotName, UserIndex));
 
