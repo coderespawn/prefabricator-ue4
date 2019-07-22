@@ -97,17 +97,17 @@ void UConstructionSystemBuildTool::Update(UConstructionSystemComponent* Construc
 			// We did not hit anything. Trace in the static world
 			bCursorFoundHit = true;
 		}
-
+		UPrefabricatorConstructionSnapComponent* SnapHost = nullptr;
 		if (bCursorFoundHit) {
 			FVector CursorLocation;
 			FQuat CursorRotation;
 			UPrefabricatorConstructionSnapComponent* CursorSnap = Cursor->GetActiveSnapComponent();
 			if (bHitSnapChannel) {
 				// Snap the cursor
-				UPrefabricatorConstructionSnapComponent* HitSnap = Cast<UPrefabricatorConstructionSnapComponent>(Hit.GetComponent());
-				if (CursorSnap && HitSnap) {
+				SnapHost = Cast<UPrefabricatorConstructionSnapComponent>(Hit.GetComponent());
+				if (CursorSnap && SnapHost) {
 					FTransform TargetSnapTransform;
-					if (FConstructionSystemUtils::GetSnapPoint(HitSnap, CursorSnap, Hit.ImpactPoint, TargetSnapTransform, CursorRotationStep, 100)) {
+					if (FConstructionSystemUtils::GetSnapPoint(SnapHost, CursorSnap, Hit.ImpactPoint, TargetSnapTransform, CursorRotationStep, 100)) {
 						bCursorModeFreeForm = false;
 						CursorLocation = TargetSnapTransform.GetLocation();
 						CursorRotation = TargetSnapTransform.GetRotation();
@@ -152,10 +152,29 @@ void UConstructionSystemBuildTool::Update(UConstructionSystemComponent* Construc
 				if (World->OverlapMultiByChannel(Overlaps, BoxLocation, BoxRotation.Quaternion(), PrefabSnapChannel, FCollisionShape::MakeBox(BoxExtent), QueryParams)) {
 					for (const FOverlapResult& Overlap : Overlaps) {
 						if (UPrefabricatorConstructionSnapComponent* OverlapSnap = Cast<UPrefabricatorConstructionSnapComponent>(Overlap.GetComponent())) {
+							if (OverlapSnap == SnapHost) {
+								// We are trying to snap on this object. ignore 
+								//continue;
+							}
+
 							if (ActiveCursorSnap->SnapType == EPrefabricatorConstructionSnapType::Wall && OverlapSnap->SnapType == EPrefabricatorConstructionSnapType::Wall) {
 								if (!FConstructionSystemCollision::WallWallCollision(
 										ActiveCursorSnap->GetScaledBoxExtent(), ActiveCursorSnap->GetComponentTransform(), 
 										OverlapSnap->GetScaledBoxExtent(), OverlapSnap->GetComponentTransform())) {
+									continue;
+								}
+							}
+							else if (ActiveCursorSnap->SnapType == EPrefabricatorConstructionSnapType::Wall && OverlapSnap->SnapType == EPrefabricatorConstructionSnapType::Floor) {
+								if (!FConstructionSystemCollision::WallBoxCollision(
+									ActiveCursorSnap->GetScaledBoxExtent(), ActiveCursorSnap->GetComponentTransform(),
+									OverlapSnap->GetScaledBoxExtent(), OverlapSnap->GetComponentTransform())) {
+									continue;
+								}
+							}
+							else if (ActiveCursorSnap->SnapType == EPrefabricatorConstructionSnapType::Floor && OverlapSnap->SnapType == EPrefabricatorConstructionSnapType::Wall) {
+								if (!FConstructionSystemCollision::WallBoxCollision(
+									OverlapSnap->GetScaledBoxExtent(), OverlapSnap->GetComponentTransform(),
+									ActiveCursorSnap->GetScaledBoxExtent(), ActiveCursorSnap->GetComponentTransform())) {
 									continue;
 								}
 							}

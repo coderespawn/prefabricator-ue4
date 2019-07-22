@@ -74,7 +74,7 @@ bool FConstructionSystemUtils::GetSnapPoint(UPrefabricatorConstructionSnapCompon
 		Cursor2D.X = bUseSrcXAxis ? LocalCursorSnapPosition.X : LocalCursorSnapPosition.Y;
 		Cursor2D.Y = LocalCursorSnapPosition.Z;
 
-		bool bCanApplyBaseRotations = false;
+		bool bAttachedOnSides = false;
 
 		// Top
 		FVector2D BestSrcPos2D = FVector2D(0, SrcHalfSize2D.Y);
@@ -101,7 +101,7 @@ bool FConstructionSystemUtils::GetSnapPoint(UPrefabricatorConstructionSnapCompon
 				BestSrcSnapDistance = TestDistance;
 				BestSrcPos2D = FVector2D(SrcHalfSize2D.X, -SrcHalfSize2D.Y);
 				BestDstPos2D = FVector2D(-DstHalfSize2D.X, -DstHalfSize2D.Y);
-				bCanApplyBaseRotations = true;
+				bAttachedOnSides = true;
 				bFoundBest = true;
 			}
 		}
@@ -113,7 +113,7 @@ bool FConstructionSystemUtils::GetSnapPoint(UPrefabricatorConstructionSnapCompon
 				BestSrcSnapDistance = TestDistance;
 				BestSrcPos2D = FVector2D(-SrcHalfSize2D.X, -SrcHalfSize2D.Y);
 				BestDstPos2D = FVector2D(DstHalfSize2D.X, -DstHalfSize2D.Y);
-				bCanApplyBaseRotations = true;
+				bAttachedOnSides = true;
 				bFoundBest = true;
 			}
 		}
@@ -135,8 +135,8 @@ bool FConstructionSystemUtils::GetSnapPoint(UPrefabricatorConstructionSnapCompon
 		FVector TargetSrcSnapLocation = SrcWorldTransform.TransformPosition(BestLocalSrcSnapLocation);
 		FVector TargetDstSnapLocation = DstWorldTransform.TransformPosition(BestLocalDstSnapLocation);
 		FQuat DstRotation = Src->GetComponentRotation().Quaternion();
-		if (bCanApplyBaseRotations) {
-			FVector UpVector = DstRotation.RotateVector(FVector::UpVector);
+		FVector UpVector = DstRotation.RotateVector(FVector::UpVector);
+		if (bAttachedOnSides) {
 			const FQuat BaseRotations[] = {
 				FQuat::Identity,
 				FQuat(UpVector, PI * 0.5f),
@@ -144,9 +144,18 @@ bool FConstructionSystemUtils::GetSnapPoint(UPrefabricatorConstructionSnapCompon
 			};
 			FQuat BaseRotation = BaseRotations[FMath::Abs(CursorRotationStep) % 3];
 			DstRotation = BaseRotation * DstRotation;
+			TargetDstSnapLocation = DstRotation.RotateVector(TargetDstSnapLocation);
+		}
+		else {
+			const FQuat BaseRotations[] = {
+				FQuat::Identity,
+				FQuat(UpVector, PI)
+			};
+			TargetDstSnapLocation = DstRotation.RotateVector(TargetDstSnapLocation);
+			FQuat BaseRotation = BaseRotations[FMath::Abs(CursorRotationStep) % 2];
+			DstRotation = BaseRotation * DstRotation;
 		}
 
-		TargetDstSnapLocation = DstRotation.RotateVector(TargetDstSnapLocation);
 		FVector DstOffset = TargetSrcSnapLocation - TargetDstSnapLocation;
 		OutTargetSnapTransform = FTransform(DstRotation, DstOffset);
 		return true;
@@ -344,8 +353,16 @@ bool FConstructionSystemUtils::GetSnapPoint(UPrefabricatorConstructionSnapCompon
 		FVector TargetSrcSnapLocation = SrcWorldTransform.TransformPosition(BestLSrcPos);
 		FVector TargetDstSnapLocation = DstWorldTransform.TransformPosition(BestLDstPos);
 		FQuat DstRotation = Src->GetComponentRotation().Quaternion() * BestLDstRot;
-
-		TargetDstSnapLocation = DstRotation.RotateVector(TargetDstSnapLocation);
+		{
+			FVector UpVector = DstRotation.RotateVector(FVector::UpVector);
+			const FQuat BaseRotations[] = {
+				FQuat::Identity,
+				FQuat(UpVector, PI)
+			};
+			TargetDstSnapLocation = DstRotation.RotateVector(TargetDstSnapLocation);
+			FQuat BaseRotation = BaseRotations[FMath::Abs(CursorRotationStep) % 2];
+			DstRotation = BaseRotation * DstRotation;
+		}
 		FVector DstOffset = TargetSrcSnapLocation - TargetDstSnapLocation;
 		OutTargetSnapTransform = FTransform(DstRotation, DstOffset);
 		return true;
@@ -409,6 +426,8 @@ bool FConstructionSystemUtils::GetSnapPoint(UPrefabricatorConstructionSnapCompon
 		FVector TargetDstSnapLocation = DstWorldTransform.TransformPosition(BestDstPos);
 		FQuat DstRotation = Src->GetComponentRotation().Quaternion();
 
+		TargetDstSnapLocation = DstRotation.RotateVector(TargetDstSnapLocation);
+
 		const bool bCanApplyBaseRotations = true;
 		if (bCanApplyBaseRotations) {
 			FVector UpVector = DstRotation.RotateVector(FVector::UpVector);
@@ -418,15 +437,45 @@ bool FConstructionSystemUtils::GetSnapPoint(UPrefabricatorConstructionSnapCompon
 				FQuat(UpVector, -PI * 0.5f)
 			};
 			FQuat BaseRotation = BaseRotations[FMath::Abs(CursorRotationStep) % 3];
-			DstRotation = BaseRotation * DstRotation;
+			DstRotation = DstRotation * BaseRotation;
 		}
 
-		TargetDstSnapLocation = DstRotation.RotateVector(TargetDstSnapLocation);
 		FVector DstOffset = TargetSrcSnapLocation - TargetDstSnapLocation;
 		OutTargetSnapTransform = FTransform(DstRotation, DstOffset);
 		return true;
 	}
 
+	else if (Dst->SnapType == EPrefabricatorConstructionSnapType::Object) {
+		FVector SrcBoxExtent = Src->GetUnscaledBoxExtent();
+		FVector DstBoxExtent = Dst->GetUnscaledBoxExtent();
+
+		const float SnapSize = 100;	// TODO: Configure me
+
+		FVector LCur = LocalCursorSnapPosition;
+		/*
+		LCur = FVector(FMath::FloorToInt(LCur.X / SnapSize),
+			FMath::FloorToInt(LCur.X / SnapSize),
+			FMath::FloorToInt(LCur.X / SnapSize)) * SnapSize;
+			*/
+
+		FBox SrcBox(-SrcBoxExtent, SrcBoxExtent);
+		LCur = SrcBox.GetClosestPointTo(LCur);
+
+		FVector TargetSrcSnapLocation = SrcWorldTransform.TransformPosition(LCur);
+		FVector TargetDstSnapLocation = DstWorldTransform.TransformPosition(FVector(0, 0, -DstBoxExtent.Z));
+		FQuat DstRotation = Src->GetComponentRotation().Quaternion();
+		TargetDstSnapLocation = DstRotation.RotateVector(TargetDstSnapLocation);
+
+		const bool bCanApplyBaseRotations = true;
+		FVector UpVector = DstRotation.RotateVector(FVector::UpVector);
+		const float RotationAngleDegree = CursorRotationStep * 15.0f;
+		FQuat BaseRotation = FQuat(UpVector, FMath::DegreesToRadians(RotationAngleDegree));
+		DstRotation = DstRotation * BaseRotation;
+
+		FVector DstOffset = TargetSrcSnapLocation - TargetDstSnapLocation;
+		OutTargetSnapTransform = FTransform(DstRotation, DstOffset);
+		return true;
+	}
 
 	return false;
 }
@@ -449,27 +498,39 @@ APrefabActor* FConstructionSystemUtils::ConstructPrefabItem(UWorld* InWorld, UPr
 }
 
 namespace {
-	FORCEINLINE bool IsPointInsideExtent2D(const FVector2D& Extent2D, const FVector2D& P) {
+	FORCEINLINE bool IsPointInsideExtent2D(const FVector2D& Extent2D, const FVector2D& P, float ShrinkExtentAmount) {
 		return
-			P.X >= -Extent2D.X && P.X <= Extent2D.X &&
-			P.Y >= -Extent2D.Y && P.Y <= Extent2D.Y;
+			P.X >= -(Extent2D.X - ShrinkExtentAmount) && P.X <= (Extent2D.X - ShrinkExtentAmount) &&
+			P.Y >= -(Extent2D.Y - ShrinkExtentAmount) && P.Y <= (Extent2D.Y - ShrinkExtentAmount);
 	}
 }
 
 
-bool FConstructionSystemCollision::WallWallCollision(const FVector& ExtentA, const FTransform& TransformA, const FVector& ExtentB, const FTransform& TransformB)
-{
-	return WallWallCollisionOneSide(ExtentA, TransformA, ExtentB, TransformB) || WallWallCollisionOneSide(ExtentB, TransformB, ExtentA, TransformA);
-}
-
 bool FConstructionSystemCollision::WallBoxCollision(const FVector& InWallExtent, const FTransform& InWallTransform, const FVector& InBoxExtent, const FTransform& InBoxTransform)
 {
-	FBox Box = FBox(-InBoxExtent, InBoxExtent).ExpandBy(-1);
-	
+	FVector E = InBoxExtent - FVector(1, 1, 1);
+
+	FVector ExtentXY = E * FVector(1, 1, 0);
+	FVector ExtentYZ = E * FVector(0, 1, 1);
+	FVector ExtentZX = E * FVector(1, 0, 1);
+	FTransform XYN = FTransform(FRotator::ZeroRotator, FVector(0, 0, -E.Z)) * InBoxTransform;
+	FTransform XYP = FTransform(FRotator::ZeroRotator, FVector(0, 0, +E.Z)) * InBoxTransform;
+	FTransform YZN = FTransform(FRotator::ZeroRotator, FVector(-E.X, 0, 0)) * InBoxTransform;
+	FTransform YZP = FTransform(FRotator::ZeroRotator, FVector(+E.X, 0, 0)) * InBoxTransform;
+	FTransform ZXN = FTransform(FRotator::ZeroRotator, FVector(0, -E.Y, 0)) * InBoxTransform;
+	FTransform ZXP = FTransform(FRotator::ZeroRotator, FVector(0, +E.Y, 0)) * InBoxTransform;
+
+	return WallWallCollision(InWallExtent, InWallTransform, ExtentXY, XYN)
+		|| WallWallCollision(InWallExtent, InWallTransform, ExtentXY, XYP)
+		|| WallWallCollision(InWallExtent, InWallTransform, ExtentYZ, YZN)
+		|| WallWallCollision(InWallExtent, InWallTransform, ExtentYZ, YZP)
+		|| WallWallCollision(InWallExtent, InWallTransform, ExtentZX, ZXN)
+		|| WallWallCollision(InWallExtent, InWallTransform, ExtentZX, ZXP);
+
 	return false;
 }
 
-bool FConstructionSystemCollision::WallWallCollisionOneSide(const FVector& ExtentA, const FTransform& TransformA, const FVector& ExtentB, const FTransform& TransformB)
+bool FConstructionSystemCollision::WallWallCollision(const FVector& ExtentA, const FTransform& TransformA, const FVector& ExtentB, const FTransform& TransformB)
 {
 	bool bUseWallBAxisX = ExtentB.X > ExtentB.Y;
 
@@ -500,15 +561,24 @@ bool FConstructionSystemCollision::WallWallCollisionOneSide(const FVector& Exten
 		bool bPointInside2 = false;
 		bool bCoPlanar = false;
 		const float COPLANAR_SMALL_NUM = 0.1f;
+
+		if (FMath::Abs(LWPB1.X) < COPLANAR_SMALL_NUM) LWPB1.X = 0;
+		if (FMath::Abs(LWPB1.Y) < COPLANAR_SMALL_NUM) LWPB1.Y = 0;
+		if (FMath::Abs(LWPB1.Z) < COPLANAR_SMALL_NUM) LWPB1.Z = 0;
+		if (FMath::Abs(LWPB2.X) < COPLANAR_SMALL_NUM) LWPB2.X = 0;
+		if (FMath::Abs(LWPB2.Y) < COPLANAR_SMALL_NUM) LWPB2.Y = 0;
+		if (FMath::Abs(LWPB2.Z) < COPLANAR_SMALL_NUM) LWPB2.Z = 0;
+
+		const float BaseExtentShrink = 1;
 		if (ExtentA.X > ExtentA.Y) {
-			bPointInside1 = IsPointInsideExtent2D(FVector2D(ExtentA.X, ExtentA.Z), FVector2D(LWPB1.X, LWPB1.Z));
-			bPointInside2 = IsPointInsideExtent2D(FVector2D(ExtentA.X, ExtentA.Z), FVector2D(LWPB2.X, LWPB2.Z));
-			bCoPlanar = FMath::Abs(LWPB1.Y) < COPLANAR_SMALL_NUM && FMath::Abs(LWPB2.Y) < COPLANAR_SMALL_NUM;
+			bPointInside1 = IsPointInsideExtent2D(FVector2D(ExtentA.X, ExtentA.Z), FVector2D(LWPB1.X, LWPB1.Z), BaseExtentShrink);
+			bPointInside2 = IsPointInsideExtent2D(FVector2D(ExtentA.X, ExtentA.Z), FVector2D(LWPB2.X, LWPB2.Z), BaseExtentShrink);
+			bCoPlanar = (LWPB1.Y == 0 && LWPB2.Y == 0);
 		}
 		else {
-			bPointInside1 = IsPointInsideExtent2D(FVector2D(ExtentA.Y, ExtentA.Z), FVector2D(LWPB1.Y, LWPB1.Z));
-			bPointInside2 = IsPointInsideExtent2D(FVector2D(ExtentA.Y, ExtentA.Z), FVector2D(LWPB2.Y, LWPB2.Z));
-			bCoPlanar = FMath::Abs(LWPB1.X) < COPLANAR_SMALL_NUM && FMath::Abs(LWPB2.X) < COPLANAR_SMALL_NUM;
+			bPointInside1 = IsPointInsideExtent2D(FVector2D(ExtentA.Y, ExtentA.Z), FVector2D(LWPB1.Y, LWPB1.Z), BaseExtentShrink);
+			bPointInside2 = IsPointInsideExtent2D(FVector2D(ExtentA.Y, ExtentA.Z), FVector2D(LWPB2.Y, LWPB2.Z), BaseExtentShrink);
+			bCoPlanar = (LWPB1.X == 0 && LWPB2.X == 0);
 		}
 
 		if (bPointInside1 || bPointInside2) {
@@ -516,10 +586,10 @@ bool FConstructionSystemCollision::WallWallCollisionOneSide(const FVector& Exten
 			// Check if they are on the opposite sides of the plane
 			bool bAreOnOppositeSides = false;
 			if (ExtentA.X > ExtentA.Y) {
-				bAreOnOppositeSides = FMath::Sign(LWPB1.Y) != FMath::Sign(LWPB2.Y);
+				bAreOnOppositeSides = (LWPB1.Y != 0 && LWPB2.Y != 0) && FMath::Sign(LWPB1.Y) != FMath::Sign(LWPB2.Y);
 			}
 			else {
-				bAreOnOppositeSides = FMath::Sign(LWPB1.X) != FMath::Sign(LWPB2.X);
+				bAreOnOppositeSides = (LWPB1.X != 0 && LWPB2.X != 0) && FMath::Sign(LWPB1.X) != FMath::Sign(LWPB2.X);
 			}
 
 			if (bAreOnOppositeSides) {
@@ -530,14 +600,14 @@ bool FConstructionSystemCollision::WallWallCollisionOneSide(const FVector& Exten
 		
 		if (bCoPlanar) {
 			// Check if the opposite ends are still inside a slightly enlarged bounding box
-			FVector2D Enlargement(1, 1);
+			const float Enlargement = -1;
 			if (ExtentA.X > ExtentA.Y) {
-				bPointInside1 = IsPointInsideExtent2D(FVector2D(ExtentA.X, ExtentA.Z) + Enlargement, FVector2D(LWPB1.X, LWPB1.Z));
-				bPointInside2 = IsPointInsideExtent2D(FVector2D(ExtentA.X, ExtentA.Z) + Enlargement, FVector2D(LWPB2.X, LWPB2.Z));
+				bPointInside1 = IsPointInsideExtent2D(FVector2D(ExtentA.X, ExtentA.Z), FVector2D(LWPB1.X, LWPB1.Z), Enlargement);
+				bPointInside2 = IsPointInsideExtent2D(FVector2D(ExtentA.X, ExtentA.Z), FVector2D(LWPB2.X, LWPB2.Z), Enlargement);
 			}
 			else {
-				bPointInside1 = IsPointInsideExtent2D(FVector2D(ExtentA.Y, ExtentA.Z) + Enlargement, FVector2D(LWPB1.Y, LWPB1.Z));
-				bPointInside2 = IsPointInsideExtent2D(FVector2D(ExtentA.Y, ExtentA.Z) + Enlargement, FVector2D(LWPB2.Y, LWPB2.Z));
+				bPointInside1 = IsPointInsideExtent2D(FVector2D(ExtentA.Y, ExtentA.Z), FVector2D(LWPB1.Y, LWPB1.Z), Enlargement);
+				bPointInside2 = IsPointInsideExtent2D(FVector2D(ExtentA.Y, ExtentA.Z), FVector2D(LWPB2.Y, LWPB2.Z), Enlargement);
 			}
 
 			if (bPointInside1 && bPointInside2) {
