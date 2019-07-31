@@ -100,7 +100,9 @@ void FPrefabTools::SetAllowOnlyPrefabSelection()
 
 	// Toggle 'allow select translucent'
 	Settings->bSelectOnlyPrefabs = !Settings->bSelectOnlyPrefabs;
+#if WITH_EDITOR
 	Settings->PostEditChange();
+#endif
 }
 
 bool FPrefabTools::GetAllowOnlyPrefabSelection()
