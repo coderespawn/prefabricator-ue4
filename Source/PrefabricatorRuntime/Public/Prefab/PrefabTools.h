@@ -31,7 +31,7 @@ public:
 	static void UnlinkAndDestroyPrefabActor(APrefabActor* PrefabActor);
 	static void GetActorChildren(AActor* InParent, TArray<AActor*>& OutChildren);
 
-	static FBox GetPrefabBounds(AActor* PrefabActor);
+	static FBox GetPrefabBounds(AActor* PrefabActor, bool bNonColliding = true);
 	static bool ShouldIgnorePropertySerialization(const FName& PropertyName);
 	static bool ShouldForcePropertySerialization(const FName& PropertyName);
 

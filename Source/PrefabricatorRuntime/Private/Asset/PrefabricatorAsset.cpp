@@ -28,7 +28,7 @@ FVector FPrefabricatorAssetUtils::FindPivot(const TArray<AActor*>& InActors)
 		float LowestZ = MAX_flt;
 		FBox Bounds(EForceInit::ForceInit);
 		for (AActor* Actor : InActors) {
-			FBox ActorBounds = FPrefabTools::GetPrefabBounds(Actor);
+			FBox ActorBounds = FPrefabTools::GetPrefabBounds(Actor, false);
 			Bounds += ActorBounds;
 		}
 
