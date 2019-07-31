@@ -16,7 +16,7 @@ public:
 
 	TSharedPtr<FUICommandInfo> CreatePrefab;
 	TSharedPtr<class FUICommandList> LevelMenuActionList;
-
+	TSharedPtr< FUICommandInfo > AllowOnlyPrefabSelection;
 };
 
 

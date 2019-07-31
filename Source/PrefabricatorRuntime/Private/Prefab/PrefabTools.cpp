@@ -17,6 +17,7 @@
 #include "Serialization/ObjectAndNameAsStringProxyArchive.h"
 #include "Serialization/ObjectReader.h"
 #include "Serialization/ObjectWriter.h"
+#include "PrefabricatorSettings.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogPrefabTools, Log, All);
 
@@ -91,6 +92,20 @@ void FPrefabTools::IterateChildrenRecursive(APrefabActor* Prefab, TFunction<void
 			}
 		}
 	}
+}
+
+void FPrefabTools::SetAllowOnlyPrefabSelection()
+{
+	auto* Settings = GetMutableDefault<UPrefabricatorSettings>();
+
+	// Toggle 'allow select translucent'
+	Settings->bSelectOnlyPrefabs = !Settings->bSelectOnlyPrefabs;
+	Settings->PostEditChange();
+}
+
+bool FPrefabTools::GetAllowOnlyPrefabSelection()
+{
+	return GetDefault<UPrefabricatorSettings>()->bSelectOnlyPrefabs;
 }
 
 bool FPrefabTools::CanCreatePrefab()

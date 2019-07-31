@@ -43,6 +43,9 @@ public:
 	static int32 GetRandomSeed(const FRandomStream& Random);
 
 	static void IterateChildrenRecursive(APrefabActor* Actor, TFunction<void(AActor*)> Visit);
+
+	static void SetAllowOnlyPrefabSelection();
+	static bool GetAllowOnlyPrefabSelection();
 };
 
 class PREFABRICATORRUNTIME_API FPrefabVersionControl {

@@ -9,6 +9,7 @@
 #include "Framework/Commands/UIAction.h"
 #include "Framework/Commands/UICommandList.h"
 #include "UObject/Object.h"
+#include "PrefabricatorEditorModule.h"
 
 #define LOCTEXT_NAMESPACE "ContentBrowser"
 
@@ -29,6 +30,15 @@ void FPrefabricatorCommands::RegisterCommands() {
 		CreatePrefab,
 		FExecuteAction::CreateStatic(&FPrefabTools::CreatePrefab),
 		FCanExecuteAction::CreateStatic(&FPrefabTools::CanCreatePrefab)
+	);
+
+	UI_COMMAND(AllowOnlyPrefabSelection, "Select Only Prefabs", "Allow only prefabs to be selected", EUserInterfaceActionType::ToggleButton, FInputChord(EKeys::NumPadOne));
+
+	LevelMenuActionList->MapAction(
+		AllowOnlyPrefabSelection
+		, FExecuteAction::CreateStatic(&FPrefabTools::SetAllowOnlyPrefabSelection)
+		, FCanExecuteAction()
+		, FIsActionChecked::CreateStatic(&FPrefabTools::GetAllowOnlyPrefabSelection)
 	);
 }
 
