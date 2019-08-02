@@ -47,8 +47,7 @@ void FPrefabricatorCommands::RegisterCommands() {
 	LevelMenuActionList->MapAction(
 		CreatePrefabZeroPivot
 		, FExecuteAction::CreateStatic(&FPrefabTools::CreatePrefabOnZeroPivot)
-		, FCanExecuteAction()
-		, FIsActionChecked::CreateStatic(&FPrefabTools::CanCreatePrefab)
+		, FCanExecuteAction::CreateStatic(&FPrefabTools::CanCreatePrefab)
 	);
 }
 
