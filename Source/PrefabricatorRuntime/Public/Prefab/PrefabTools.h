@@ -19,7 +19,11 @@ class PREFABRICATORRUNTIME_API FPrefabTools {
 public:
 	static bool CanCreatePrefab();
 	static void CreatePrefab();
-	static void CreatePrefabFromActors(const TArray<AActor*>& Actors);
+	static void CreatePrefabFromActors(const TArray<AActor*>& InActors);
+
+	static void CreatePrefabOnZeroPivot();
+	static void CreatePrefabFromActorsOnZeroPivot(const TArray<AActor*>& Actors);
+
 	static void AssignAssetUserData(AActor* InActor, const FGuid& InItemID, APrefabActor* Prefab);
 
 	static void SaveStateToPrefabAsset(APrefabActor* PrefabActor);

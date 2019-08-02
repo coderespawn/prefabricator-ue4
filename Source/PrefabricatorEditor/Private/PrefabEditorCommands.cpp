@@ -40,6 +40,16 @@ void FPrefabricatorCommands::RegisterCommands() {
 		, FCanExecuteAction()
 		, FIsActionChecked::CreateStatic(&FPrefabTools::GetAllowOnlyPrefabSelection)
 	);
+
+
+	UI_COMMAND(CreatePrefabZeroPivot, "Create Prefab On Zero Oirgin", "Create New prefab on Zeroed pivot", EUserInterfaceActionType::Button, FInputChord(EKeys::NumPadTwo));
+
+	LevelMenuActionList->MapAction(
+		CreatePrefabZeroPivot
+		, FExecuteAction::CreateStatic(&FPrefabTools::CreatePrefabOnZeroPivot)
+		, FCanExecuteAction()
+		, FIsActionChecked::CreateStatic(&FPrefabTools::CanCreatePrefab)
+	);
 }
 
 

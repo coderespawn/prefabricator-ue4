@@ -18,6 +18,7 @@
 #include "Serialization/ObjectReader.h"
 #include "Serialization/ObjectWriter.h"
 #include "PrefabricatorSettings.h"
+#include "Editor.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogPrefabTools, Log, All);
 
@@ -150,6 +151,123 @@ namespace {
 	}
 
 }
+
+void FPrefabTools::CreatePrefabOnZeroPivot()
+{
+	TArray<AActor*> SelectedActors;
+	GetSelectedActors(SelectedActors);
+
+	CreatePrefabFromActorsOnZeroPivot(SelectedActors);
+}
+
+void FPrefabTools::CreatePrefabFromActorsOnZeroPivot(const TArray<AActor*>& InActors)
+{
+	TArray<AActor*> Actors;
+	SanitizePrefabActorsForCreation(InActors, Actors);
+
+	if (Actors.Num() == 0) {
+		return;
+	}
+
+	UPrefabricatorAsset* PrefabAsset = CreatePrefabAsset();
+	if (!PrefabAsset) {
+		return;
+	}
+
+	TSharedPtr<IPrefabricatorService> Service = FPrefabricatorService::Get();
+	if (Service.IsValid()) {
+		Service->BeginTransaction(LOCTEXT("TransLabel_CreatePrefab", "Create Prefab"));
+	}
+
+
+	UWorld* World = Actors[0]->GetWorld();
+
+	FVector Pivot = FVector::ZeroVector;
+
+	TArray<FTransform> OriginalActorTransforms;
+
+	for (AActor* A : Actors)
+	{
+		OriginalActorTransforms.Add(A->GetTransform());
+		FBox BB = A->GetComponentsBoundingBox();
+		
+		A->SetActorRotation(FRotator::ZeroRotator);
+	}
+
+	{
+		float LowestZ = MAX_flt;
+		FBox Bounds(EForceInit::ForceInit);
+		for (AActor* Actor : Actors)
+		{
+			FBox ActorBounds = FPrefabTools::GetPrefabBounds(Actor, false);
+			Bounds += ActorBounds;
+		}
+
+		Pivot = Bounds.GetCenter();
+		Pivot.Z = Bounds.Min.Z;
+	}
+
+	FVector RelativePosition = Pivot;
+
+	FActorSpawnParameters SpanParams;
+	SpanParams.bNoFail = true;
+
+	APrefabActor* PrefabActorTemp = World->SpawnActor<APrefabActor>(RelativePosition, FRotator::ZeroRotator, SpanParams);
+	PrefabActorTemp->GetRootComponent()->SetMobility(EComponentMobility::Static);
+
+	//attach to dummy
+	for (AActor* A : Actors)
+	{
+		A->DetachFromActor(FDetachmentTransformRules(EDetachmentRule::KeepWorld, true));
+		A->AttachToActor(PrefabActorTemp, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
+
+		FTransform RT = A->GetRootComponent()->GetRelativeTransform();
+
+		FVector RelLoc = RT.GetLocation();
+	}
+
+	//move to world origin
+	PrefabActorTemp->SetActorLocation(FVector::ZeroVector);
+
+	//detach from dummy.
+	for (int32 Idx = 0; Idx < Actors.Num(); Idx++)
+	{
+		Actors[Idx]->DetachFromActor(FDetachmentTransformRules(EDetachmentRule::KeepWorld, true));
+	}
+
+	//we don't need it anymore.
+	PrefabActorTemp->Destroy(true, true);
+
+	Pivot = FVector::ZeroVector;
+
+	APrefabActor* PrefabActor = World->SpawnActor<APrefabActor>(FVector::ZeroVector, FRotator::ZeroRotator);
+
+	// Find the compatible mobility for the prefab actor
+	EComponentMobility::Type Mobility = FPrefabricatorAssetUtils::FindMobility(Actors);
+	PrefabActor->GetRootComponent()->SetMobility(Mobility);
+
+	PrefabActor->PrefabComponent->PrefabAssetInterface = PrefabAsset;
+	// Attach the actors to the prefab
+	for (AActor* Actor : Actors) {
+		ParentActors(PrefabActor, Actor);
+	}
+
+	for (int32 Idx = 0; Idx < Actors.Num(); Idx++)
+	{
+		Actors[Idx]->SetActorRotation(OriginalActorTransforms[Idx].GetRotation());
+	}
+
+	if (Service.IsValid()) {
+		Service->EndTransaction();
+	}
+
+	SaveStateToPrefabAsset(PrefabActor);
+
+	SelectPrefabActor(PrefabActor);
+
+	PrefabActor->SetActorLocation(RelativePosition);
+}
+
 void FPrefabTools::CreatePrefabFromActors(const TArray<AActor*>& InActors)
 {
 	TArray<AActor*> Actors;
@@ -169,15 +287,17 @@ void FPrefabTools::CreatePrefabFromActors(const TArray<AActor*>& InActors)
 		Service->BeginTransaction(LOCTEXT("TransLabel_CreatePrefab", "Create Prefab"));
 	}
 
+
 	UWorld* World = Actors[0]->GetWorld();
 
 	FVector Pivot = FPrefabricatorAssetUtils::FindPivot(Actors);
-	APrefabActor* PrefabActor = World->SpawnActor<APrefabActor>(Pivot, FRotator::ZeroRotator);
 
+	APrefabActor* PrefabActor = World->SpawnActor<APrefabActor>(FVector::ZeroVector, FRotator::ZeroRotator);
+	
 	// Find the compatible mobility for the prefab actor
 	EComponentMobility::Type Mobility = FPrefabricatorAssetUtils::FindMobility(Actors);
 	PrefabActor->GetRootComponent()->SetMobility(Mobility);
-
+	
 	PrefabActor->PrefabComponent->PrefabAssetInterface = PrefabAsset;
 	// Attach the actors to the prefab
 	for (AActor* Actor : Actors) {
@@ -187,11 +307,10 @@ void FPrefabTools::CreatePrefabFromActors(const TArray<AActor*>& InActors)
 	if (Service.IsValid()) {
 		Service->EndTransaction();
 	}
-
+	
 	SaveStateToPrefabAsset(PrefabActor);
-
+	
 	SelectPrefabActor(PrefabActor);
-
 }
 
 void FPrefabTools::AssignAssetUserData(AActor* InActor, const FGuid& InItemID, APrefabActor* Prefab)
