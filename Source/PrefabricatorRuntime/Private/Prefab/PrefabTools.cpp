@@ -291,7 +291,7 @@ void FPrefabTools::CreatePrefabFromActors(const TArray<AActor*>& InActors)
 
 	FVector Pivot = FPrefabricatorAssetUtils::FindPivot(Actors);
 
-	APrefabActor* PrefabActor = World->SpawnActor<APrefabActor>(FVector::ZeroVector, FRotator::ZeroRotator);
+	APrefabActor* PrefabActor = World->SpawnActor<APrefabActor>(Pivot, FRotator::ZeroRotator);
 	
 	// Find the compatible mobility for the prefab actor
 	EComponentMobility::Type Mobility = FPrefabricatorAssetUtils::FindMobility(Actors);
