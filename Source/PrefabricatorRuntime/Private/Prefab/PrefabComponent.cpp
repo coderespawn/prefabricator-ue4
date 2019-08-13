@@ -75,7 +75,7 @@ void UPrefabComponent::PostEditChangeProperty(struct FPropertyChangedEvent& e)
 			}
 		}
 	}
-
+	Super::PostEditChangeProperty(e);
 }
 #endif // WITH_EDITOR
 
