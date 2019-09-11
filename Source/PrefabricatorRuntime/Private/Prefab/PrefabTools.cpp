@@ -447,6 +447,10 @@ void FPrefabTools::SaveStateToPrefabAsset(AActor* InActor, APrefabActor* PrefabA
 	OutActorData.ClassPath = ClassPath;
 	SerializeFields(InActor, PrefabActor, OutActorData.Properties);
 
+#if WITH_EDITOR
+	OutActorData.ActorName = InActor->GetActorLabel();
+#endif // WITH_EDITOR
+
 	TArray<UActorComponent*> Components;
 	InActor->GetComponents(Components);
 
@@ -501,6 +505,12 @@ void FPrefabTools::LoadStateFromPrefabAsset(AActor* InActor, const FPrefabricato
 		}
 	}
 
+#if WITH_EDITOR
+	if (InActorData.ActorName.Len() > 0) {
+		InActor->SetActorLabel(InActorData.ActorName);
+	}
+#endif // WITH_EDITOR
+
 	if (Service.IsValid()) {
 		Service->EndTransaction();
 	}
@@ -539,9 +549,9 @@ void FPrefabTools::GetActorChildren(AActor* InParent, TArray<AActor*>& OutChildr
 }
 
 namespace {
-	void GetPrefabBoundsRecursive(AActor* InActor, FBox& OutBounds) {
+	void GetPrefabBoundsRecursive(AActor* InActor, FBox& OutBounds, bool bNonColliding) {
 		if (!InActor->IsA<APrefabActor>()) {
-			FBox ActorBounds = InActor->GetComponentsBoundingBox(false);
+			FBox ActorBounds = InActor->GetComponentsBoundingBox(bNonColliding);
 			if (ActorBounds.GetExtent() == FVector::ZeroVector) {
 				ActorBounds = FBox({ InActor->GetActorLocation() });
 			}
@@ -551,15 +561,15 @@ namespace {
 		TArray<AActor*> AttachedActors;
 		InActor->GetAttachedActors(AttachedActors);
 		for (AActor* AttachedActor : AttachedActors) {
-			GetPrefabBoundsRecursive(AttachedActor, OutBounds);
+			GetPrefabBoundsRecursive(AttachedActor, OutBounds, bNonColliding);
 		}
 	}
 }
 
-FBox FPrefabTools::GetPrefabBounds(AActor* PrefabActor)
+FBox FPrefabTools::GetPrefabBounds(AActor* PrefabActor, bool bNonColliding)
 {
 	FBox Result(EForceInit::ForceInit);
-	GetPrefabBoundsRecursive(PrefabActor, Result);
+	GetPrefabBoundsRecursive(PrefabActor, Result, bNonColliding);
 	return Result;
 }
 
@@ -621,15 +631,19 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 		}
 
 		if (!ChildActor) {
-			FActorSpawnParameters SpawnParams;
-			SpawnParams.OverrideLevel = PrefabActor->GetLevel();
-			ChildActor = World->SpawnActor<AActor>(ActorClass, SpawnParams);
+			TSharedPtr<IPrefabricatorService> Service = FPrefabricatorService::Get();
+			if (Service.IsValid()) {
+				ChildActor = Service->SpawnActor(ActorClass, FTransform::Identity, PrefabActor->GetLevel());
+			}
+			//FActorSpawnParameters SpawnParams;
+			//SpawnParams.OverrideLevel = PrefabActor->GetLevel();
+			//ChildActor = World->SpawnActor<AActor>(ActorClass, SpawnParams);
 		}
 
 		if (ChildActor) {
 			// Load the saved data into the actor
 			LoadStateFromPrefabAsset(ChildActor, ActorItemData, InSettings);
-
+			
 			ParentActors(PrefabActor, ChildActor);
 			AssignAssetUserData(ChildActor, ActorItemData.PrefabItemID, PrefabActor);
 
