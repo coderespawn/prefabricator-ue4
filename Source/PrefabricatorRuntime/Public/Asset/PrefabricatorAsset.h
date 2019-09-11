@@ -74,6 +74,11 @@ struct PREFABRICATORRUNTIME_API FPrefabricatorActorData {
 
 	UPROPERTY()
 	TArray<FPrefabricatorComponentData> Components;
+
+#if WITH_EDITORONLY_DATA
+	UPROPERTY()
+	FString ActorName;
+#endif // WITH_EDITORONLY_DATA
 };
 
 struct FPrefabAssetSelectionConfig {

@@ -447,6 +447,10 @@ void FPrefabTools::SaveStateToPrefabAsset(AActor* InActor, APrefabActor* PrefabA
 	OutActorData.ClassPath = ClassPath;
 	SerializeFields(InActor, PrefabActor, OutActorData.Properties);
 
+#if WITH_EDITOR
+	OutActorData.ActorName = InActor->GetActorLabel();
+#endif // WITH_EDITOR
+
 	TArray<UActorComponent*> Components;
 	InActor->GetComponents(Components);
 
@@ -500,6 +504,12 @@ void FPrefabTools::LoadStateFromPrefabAsset(AActor* InActor, const FPrefabricato
 			}
 		}
 	}
+
+#if WITH_EDITOR
+	if (InActorData.ActorName.Len() > 0) {
+		InActor->SetActorLabel(InActorData.ActorName);
+	}
+#endif // WITH_EDITOR
 
 	if (Service.IsValid()) {
 		Service->EndTransaction();
@@ -633,7 +643,7 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 		if (ChildActor) {
 			// Load the saved data into the actor
 			LoadStateFromPrefabAsset(ChildActor, ActorItemData, InSettings);
-
+			
 			ParentActors(PrefabActor, ChildActor);
 			AssignAssetUserData(ChildActor, ActorItemData.PrefabItemID, PrefabActor);
 
