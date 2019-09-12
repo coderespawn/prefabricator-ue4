@@ -1,7 +1,9 @@
 CHANGELOG: Prefabricator
 ========================
-Version 1.2.0.hf1
------------------
+Version 1.2.1
+-------------
+* New: Added 4.23 engine support
+* New: While saving a prefab, the names of the individual actors are also saved so they are restored correctly when the prefab is spawned
 * Fix: Added null pointer checks while serializing / deserializing prefabs to avoid crash issues with stale uobjects
 
 Version 1.2.0
