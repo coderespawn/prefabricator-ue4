@@ -58,6 +58,8 @@ FBoxSphereBounds UPrefabComponent::CalcBounds(const FTransform& LocalToWorld) co
 #if WITH_EDITOR
 void UPrefabComponent::PostEditChangeProperty(struct FPropertyChangedEvent& e)
 {
+	Super::PostEditChangeProperty(e);
+
 	if (e.Property) {
 		FName PropertyName = e.Property->GetFName();
 		if (PropertyName == GET_MEMBER_NAME_CHECKED(UPrefabComponent, PrefabAssetInterface)) {
