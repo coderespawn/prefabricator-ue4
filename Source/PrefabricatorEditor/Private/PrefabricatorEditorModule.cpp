@@ -23,7 +23,8 @@
 #include "PropertyEditorModule.h"
 #include "ThumbnailRendering/ThumbnailManager.h"
 #include "UnrealEdGlobals.h"
-
+#include "Engine/Selection.h"
+#include "Prefab/PrefabActor.h"
 #define LOCTEXT_NAMESPACE "PrefabricatorEditorModule" 
 
 
@@ -31,9 +32,11 @@
 class FPrefabricatorEditorModule : public IPrefabricatorEditorModule
 {
 	FPrefabDetailsExtend PrefabActorDetailsExtender;
+	FDelegateHandle SelectionDelegateHandle;
 
 	virtual void StartupModule() override 
 	{
+		SelectionDelegateHandle = USelection::SelectObjectEvent.AddRaw(this, &FPrefabricatorEditorModule::OnSelectionChanged);
 		FPrefabEditorStyle::Initialize();
 		FPrefabricatorCommands::Register();
 
@@ -129,6 +132,22 @@ private:
 	TSharedPtr<IComponentAssetBroker> PrefabAssetBroker;
 	TArray< TSharedPtr<IAssetTypeActions> > CreatedAssetTypeActions;
 	EAssetTypeCategories::Type PrefabricatorAssetCategoryBit;
+
+	void OnSelectionChanged(UObject* Object)
+	{
+		if(FPrefabTools::GetAllowOnlyPrefabSelection())
+		{
+			APrefabActor* Prefab = Cast<APrefabActor>(Object);
+
+			if (!Prefab)
+			{
+				GEditor->GetSelectedActors()->BeginBatchSelectOperation();
+				GEditor->GetSelectedActors()->Select(Object, false);
+				GEditor->GetSelectedActors()->EndBatchSelectOperation(false);
+			}
+		}
+		
+	}
 };
 
 IMPLEMENT_MODULE(FPrefabricatorEditorModule, PrefabricatorEditor)

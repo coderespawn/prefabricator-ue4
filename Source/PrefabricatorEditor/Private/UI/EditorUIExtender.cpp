@@ -150,6 +150,8 @@ void FEditorUIExtender::Extend()
 
 			MenuBuilder.BeginSection("Prefabricator-Prefabs", LOCTEXT("PrefabHeader", "Prefabs"));
 			MenuBuilder.AddMenuEntry(FPrefabricatorCommands::Get().CreatePrefab);
+			MenuBuilder.AddMenuEntry(FPrefabricatorCommands::Get().CreatePrefabZeroPivot);
+			MenuBuilder.AddMenuEntry(FPrefabricatorCommands::Get().AllowOnlyPrefabSelection);
 			MenuBuilder.EndSection();
 
 			MenuBuilder.BeginSection("Prefabricator-Randomization", LOCTEXT("RandomizationHeader", "Randomization"));

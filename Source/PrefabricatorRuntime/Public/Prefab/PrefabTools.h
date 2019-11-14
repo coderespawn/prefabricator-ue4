@@ -19,7 +19,11 @@ class PREFABRICATORRUNTIME_API FPrefabTools {
 public:
 	static bool CanCreatePrefab();
 	static void CreatePrefab();
-	static void CreatePrefabFromActors(const TArray<AActor*>& Actors);
+	static void CreatePrefabFromActors(const TArray<AActor*>& InActors);
+
+	static void CreatePrefabOnZeroPivot();
+	static void CreatePrefabFromActorsOnZeroPivot(const TArray<AActor*>& Actors);
+
 	static void AssignAssetUserData(AActor* InActor, const FGuid& InItemID, APrefabActor* Prefab);
 
 	static void SaveStateToPrefabAsset(APrefabActor* PrefabActor);
@@ -43,6 +47,9 @@ public:
 	static int32 GetRandomSeed(const FRandomStream& Random);
 
 	static void IterateChildrenRecursive(APrefabActor* Actor, TFunction<void(AActor*)> Visit);
+
+	static void SetAllowOnlyPrefabSelection();
+	static bool GetAllowOnlyPrefabSelection();
 };
 
 class PREFABRICATORRUNTIME_API FPrefabVersionControl {

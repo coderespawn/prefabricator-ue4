@@ -15,7 +15,6 @@
  */
 class PREFABRICATOREDITOR_API IPrefabricatorEditorModule : public IModuleInterface
 {
-
 public:
 
 	/**
@@ -43,4 +42,3 @@ public:
 	virtual FPrefabDetailsExtend& GetPrefabActorDetailsExtender() = 0;
 	virtual void UpgradePrefabAssets() = 0;
 };
-

@@ -30,6 +30,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, config, Category = "Settings")
 	bool bAllowDynamicUpdate;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, config, Category = "Settings")
+	bool bSelectOnlyPrefabs;
+
 public:
 	UPrefabricatorSettings();
 

@@ -32,18 +32,18 @@ FVector FPrefabricatorAssetUtils::FindPivot(const TArray<AActor*>& InActors)
 			Bounds += ActorBounds;
 		}
 
-		switch (GetDefault< UPrefabricatorSettings>()->PivotPosition)
-		{
-		case EPrefabricatorPivotPosition::ExtremeLeft:
-			Pivot = Bounds.GetCenter() - Bounds.GetExtent();
-			break;
-		case EPrefabricatorPivotPosition::ExtremeRight:
-			Pivot = Bounds.GetCenter() + Bounds.GetExtent();
-			break;
-		case EPrefabricatorPivotPosition::Center:
-			Pivot = Bounds.GetCenter();
-			break;
-		default:;
+		switch (GetDefault< UPrefabricatorSettings>()->PivotPosition) 
+		{ 
+			case EPrefabricatorPivotPosition::ExtremeLeft:
+				Pivot = Bounds.GetCenter() - Bounds.GetExtent();
+				break;
+			case EPrefabricatorPivotPosition::ExtremeRight:
+				Pivot = Bounds.GetCenter() + Bounds.GetExtent();
+				break;
+			case EPrefabricatorPivotPosition::Center:
+				Pivot = Bounds.GetCenter();
+				break;
+			default:;
 		}
 		Pivot.Z = Bounds.Min.Z;
 	}
@@ -95,7 +95,7 @@ UPrefabricatorAsset* UPrefabricatorAssetCollection::GetPrefabAsset(const FPrefab
 
 	FRandomStream Random;
 	Random.Initialize(InConfig.Seed);
-
+	
 	TSoftObjectPtr<UPrefabricatorAsset> PrefabAssetPtr;
 
 	if (TotalWeight == 0) {
@@ -116,11 +116,15 @@ UPrefabricatorAsset* UPrefabricatorAssetCollection::GetPrefabAsset(const FPrefab
 			}
 			StartRange = EndRange;
 		}
-		if (!bFound) {
+		if (PrefabAssetPtr.IsNull()) {
 			PrefabAssetPtr = Prefabs.Last().PrefabAsset;
 		}
 	}
-	return PrefabAssetPtr.LoadSynchronous();
+	
+	if (!PrefabAssetPtr.IsNull()) {
+		return PrefabAssetPtr.LoadSynchronous();
+	}
+	return nullptr;
 }
 
 void UPrefabricatorEventListener::PostSpawn_Implementation(APrefabActor* Prefab)
