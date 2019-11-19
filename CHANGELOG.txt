@@ -1,5 +1,9 @@
 CHANGELOG: Prefabricator
 ========================
+Version 1.2.2
+-------------
+* Fix: Undo no longer crashes the editor [@grujicbr]
+
 Version 1.2.1
 -------------
 * New: Added 4.23 engine support
