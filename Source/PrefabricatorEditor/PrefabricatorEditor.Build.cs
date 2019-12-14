@@ -6,7 +6,6 @@ namespace UnrealBuildTool.Rules
 	{
 		public PrefabricatorEditor(ReadOnlyTargetRules Target) : base(Target)
         {
-            bUseUnity = false;
             PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
             PublicIncludePaths.AddRange(
 				new string[] {
