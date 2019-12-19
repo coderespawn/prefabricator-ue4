@@ -88,7 +88,5 @@ void FPrefabricatorAssetThumbnailScene::GetViewMatrixParameters(const float InFO
 		OutOrbitYaw = ThumbnailInfo->OrbitYaw;
 		OutOrbitZoom = TargetDistance + ThumbnailInfo->OrbitZoom;
 	}
-
-
 }
 
