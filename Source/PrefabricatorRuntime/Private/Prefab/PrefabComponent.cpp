@@ -34,7 +34,7 @@ void UPrefabComponent::OnRegister()
 	if (SpriteComponent)
 	{
 		SpriteComponent->SetSprite(EditorSpriteTexture);
-		SpriteComponent->RelativeScale3D = FVector(2.0f);
+		SpriteComponent->SetRelativeScale3D(FVector(2.0f));
 		SpriteComponent->SpriteInfo.Category = TEXT("Prefab");
 		SpriteComponent->SpriteInfo.DisplayName = NSLOCTEXT("PrefabComponent", "Prefab", "Prefab");
 		SpriteComponent->Mobility = EComponentMobility::Static;

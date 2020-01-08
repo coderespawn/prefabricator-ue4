@@ -6,7 +6,6 @@
 UPrefabricatorSettings::UPrefabricatorSettings()
 {
 	//Do not change default behavior.
-	bAllowDynamicUpdate = true;
 	PivotPosition = EPrefabricatorPivotPosition::Center;
 }
 
