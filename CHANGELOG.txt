@@ -1,5 +1,9 @@
 CHANGELOG: Prefabricator
 ========================
+Version 1.3.0
+-------------
+* New: Added UE 4.24 support
+
 Version 1.2.3
 -------------
 * New: Added UE 4.24 support
