@@ -141,12 +141,6 @@ public:
 	UPROPERTY()
 	uint32 Version;
 
-	/*
-#if WITH_EDITORONLY_DATA
-	UPROPERTY()
-	UTexture2D* ThumbnailCache;
-#endif // WITH_EDITORONLY_DATA
-	*/
 public:
 	virtual UPrefabricatorAsset* GetPrefabAsset(const FPrefabAssetSelectionConfig& InConfig) override;
 };

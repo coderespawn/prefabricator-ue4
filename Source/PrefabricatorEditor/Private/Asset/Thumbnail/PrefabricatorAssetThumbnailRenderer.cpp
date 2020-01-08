@@ -20,27 +20,20 @@ void UPrefabricatorAssetThumbnailRenderer::Draw(UObject* Object, int32 X, int32 
 {
 	UPrefabricatorAsset* PrefabAsset = Cast<UPrefabricatorAsset>(Object);
 	if (PrefabAsset && !PrefabAsset->IsPendingKill()) {
-		/*
-		if (PrefabAsset->ThumbnailCache) {
+		FPrefabricatorAssetThumbnailScene* ThumbnailScene = GetThumbnailScene(*PrefabAsset->GetPathName());
+		ThumbnailScene->SetPrefabAsset(PrefabAsset);
+		ThumbnailScene->GetScene()->UpdateSpeedTreeWind(0.0);
 
-		}
-		else
-		*/
-		{
-			FPrefabricatorAssetThumbnailScene* ThumbnailScene = GetThumbnailScene(*PrefabAsset->GetPathName());
-			ThumbnailScene->SetPrefabAsset(PrefabAsset);
-			ThumbnailScene->GetScene()->UpdateSpeedTreeWind(0.0);
+		FSceneViewFamilyContext ViewFamily(FSceneViewFamily::ConstructionValues(RenderTarget, ThumbnailScene->GetScene(), FEngineShowFlags(ESFIM_Game))
+			.SetWorldTimes(FApp::GetCurrentTime() - GStartTime, FApp::GetDeltaTime(), FApp::GetCurrentTime() - GStartTime));
 
-			FSceneViewFamilyContext ViewFamily(FSceneViewFamily::ConstructionValues(RenderTarget, ThumbnailScene->GetScene(), FEngineShowFlags(ESFIM_Game))
-				.SetWorldTimes(FApp::GetCurrentTime() - GStartTime, FApp::GetDeltaTime(), FApp::GetCurrentTime() - GStartTime));
+		ViewFamily.EngineShowFlags.DisableAdvancedFeatures();
+		ViewFamily.EngineShowFlags.MotionBlur = 0;
+		ViewFamily.EngineShowFlags.LOD = 0;
 
-			ViewFamily.EngineShowFlags.DisableAdvancedFeatures();
-			ViewFamily.EngineShowFlags.MotionBlur = 0;
-			ViewFamily.EngineShowFlags.LOD = 0;
-
-			ThumbnailScene->GetView(&ViewFamily, X, Y, Width, Height);
-			RenderViewFamily(Canvas, &ViewFamily);
-		}
+		ThumbnailScene->GetView(&ViewFamily, X, Y, Width, Height);
+		RenderViewFamily(Canvas, &ViewFamily);
+		
 	}
 }
 

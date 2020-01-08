@@ -7,38 +7,13 @@
 #include "Utils/PrefabricatorConstants.h"
 #include "Utils/PrefabricatorService.h"
 
-#include "Engine/Texture.h"
 #include "GameFramework/Actor.h"
-#include "RenderUtils.h"
+#include "Internationalization/Regex.h"
+#include "Misc/PackageName.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogPrefabricatorAsset, Log, All);
 
 UPrefabricatorAsset::UPrefabricatorAsset(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer) {
-
-	/*
-#if WITH_EDITORONLY_DATA
-	{
-		ThumbnailCache = CreateEditorOnlyDefaultSubobject<UTexture2D>("ThumbnailCache");
-		const int32 TexSize = 256;
-		const EPixelFormat Format = PF_B8G8R8A8;
-		ThumbnailCache->PlatformData = new FTexturePlatformData();
-		ThumbnailCache->PlatformData->SizeX = TexSize;
-		ThumbnailCache->PlatformData->SizeY = TexSize;
-		ThumbnailCache->PlatformData->PixelFormat = PF_B8G8R8A8;
-
-		// Allocate first mipmap.
-		int32 NumBlocksX = TexSize / GPixelFormats[Format].BlockSizeX;
-		int32 NumBlocksY = TexSize / GPixelFormats[Format].BlockSizeY;
-		FTexture2DMipMap* Mip = new FTexture2DMipMap();
-		ThumbnailCache->PlatformData->Mips.Add(Mip);
-		Mip->SizeX = TexSize;
-		Mip->SizeY = TexSize;
-		Mip->BulkData.Lock(LOCK_READ_WRITE);
-		Mip->BulkData.Realloc(NumBlocksX * NumBlocksY * GPixelFormats[Format].BlockBytes);
-		Mip->BulkData.Unlock();
-	}
-#endif // WITH_EDITORONLY_DATA
-	*/
 }
 
 UPrefabricatorAsset* UPrefabricatorAsset::GetPrefabAsset(const FPrefabAssetSelectionConfig& InConfig)

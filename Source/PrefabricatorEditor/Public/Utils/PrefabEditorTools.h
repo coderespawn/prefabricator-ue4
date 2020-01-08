@@ -12,9 +12,6 @@ class UPrefabricatorAsset;
 
 class PREFABRICATOREDITOR_API FPrefabEditorTools {
 public:
-	static void UpdateAssetThumbnail_GameThread(UPrefabricatorAsset* InAsset);
-	static void UpdateAssetThumbnail_RenderThread(FRHICommandListImmediate& RHICmdList, UPrefabricatorAsset* InAsset, FRenderTarget* RenderTarget);
-
 	static void ReloadPrefabsInLevel(UWorld* World, UPrefabricatorAsset* InAsset = nullptr);
 
 	static void ShowNotification(FText Text, SNotificationItem::ECompletionState State = SNotificationItem::CS_Fail);

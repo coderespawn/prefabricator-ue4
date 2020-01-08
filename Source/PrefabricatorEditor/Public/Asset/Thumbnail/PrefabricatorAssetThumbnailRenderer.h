@@ -26,7 +26,7 @@ class PREFABRICATOREDITOR_API UPrefabricatorAssetThumbnailRenderer : public UDef
 private:
 	FPrefabricatorAssetThumbnailScene* GetThumbnailScene(const FName& InAssetPath);
 	void PurgeUnusedThumbnailScenes();
-	
+
 private:
 	TMap<FName, FPrefabricatorAssetThumbnailScene*> AssetThumbnailScenes;
 };
