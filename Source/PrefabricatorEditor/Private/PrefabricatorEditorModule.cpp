@@ -9,6 +9,7 @@
 #include "Prefab/PrefabTools.h"
 #include "PrefabEditorCommands.h"
 #include "PrefabEditorStyle.h"
+#include "PrefabricatorSettings.h"
 #include "UI/EditorUIExtender.h"
 #include "UI/PrefabCustomization.h"
 #include "Utils/MapChangeHook.h"
@@ -62,8 +63,12 @@ class FPrefabricatorEditorModule : public IPrefabricatorEditorModule
 		// Override the prefabricator service with the editor version, so the runtime module can access it
 		FPrefabricatorService::Set(MakeShareable(new FPrefabricatorEditorService));
 
-		// Setup the thumbnail renderer for the prefab asset
-		UThumbnailManager::Get().RegisterCustomRenderer(UPrefabricatorAsset::StaticClass(), UPrefabricatorAssetThumbnailRenderer::StaticClass());
+		const UPrefabricatorSettings* PS = GetDefault<UPrefabricatorSettings>();
+		if (PS->bShowAssetThumbnails)
+		{
+			// Setup the thumbnail renderer for the prefab asset
+			UThumbnailManager::Get().RegisterCustomRenderer(UPrefabricatorAsset::StaticClass(), UPrefabricatorAssetThumbnailRenderer::StaticClass());
+		}
 	}
 
 	virtual void ShutdownModule() override {

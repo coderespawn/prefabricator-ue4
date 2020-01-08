@@ -25,10 +25,13 @@ public:
 
 	/* Position pivot on extreme corner (bottom, left up), instead of center. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, config, Category = "Settings")
-		EPrefabricatorPivotPosition PivotPosition;
+	EPrefabricatorPivotPosition PivotPosition;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, config, Category = "Settings")
-	bool bAllowDynamicUpdate;
+	bool bAllowDynamicUpdate = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, config, Category = "Settings", meta = (ConfigRestartRequired = true))
+	bool bShowAssetThumbnails = true;
 
 public:
 	UPrefabricatorSettings();
