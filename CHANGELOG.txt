@@ -2,7 +2,7 @@ CHANGELOG: Prefabricator
 ========================
 Version 1.3.0
 -------------
-* New: Added UE 4.24 support
+* New: Added a project setting to disable custom thumb renderer as it was causing performance issues on larger prefabs.    If it is disabled, another option will be preset to manually set the thumbnail, which would be captured from the level editor's current viewport.   (Edit > Project Settings > Prefabricator > Show Asset Thumbnails)
 
 Version 1.2.3
 -------------
