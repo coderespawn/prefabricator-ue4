@@ -253,7 +253,7 @@ void AReplicablePrefabActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty
 
 void AReplicablePrefabActor::BeginPlay()
 {
-	if (Role == ROLE_Authority)
+	if (GetLocalRole() == ROLE_Authority)
 	{
 		bReplicates = false;
 		SetRemoteRoleForBackwardsCompat(ROLE_SimulatedProxy);

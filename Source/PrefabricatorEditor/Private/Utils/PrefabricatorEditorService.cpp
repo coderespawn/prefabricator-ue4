@@ -8,7 +8,10 @@
 #include "Prefab/PrefabComponent.h"
 #include "Utils/PrefabEditorTools.h"
 
+#include "ActorFactories/ActorFactory.h"
+#include "ActorFactories/ActorFactoryBoxVolume.h"
 #include "AssetToolsModule.h"
+#include "ComponentAssetBroker.h"
 #include "Editor.h"
 #include "Editor/EditorEngine.h"
 #include "EditorViewportClient.h"
@@ -18,9 +21,6 @@
 #include "PropertyEditorModule.h"
 #include "ScopedTransaction.h"
 #include "ThumbnailRendering/SceneThumbnailInfo.h"
-#include "ActorFactories/ActorFactory.h"
-#include "ComponentAssetBroker.h"
-#include "ActorFactories/ActorFactoryBoxVolume.h"
 
 void FPrefabricatorEditorService::ParentActors(AActor* ParentActor, AActor* ChildActor)
 {
