@@ -4,6 +4,8 @@
 #include "CoreMinimal.h"
 #include "PrefabRandomizerActor.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FPrefabRandomizerCompleteBindableEvent);
+
 UCLASS(Blueprintable)
 class PREFABRICATORRUNTIME_API APrefabRandomizer : public AActor {
 	GENERATED_UCLASS_BODY()
@@ -30,6 +32,9 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Prefabricator")
 	float MaxBuildTimePerFrame = 0.02f;
+
+	UPROPERTY(BlueprintAssignable, Category = "Prefabricator")
+	FPrefabRandomizerCompleteBindableEvent OnRandomizationComplete;
 
 private:
 	TSharedPtr<class FPrefabBuildSystem> BuildSystem;
