@@ -92,6 +92,7 @@ public:
 	void Tick();
 	void Reset();
 	void PushCommand(FPrefabBuildSystemCommandPtr InCommand);
+	int32 GetNumPendingCommands() const { return BuildStack.Num(); }
 
 private:
 	TArray<FPrefabBuildSystemCommandPtr> BuildStack;
