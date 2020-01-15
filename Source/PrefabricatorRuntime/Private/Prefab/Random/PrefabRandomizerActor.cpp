@@ -38,6 +38,11 @@ void APrefabRandomizer::Tick(float DeltaSeconds)
 
 	if (BuildSystem.IsValid()) {
 		BuildSystem->Tick();
+		int32 NumRemaining = BuildSystem->GetNumPendingCommands();
+		if (NumRemaining == 0) {
+			OnRandomizationComplete.Broadcast();
+			BuildSystem = nullptr;
+		}
 	}
 }
 
