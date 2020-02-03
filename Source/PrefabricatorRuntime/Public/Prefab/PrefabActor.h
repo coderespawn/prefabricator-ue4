@@ -76,6 +76,18 @@ private:
 	FRandomStream* Random = nullptr;
 };
 
+class PREFABRICATORRUNTIME_API FPrefabBuildSystemCommand_BuildPrefabSync : public FPrefabBuildSystemCommand {
+public:
+	FPrefabBuildSystemCommand_BuildPrefabSync(TWeakObjectPtr<APrefabActor> InPrefab, bool bInRandomizeNestedSeed, FRandomStream* InRandom);
+
+	virtual void Execute(FPrefabBuildSystem& BuildSystem) override;
+
+private:
+	TWeakObjectPtr<APrefabActor> Prefab;
+	bool bRandomizeNestedSeed = false;
+	FRandomStream* Random = nullptr;
+};
+
 class PREFABRICATORRUNTIME_API FPrefabBuildSystemCommand_NotifyBuildComplete : public FPrefabBuildSystemCommand {
 public:
 	FPrefabBuildSystemCommand_NotifyBuildComplete(TWeakObjectPtr<APrefabActor> InPrefab);

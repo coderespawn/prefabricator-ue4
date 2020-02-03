@@ -36,6 +36,9 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Prefabricator")
 	FPrefabRandomizerCompleteBindableEvent OnRandomizationComplete;
 
+	UPROPERTY(EditAnywhere, Category = "Prefabricator")
+	bool bFastSyncBuild = false;
+
 private:
 	TSharedPtr<class FPrefabBuildSystem> BuildSystem;
 	FRandomStream Random;
