@@ -1,4 +1,4 @@
-//$ Copyright 2015-19, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
+//$ Copyright 2015-20, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #include "Prefab/PrefabActor.h"
 
@@ -6,15 +6,13 @@
 #include "Asset/PrefabricatorAssetUserData.h"
 #include "Prefab/PrefabComponent.h"
 #include "Prefab/PrefabTools.h"
+#include "Utils/PrefabricatorStats.h"
 
 #include "Components/BillboardComponent.h"
 #include "Engine/PointLight.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogPrefabActor, Log, All);
 
-DECLARE_STATS_GROUP(TEXT("Prefabricator"), STATGROUP_Prefabricator, STATCAT_Advanced);
-DECLARE_CYCLE_STAT(TEXT("Randomize - LoadPrefab"), STAT_Randomize_LoadPrefab, STATGROUP_Prefabricator);
-DECLARE_CYCLE_STAT(TEXT("Randomize - GetChildActor"), STAT_Randomize_GetChildActor, STATGROUP_Prefabricator);
 
 APrefabActor::APrefabActor(const FObjectInitializer& ObjectInitializer) 
 	: Super(ObjectInitializer)
@@ -293,3 +291,4 @@ void AReplicablePrefabActor::BeginPlay()
 
 	Super::BeginPlay();
 }
+

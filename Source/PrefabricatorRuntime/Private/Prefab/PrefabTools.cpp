@@ -1,4 +1,4 @@
-//$ Copyright 2015-19, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
+//$ Copyright 2015-20, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #include "Prefab/PrefabTools.h"
 
@@ -7,6 +7,7 @@
 #include "Prefab/PrefabActor.h"
 #include "Prefab/PrefabComponent.h"
 #include "Utils/PrefabricatorService.h"
+#include "Utils/PrefabricatorStats.h"
 
 #include "Engine/Selection.h"
 #include "EngineUtils.h"
@@ -298,23 +299,34 @@ namespace {
 		if (!InObjToDeserialize) return;
 
 		TMap<FString, UPrefabricatorProperty*> PropertiesByName;
-		for (UPrefabricatorProperty* Property : InProperties) {
-			if (!Property) continue;
-			PropertiesByName.Add(Property->PropertyName, Property);
+		{
+			//SCOPE_CYCLE_COUNTER(STAT_DeserializeFields_BuildMap);
+			for (UPrefabricatorProperty* Property : InProperties) {
+				if (!Property) continue;
+				PropertiesByName.Add(Property->PropertyName, Property);
+			}
 		}
 
-		for (TFieldIterator<UProperty> PropertyIterator(InObjToDeserialize->GetClass()); PropertyIterator; ++PropertyIterator) {
-			UProperty* Property = *PropertyIterator;
-			if (!Property) continue;
+		{
+			SCOPE_CYCLE_COUNTER(STAT_DeserializeFields_Iterate);
+			for (TFieldIterator<UProperty> PropertyIterator(InObjToDeserialize->GetClass()); PropertyIterator; ++PropertyIterator) {
+				UProperty* Property = *PropertyIterator;
+				if (!Property) continue;
 
-			FString PropertyName = Property->GetName();
-			UPrefabricatorProperty** SearchResult = PropertiesByName.Find(PropertyName);
-			if (!SearchResult) continue;
-
-			UPrefabricatorProperty* PrefabProperty = *SearchResult;
-			if (PrefabProperty) {
-				PrefabProperty->LoadReferencedAssetValues();
-				PropertyPathHelpers::SetPropertyValueFromString(InObjToDeserialize, PrefabProperty->PropertyName, PrefabProperty->ExportedValue);
+				FString PropertyName = Property->GetName();
+				UPrefabricatorProperty** SearchResult = PropertiesByName.Find(PropertyName);
+				if (!SearchResult) continue;
+				UPrefabricatorProperty* PrefabProperty = *SearchResult;
+				if (PrefabProperty) {
+					{
+						SCOPE_CYCLE_COUNTER(STAT_DeserializeFields_Iterate_LoadValue);
+						PrefabProperty->LoadReferencedAssetValues();
+					}
+					{
+						SCOPE_CYCLE_COUNTER(STAT_DeserializeFields_Iterate_SetValue);
+						PropertyPathHelpers::SetPropertyValueFromString(InObjToDeserialize, PrefabProperty->PropertyName, PrefabProperty->ExportedValue);
+					}
+				}
 			}
 		}
 	}
@@ -478,10 +490,14 @@ void FPrefabTools::LoadStateFromPrefabAsset(AActor* InActor, const FPrefabricato
 
 	TSharedPtr<IPrefabricatorService> Service = FPrefabricatorService::Get();
 	if (Service.IsValid()) {
+		//SCOPE_CYCLE_COUNTER(STAT_LoadStateFromPrefabAsset_BeginTransaction);
 		Service->BeginTransaction(LOCTEXT("TransLabel_LoadPrefab", "Load Prefab"));
 	}
 
-	DeserializeFields(InActor, InActorData.Properties);
+	{
+		//SCOPE_CYCLE_COUNTER(STAT_LoadStateFromPrefabAsset_DeserializeFieldsActor);
+		DeserializeFields(InActor, InActorData.Properties);
+	}
 
 	TMap<FString, UActorComponent*> ComponentsByName;
 	for (UActorComponent* Component : InActor->GetComponents()) {
@@ -489,18 +505,30 @@ void FPrefabTools::LoadStateFromPrefabAsset(AActor* InActor, const FPrefabricato
 		ComponentsByName.Add(ComponentPath, Component);
 	}
 
-	for (const FPrefabricatorComponentData& ComponentData : InActorData.Components) {
-		if (UActorComponent** SearchResult = ComponentsByName.Find(ComponentData.ComponentName)) {
-			UActorComponent* Component = *SearchResult;
-			bool bPreviouslyRegister = Component->IsRegistered();
-			if (InSettings.bUnregisterComponentsBeforeLoading && bPreviouslyRegister) {
-				Component->UnregisterComponent();
-			}
+	{
+		for (const FPrefabricatorComponentData& ComponentData : InActorData.Components) {
+			if (UActorComponent** SearchResult = ComponentsByName.Find(ComponentData.ComponentName)) {
+				UActorComponent* Component = *SearchResult;
+				bool bPreviouslyRegister;
+				{
+					//SCOPE_CYCLE_COUNTER(STAT_LoadStateFromPrefabAsset_UnregisterComponent);
+					bPreviouslyRegister = Component->IsRegistered();
+					if (InSettings.bUnregisterComponentsBeforeLoading && bPreviouslyRegister) {
+						Component->UnregisterComponent();
+					}
+				}
 
-			DeserializeFields(Component, ComponentData.Properties);
+				{
+					//SCOPE_CYCLE_COUNTER(STAT_LoadStateFromPrefabAsset_DeserializeFieldsComponents);
+					DeserializeFields(Component, ComponentData.Properties);
+				}
 
-			if (InSettings.bUnregisterComponentsBeforeLoading && bPreviouslyRegister) {
-				Component->RegisterComponent();
+				{
+					//SCOPE_CYCLE_COUNTER(STAT_LoadStateFromPrefabAsset_RegisterComponent);
+					if (InSettings.bUnregisterComponentsBeforeLoading && bPreviouslyRegister) {
+						Component->RegisterComponent();
+					}
+				}
 			}
 		}
 	}
@@ -512,6 +540,7 @@ void FPrefabTools::LoadStateFromPrefabAsset(AActor* InActor, const FPrefabricato
 #endif // WITH_EDITOR
 
 	if (Service.IsValid()) {
+		SCOPE_CYCLE_COUNTER(STAT_LoadStateFromPrefabAsset_EndTransaction);
 		Service->EndTransaction();
 	}
 

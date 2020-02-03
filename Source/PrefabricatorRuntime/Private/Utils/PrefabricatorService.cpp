@@ -1,4 +1,4 @@
-//$ Copyright 2015-19, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
+//$ Copyright 2015-20, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #include "Utils/PrefabricatorService.h"
 
@@ -60,3 +60,4 @@ UPrefabricatorAsset* FPrefabricatorRuntimeService::CreatePrefabAsset()
 	// Not supported in runtime builds (and not necessary)
 	return nullptr;
 }
+
