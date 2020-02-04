@@ -1,4 +1,4 @@
-//$ Copyright 2015-19, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
+//$ Copyright 2015-20, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #include "Prefab/Random/PrefabRandomizerActor.h"
 
@@ -11,6 +11,8 @@
 #include "GameFramework/Actor.h"
 #include "Math/RandomStream.h"
 #include "UObject/ConstructorHelpers.h"
+#include "Prefab/PrefabTools.h"
+#include "Utils/PrefabricatorService.h"
 
 APrefabRandomizer::APrefabRandomizer(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -42,6 +44,16 @@ void APrefabRandomizer::Tick(float DeltaSeconds)
 		if (NumRemaining == 0) {
 			OnRandomizationComplete.Broadcast();
 			BuildSystem = nullptr;
+
+			// Run GC in the editor
+			TSharedPtr<IPrefabricatorService> Service = FPrefabricatorService::Get();
+			if (Service.IsValid()) {
+				Service->RunGC();
+			}
+
+			if (LoadState.IsValid()) {
+				UE_LOG(LogTemp, Log, TEXT("Slow[%d], Fast[%d], Reuse[%d]"), LoadState->_Stat_SlowSpawns, LoadState->_Stat_FastSpawns, LoadState->_Stat_ReuseSpawns);
+			}
 		}
 	}
 }
@@ -111,8 +123,17 @@ void APrefabRandomizer::Randomize(int32 InSeed)
 	}
 
 	BuildSystem = MakeShareable(new FPrefabBuildSystem(MaxBuildTimePerFrame));
+	LoadState = bUseOptimizedPooling ? MakeShareable(new FPrefabLoadState) : nullptr;
+
 	for (APrefabActor* TopLevelPrefab : TopLevelPrefabs) {
-		FPrefabBuildSystemCommandPtr BuildCommand = MakeShareable(new FPrefabBuildSystemCommand_BuildPrefab(TopLevelPrefab, true, &Random));
+		FPrefabBuildSystemCommandPtr BuildCommand;
+		if (bFastSyncBuild) {
+			BuildCommand = MakeShareable(new FPrefabBuildSystemCommand_BuildPrefabSync(TopLevelPrefab, true, &Random, LoadState));
+		}
+		else {
+			BuildCommand = MakeShareable(new FPrefabBuildSystemCommand_BuildPrefab(TopLevelPrefab, true, &Random, LoadState));
+		}
+
 		BuildSystem->PushCommand(BuildCommand);
 	}
 

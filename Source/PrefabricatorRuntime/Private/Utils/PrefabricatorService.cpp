@@ -1,4 +1,4 @@
-//$ Copyright 2015-19, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
+//$ Copyright 2015-20, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #include "Utils/PrefabricatorService.h"
 
@@ -21,16 +21,33 @@ void FPrefabricatorService::Set(TSharedPtr<IPrefabricatorService> InInstance)
 
 
 /////////////////////////// IPrefabricatorService /////////////////////////// 
-AActor* IPrefabricatorService::SpawnActor(TSubclassOf<AActor> InClass, const FTransform& InTransform, ULevel* InLevel)
+AActor* IPrefabricatorService::SpawnActor(TSubclassOf<AActor> InClass, const FTransform& InTransform, ULevel* InLevel, AActor* InTemplate)
 {
 	if (!InClass || !InLevel) {
 		return nullptr;
 	}
 
+	TArray<AActor*> AttachedToTemplate;
+	if (InTemplate) {
+		InTemplate->GetAttachedActors(AttachedToTemplate);
+		for (AActor* TemplateChild : AttachedToTemplate) {
+			TemplateChild->DetachFromActor(FDetachmentTransformRules(EDetachmentRule::KeepWorld, false));
+		}
+	}
+
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.OverrideLevel = InLevel;
+	SpawnParams.Template = InTemplate;
 	UWorld* World = InLevel->GetWorld();
-	return World->SpawnActor<AActor>(InClass, InTransform, SpawnParams);
+	AActor* Actor = World->SpawnActor<AActor>(InClass, InTransform, SpawnParams);
+	TSharedPtr<IPrefabricatorService> Service = FPrefabricatorService::Get();
+	if (Actor && InTemplate && Service.IsValid()) {
+		// Attach the template children back
+		for (AActor* TemplateChild : AttachedToTemplate) {
+			Service->ParentActors(InTemplate, TemplateChild);
+		}
+	}
+	return Actor;
 }
 
 /////////////////////////// FPrefabricatorRuntimeService /////////////////////////// 
@@ -60,3 +77,4 @@ UPrefabricatorAsset* FPrefabricatorRuntimeService::CreatePrefabAsset()
 	// Not supported in runtime builds (and not necessary)
 	return nullptr;
 }
+

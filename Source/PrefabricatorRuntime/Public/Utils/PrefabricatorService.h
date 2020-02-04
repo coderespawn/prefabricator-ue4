@@ -1,4 +1,4 @@
-//$ Copyright 2015-19, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
+//$ Copyright 2015-20, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #pragma once
 #include "CoreMinimal.h"
@@ -35,9 +35,10 @@ public:
 	virtual UPrefabricatorAsset* CreatePrefabAsset() = 0;
 	virtual FVector SnapToGrid(const FVector& InLocation) { return InLocation; }
 	virtual void SetDetailsViewObject(UObject* InObject) {}
-	virtual AActor* SpawnActor(TSubclassOf<AActor> InClass, const FTransform& InTransform, ULevel* InLevel);
+	virtual AActor* SpawnActor(TSubclassOf<AActor> InClass, const FTransform& InTransform, ULevel* InLevel, AActor* InTemplate);
 	virtual void BeginTransaction(const FText& Description) {}
 	virtual void EndTransaction() {}
+	virtual void RunGC() {}
 };
 
 class PREFABRICATORRUNTIME_API FPrefabricatorRuntimeService : public IPrefabricatorService {

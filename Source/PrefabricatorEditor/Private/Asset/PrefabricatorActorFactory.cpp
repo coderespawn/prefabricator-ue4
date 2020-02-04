@@ -1,4 +1,4 @@
-//$ Copyright 2015-19, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
+//$ Copyright 2015-20, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #include "Asset/PrefabricatorActorFactory.h"
 
@@ -44,7 +44,8 @@ void UPrefabricatorActorFactory::LoadPrefabActorState(APrefabActor* PrefabActor)
 
 		FPrefabLoadSettings LoadSettings;
 		LoadSettings.bUnregisterComponentsBeforeLoading = !bIsPreviewActor;
-		FPrefabTools::LoadStateFromPrefabAsset(PrefabActor, LoadSettings);
+		FPrefabLoadStatePtr LoadState = MakeShareable(new FPrefabLoadState);
+		FPrefabTools::LoadStateFromPrefabAsset(PrefabActor, LoadSettings, LoadState);
 		if (bIsPreviewActor) {
 			FPrefabTools::IterateChildrenRecursive(PrefabActor, [](AActor* ChildActor) {
 				ChildActor->SetActorEnableCollision(false);

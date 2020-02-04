@@ -1,4 +1,4 @@
-//$ Copyright 2015-19, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
+//$ Copyright 2015-20, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #include "Utils/PrefabricatorFunctionLibrary.h"
 
@@ -40,7 +40,8 @@ void UPrefabricatorBlueprintLibrary::RandomizePrefab(APrefabActor* PrefabActor, 
 	FPrefabLoadSettings LoadSettings;
 	LoadSettings.bRandomizeNestedSeed = true;
 	LoadSettings.Random = &InRandom;
-	FPrefabTools::LoadStateFromPrefabAsset(PrefabActor, LoadSettings);
+	FPrefabLoadStatePtr LoadState = MakeShareable(new FPrefabLoadState);
+	FPrefabTools::LoadStateFromPrefabAsset(PrefabActor, LoadSettings, LoadState);
 }
 
 void UPrefabricatorBlueprintLibrary::GetAllAttachedActors(AActor* Prefab, TArray<AActor*>& AttachedActors)
