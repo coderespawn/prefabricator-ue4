@@ -15,6 +15,14 @@ struct PREFABRICATORRUNTIME_API FPrefabLoadSettings {
 	const FRandomStream* Random = nullptr;
 };
 
+struct PREFABRICATORRUNTIME_API FPrefabLoadState {
+	TMap<FGuid, TWeakObjectPtr<AActor>> PrefabItemTemplates;
+	int32 _Stat_SlowSpawns = 0;
+	int32 _Stat_FastSpawns = 0;
+	int32 _Stat_ReuseSpawns = 0;
+};
+typedef TSharedPtr<FPrefabLoadState> FPrefabLoadStatePtr;
+
 class PREFABRICATORRUNTIME_API FPrefabTools {
 public:
 	static bool CanCreatePrefab();
@@ -23,10 +31,7 @@ public:
 	static void AssignAssetUserData(AActor* InActor, const FGuid& InItemID, APrefabActor* Prefab);
 
 	static void SaveStateToPrefabAsset(APrefabActor* PrefabActor);
-	static void LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPrefabLoadSettings& InSettings = FPrefabLoadSettings());
-
-	static void SaveStateToPrefabAsset(AActor* InActor, APrefabActor* PrefabActor, FPrefabricatorActorData& OutActorData);
-	static void LoadStateFromPrefabAsset(AActor* InActor, const FPrefabricatorActorData& InActorData, const FPrefabLoadSettings& InSettings);
+	static void LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPrefabLoadSettings& InSettings = FPrefabLoadSettings(), FPrefabLoadStatePtr InState = nullptr);
 
 	static void UnlinkAndDestroyPrefabActor(APrefabActor* PrefabActor);
 	static void GetActorChildren(AActor* InParent, TArray<AActor*>& OutChildren);
@@ -43,6 +48,11 @@ public:
 	static int32 GetRandomSeed(const FRandomStream& Random);
 
 	static void IterateChildrenRecursive(APrefabActor* Actor, TFunction<void(AActor*)> Visit);
+
+private:
+	static void SaveActorState(AActor* InActor, APrefabActor* PrefabActor, FPrefabricatorActorData& OutActorData);
+	static void LoadActorState(AActor* InActor, const FPrefabricatorActorData& InActorData, const FPrefabLoadSettings& InSettings);
+
 };
 
 class PREFABRICATORRUNTIME_API FPrefabVersionControl {

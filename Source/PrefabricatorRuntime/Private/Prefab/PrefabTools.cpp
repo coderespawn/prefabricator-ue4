@@ -243,7 +243,7 @@ void FPrefabTools::SaveStateToPrefabAsset(APrefabActor* PrefabActor)
 			int32 NewItemIndex = PrefabAsset->ActorData.AddDefaulted();
 			FPrefabricatorActorData& ActorData = PrefabAsset->ActorData[NewItemIndex];
 			ActorData.PrefabItemID = ItemID;
-			SaveStateToPrefabAsset(ChildActor, PrefabActor, ActorData);
+			SaveActorState(ChildActor, PrefabActor, ActorData);
 		}
 	}
 	PrefabAsset->Version = (uint32)EPrefabricatorAssetVersion::LatestVersion;
@@ -447,7 +447,7 @@ bool FPrefabTools::ShouldForcePropertySerialization(const FName& PropertyName)
 	return FieldsToForceSerialize.Contains(PropertyName);
 }
 
-void FPrefabTools::SaveStateToPrefabAsset(AActor* InActor, APrefabActor* PrefabActor, FPrefabricatorActorData& OutActorData)
+void FPrefabTools::SaveActorState(AActor* InActor, APrefabActor* PrefabActor, FPrefabricatorActorData& OutActorData)
 {
 	if (!InActor) return;
 
@@ -482,7 +482,7 @@ void FPrefabTools::SaveStateToPrefabAsset(AActor* InActor, APrefabActor* PrefabA
 	DumpSerializedData(OutActorData);
 }
 
-void FPrefabTools::LoadStateFromPrefabAsset(AActor* InActor, const FPrefabricatorActorData& InActorData, const FPrefabLoadSettings& InSettings)
+void FPrefabTools::LoadActorState(AActor* InActor, const FPrefabricatorActorData& InActorData, const FPrefabLoadSettings& InSettings)
 {
 	if (!InActor) {
 		return;
@@ -602,7 +602,7 @@ FBox FPrefabTools::GetPrefabBounds(AActor* PrefabActor, bool bNonColliding)
 	return Result;
 }
 
-void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPrefabLoadSettings& InSettings)
+void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPrefabLoadSettings& InSettings, FPrefabLoadStatePtr InState)
 {
 	if (!PrefabActor) {
 		UE_LOG(LogPrefabTools, Error, TEXT("Invalid prefab actor reference"));
@@ -662,17 +662,39 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 		if (!ChildActor) {
 			TSharedPtr<IPrefabricatorService> Service = FPrefabricatorService::Get();
 			if (Service.IsValid()) {
-				ChildActor = Service->SpawnActor(ActorClass, FTransform::Identity, PrefabActor->GetLevel());
+				AActor* Template = nullptr;
+				if (InState.IsValid()) {
+					TWeakObjectPtr<AActor>* SearchResult = InState->PrefabItemTemplates.Find(ActorItemData.PrefabItemID);
+					if (SearchResult) {
+						TWeakObjectPtr<AActor> ActorTemplatePtr = *SearchResult;
+						if (ActorTemplatePtr.IsValid()) {
+							Template = ActorTemplatePtr.Get();
+						}
+					}
+				}
+
+				ChildActor = Service->SpawnActor(ActorClass, FTransform::Identity, PrefabActor->GetLevel(), Template);
+				if (!Template) {
+					LoadActorState(ChildActor, ActorItemData, InSettings);
+					if (InState.IsValid()) {
+						InState->PrefabItemTemplates.Add(ActorItemData.PrefabItemID, ChildActor);
+						InState->_Stat_SlowSpawns++;
+					}
+				}
+				else {
+					if (InState.IsValid()) {
+						InState->_Stat_FastSpawns++;
+					}
+				}
 			}
-			//FActorSpawnParameters SpawnParams;
-			//SpawnParams.OverrideLevel = PrefabActor->GetLevel();
-			//ChildActor = World->SpawnActor<AActor>(ActorClass, SpawnParams);
+		}
+		else {
+			if (InState.IsValid()) {
+				InState->_Stat_ReuseSpawns++;
+			}
 		}
 
 		if (ChildActor) {
-			// Load the saved data into the actor
-			LoadStateFromPrefabAsset(ChildActor, ActorItemData, InSettings);
-			
 			ParentActors(PrefabActor, ChildActor);
 			AssignAssetUserData(ChildActor, ActorItemData.PrefabItemID, PrefabActor);
 
@@ -694,7 +716,7 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 					ChildPrefab->Seed = FPrefabTools::GetRandomSeed(*InSettings.Random);
 				}
 				if (InSettings.bSynchronousBuild) {
-					LoadStateFromPrefabAsset(ChildPrefab, InSettings);
+					LoadStateFromPrefabAsset(ChildPrefab, InSettings, InState);
 				}
 			}
 		}

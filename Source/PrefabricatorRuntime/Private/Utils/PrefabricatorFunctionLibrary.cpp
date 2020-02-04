@@ -40,7 +40,8 @@ void UPrefabricatorBlueprintLibrary::RandomizePrefab(APrefabActor* PrefabActor, 
 	FPrefabLoadSettings LoadSettings;
 	LoadSettings.bRandomizeNestedSeed = true;
 	LoadSettings.Random = &InRandom;
-	FPrefabTools::LoadStateFromPrefabAsset(PrefabActor, LoadSettings);
+	FPrefabLoadStatePtr LoadState = MakeShareable(new FPrefabLoadState);
+	FPrefabTools::LoadStateFromPrefabAsset(PrefabActor, LoadSettings, LoadState);
 }
 
 void UPrefabricatorBlueprintLibrary::GetAllAttachedActors(AActor* Prefab, TArray<AActor*>& AttachedActors)

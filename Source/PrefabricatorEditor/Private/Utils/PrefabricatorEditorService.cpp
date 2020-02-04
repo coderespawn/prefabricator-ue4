@@ -90,9 +90,9 @@ void FPrefabricatorEditorService::SetDetailsViewObject(UObject* InObject)
 }
 
 
-AActor* FPrefabricatorEditorService::SpawnActor(TSubclassOf<AActor> InActorClass, const FTransform& InTransform, ULevel* InLevel)
+AActor* FPrefabricatorEditorService::SpawnActor(TSubclassOf<AActor> InActorClass, const FTransform& InTransform, ULevel* InLevel, AActor* InTemplate)
 {
-	if (GEditor) {
+	if (GEditor && !InTemplate) {
 		UActorFactory* ActorFactory = GEditor->FindActorFactoryByClassForActorClass(UActorFactoryBoxVolume::StaticClass(), InActorClass);
 		if (ActorFactory) {
 			FAssetData AssetData(InActorClass);
@@ -100,7 +100,7 @@ AActor* FPrefabricatorEditorService::SpawnActor(TSubclassOf<AActor> InActorClass
 		}
 	}
 
-	return IPrefabricatorService::SpawnActor(InActorClass, InTransform, InLevel);
+	return IPrefabricatorService::SpawnActor(InActorClass, InTransform, InLevel, InTemplate);
 }
 
 namespace {
@@ -143,5 +143,10 @@ void FPrefabricatorEditorService::BeginTransaction(const FText& Description)
 void FPrefabricatorEditorService::EndTransaction()
 {
 	PrefabEndTransaction();
+}
+
+void FPrefabricatorEditorService::RunGC()
+{
+	CollectGarbage(GARBAGE_COLLECTION_KEEPFLAGS);
 }
 

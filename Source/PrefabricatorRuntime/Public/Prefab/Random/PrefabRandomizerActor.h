@@ -6,6 +6,8 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FPrefabRandomizerCompleteBindableEvent);
 
+typedef TSharedPtr<struct FPrefabLoadState> FPrefabLoadStatePtr;
+
 UCLASS(Blueprintable)
 class PREFABRICATORRUNTIME_API APrefabRandomizer : public AActor {
 	GENERATED_UCLASS_BODY()
@@ -39,8 +41,12 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Prefabricator")
 	bool bFastSyncBuild = false;
 
+	UPROPERTY(EditAnywhere, Category = "Prefabricator")
+	bool bUseOptimizedPooling = true;
+
 private:
 	TSharedPtr<class FPrefabBuildSystem> BuildSystem;
 	FRandomStream Random;
+	FPrefabLoadStatePtr LoadState;
 };
 

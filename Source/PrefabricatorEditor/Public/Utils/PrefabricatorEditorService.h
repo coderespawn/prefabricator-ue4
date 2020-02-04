@@ -13,9 +13,9 @@ public:
 	virtual UPrefabricatorAsset* CreatePrefabAsset() override;
 	virtual FVector SnapToGrid(const FVector& InLocation) override;
 	virtual void SetDetailsViewObject(UObject* InObject) override;
-	virtual AActor* SpawnActor(TSubclassOf<AActor> InClass, const FTransform& InTransform, ULevel* InLevel) override;
+	virtual AActor* SpawnActor(TSubclassOf<AActor> InClass, const FTransform& InTransform, ULevel* InLevel, AActor* InTemplate) override;
 	virtual void BeginTransaction(const FText& Description) override;
 	virtual void EndTransaction() override;
-
+	virtual void RunGC() override;
 };
 
