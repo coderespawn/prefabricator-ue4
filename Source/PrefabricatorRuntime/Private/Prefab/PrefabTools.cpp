@@ -134,18 +134,18 @@ namespace {
 	}
 
 }
-void FPrefabTools::CreatePrefabFromActors(const TArray<AActor*>& InActors)
+APrefabActor* FPrefabTools::CreatePrefabFromActors(const TArray<AActor*>& InActors)
 {
 	TArray<AActor*> Actors;
 	SanitizePrefabActorsForCreation(InActors, Actors);
 
 	if (Actors.Num() == 0) {
-		return;
+		return nullptr;
 	}
 
 	UPrefabricatorAsset* PrefabAsset = CreatePrefabAsset();
 	if (!PrefabAsset) {
-		return;
+		return nullptr;
 	}
 
 	TSharedPtr<IPrefabricatorService> Service = FPrefabricatorService::Get();
@@ -176,6 +176,7 @@ void FPrefabTools::CreatePrefabFromActors(const TArray<AActor*>& InActors)
 
 	SelectPrefabActor(PrefabActor);
 
+	return PrefabActor;
 }
 
 void FPrefabTools::AssignAssetUserData(AActor* InActor, const FGuid& InItemID, APrefabActor* Prefab)
@@ -254,6 +255,11 @@ void FPrefabTools::SaveStateToPrefabAsset(APrefabActor* PrefabActor)
 	PrefabAsset->LastUpdateID = FGuid::NewGuid();
 	PrefabActor->LastUpdateID = PrefabAsset->LastUpdateID;
 	PrefabAsset->Modify();
+
+	TSharedPtr<IPrefabricatorService> Service = FPrefabricatorService::Get();
+	if (Service.IsValid()) {
+		Service->CaptureThumb(PrefabAsset);
+	}
 }
 
 namespace {

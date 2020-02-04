@@ -39,6 +39,7 @@ public:
 	virtual void BeginTransaction(const FText& Description) {}
 	virtual void EndTransaction() {}
 	virtual void RunGC() {}
+	virtual void CaptureThumb(UPrefabricatorAsset* PrefabAsset) {}
 };
 
 class PREFABRICATORRUNTIME_API FPrefabricatorRuntimeService : public IPrefabricatorService {

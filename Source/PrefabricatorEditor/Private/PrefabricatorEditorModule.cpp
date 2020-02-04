@@ -62,13 +62,6 @@ class FPrefabricatorEditorModule : public IPrefabricatorEditorModule
 
 		// Override the prefabricator service with the editor version, so the runtime module can access it
 		FPrefabricatorService::Set(MakeShareable(new FPrefabricatorEditorService));
-
-		const UPrefabricatorSettings* PS = GetDefault<UPrefabricatorSettings>();
-		if (PS->bShowAssetThumbnails)
-		{
-			// Setup the thumbnail renderer for the prefab asset
-			UThumbnailManager::Get().RegisterCustomRenderer(UPrefabricatorAsset::StaticClass(), UPrefabricatorAssetThumbnailRenderer::StaticClass());
-		}
 	}
 
 	virtual void ShutdownModule() override {

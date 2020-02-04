@@ -17,5 +17,6 @@ public:
 	virtual void BeginTransaction(const FText& Description) override;
 	virtual void EndTransaction() override;
 	virtual void RunGC() override;
+	virtual void CaptureThumb(UPrefabricatorAsset* PrefabAsset) override;
 };
 

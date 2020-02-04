@@ -18,6 +18,8 @@ public:
 
 	static void SwitchLevelViewportToRealtimeMode();
 
+	static void CapturePrefabAssetThumbnail(UPrefabricatorAsset* InAsset);
+
 	template<typename T>
 	static T* CreateAssetOnContentBrowser(const FString& InAssetName, bool bSyncBrowserToAsset)
 	{

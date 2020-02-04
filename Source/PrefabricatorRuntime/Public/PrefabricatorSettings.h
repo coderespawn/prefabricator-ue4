@@ -30,9 +30,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, config, Category = "Settings")
 	bool bAllowDynamicUpdate = true;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, config, Category = "Settings", meta = (ConfigRestartRequired = true))
-	bool bShowAssetThumbnails = true;
-
 public:
 	UPrefabricatorSettings();
 

@@ -150,3 +150,9 @@ void FPrefabricatorEditorService::RunGC()
 	CollectGarbage(GARBAGE_COLLECTION_KEEPFLAGS);
 }
 
+void FPrefabricatorEditorService::CaptureThumb(UPrefabricatorAsset* PrefabAsset)
+{
+	// Save the thumbnail
+	FPrefabEditorTools::CapturePrefabAssetThumbnail(PrefabAsset);
+}
+

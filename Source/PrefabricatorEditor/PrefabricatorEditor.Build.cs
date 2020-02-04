@@ -39,6 +39,7 @@ namespace UnrealBuildTool.Rules
                     "Kismet",
                     "PlacementMode",
                     "EditorWidgets",
+                    "RHI"
                 }
 				);
 
