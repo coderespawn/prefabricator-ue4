@@ -298,6 +298,22 @@ namespace {
 			}
 		}
 
+		// JB: We skip serialization of RelativeLocation for root components.
+		// JB: The root component relative location is redundant as it equals to the actor location.
+		// JB: Having it set during deserialization causes problems with PhysicX when a large number of prefabs are spawned at runtime.
+		// JB: Restoring the relative location will essentially put all spawned actors on top of each other even if the prefabs are spawned at different places.
+		// JB: In such a case, the physics has to deal with the overlaps (or at least I think so) and significantly slows down.
+		// JB: Especially if the assets have a large number of collisions.
+		USceneComponent* SceneComponent = Cast<USceneComponent>(ObjToSerialize);
+		if(SceneComponent && Cast<UPrefabComponent>(SceneComponent->GetAttachParent()))
+		{
+			if (Property->GetName().Equals("RelativeLocation"))
+			{
+				return true;
+			}
+		}
+		
+
 		return false;
 	}
 
@@ -679,7 +695,8 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 					}
 				}
 
-				ChildActor = Service->SpawnActor(ActorClass, FTransform::Identity, PrefabActor->GetLevel(), Template);
+				//JB: Spawning actors on top of each other may cause problems with PhysicX (as it needs to compute the overlaps).
+				ChildActor = Service->SpawnActor(ActorClass, PrefabActor->GetActorTransform(), PrefabActor->GetLevel(), Template);
 				if (!Template) {
 					LoadActorState(ChildActor, ActorItemData, InSettings);
 					if (InState.IsValid()) {
