@@ -51,7 +51,8 @@ public:
 
 private:
 	static void SaveActorState(AActor* InActor, APrefabActor* PrefabActor, FPrefabricatorActorData& OutActorData);
-	static void LoadActorState(AActor* InActor, const FPrefabricatorActorData& InActorData, const FPrefabLoadSettings& InSettings);
+	// JB: The InChildActors map contains all actors spawned by the prefab stored by their ItemID.
+	static void LoadActorState(AActor* InActor, const FPrefabricatorActorData& InActorData, const FPrefabLoadSettings& InSettings, const TMap<FGuid, AActor*>& InChildActors);
 
 };
 
