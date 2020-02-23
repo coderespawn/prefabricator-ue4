@@ -359,6 +359,7 @@ namespace {
 		}
 
 		UPrefabricatorAsset* PrefabAsset = Cast<UPrefabricatorAsset>(PrefabActor->PrefabComponent->PrefabAssetInterface.LoadSynchronous());
+		USceneComponent* SceneComponent = Cast<USceneComponent>(ObjToSerialize);
 
 		if (!PrefabAsset) {
 			return;
@@ -531,12 +532,28 @@ void FPrefabTools::LoadActorState(AActor* InActor, const FPrefabricatorActorData
 		for (const FPrefabricatorComponentData& ComponentData : InActorData.Components) {
 			if (UActorComponent** SearchResult = ComponentsByName.Find(ComponentData.ComponentName)) {
 				UActorComponent* Component = *SearchResult;
+				USceneComponent* SceneComponent = Cast<USceneComponent>(Component);
+
+				// JB: We store the world location in case we would be restoring a component simulating physics.
+				// JB: This is necessary only for prefab spawned at runtime.
+				FVector WorldLocation = FVector::ZeroVector;
+				if (InActor->HasActorBegunPlay()) {
+					if (SceneComponent)
+					{
+						WorldLocation = SceneComponent->GetComponentLocation();
+					}
+				}
+
 				bool bPreviouslyRegister;
 				{
 					//SCOPE_CYCLE_COUNTER(STAT_LoadStateFromPrefabAsset_UnregisterComponent);
 					bPreviouslyRegister = Component->IsRegistered();
 					if (InSettings.bUnregisterComponentsBeforeLoading && bPreviouslyRegister) {
 						Component->UnregisterComponent();
+						// JB: Some of the components (e.g., UPhysicsConstraintComponent) also require re-initialization.
+						if (Component->HasBeenInitialized()) {
+							Component->UninitializeComponent();
+						}
 					}
 				}
 
@@ -548,7 +565,14 @@ void FPrefabTools::LoadActorState(AActor* InActor, const FPrefabricatorActorData
 				{
 					//SCOPE_CYCLE_COUNTER(STAT_LoadStateFromPrefabAsset_RegisterComponent);
 					if (InSettings.bUnregisterComponentsBeforeLoading && bPreviouslyRegister) {
+						// JB: Register component will also initialize component if necessary.
 						Component->RegisterComponent();
+						// JB: Components that are simulating physics are detached from the actor on register.
+						// JB: Restoring their relative location above will cause them to be spawned at a wrong location so we fix it.
+						// JB: This is necessary only for prefab spawned at runtime.
+						if (InActor->HasActorBegunPlay() && SceneComponent->IsSimulatingPhysics()) {
+							SceneComponent->SetRelativeLocation(WorldLocation);
+						}
 					}
 				}
 			}
@@ -696,7 +720,8 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 				}
 
 				//JB: Spawning actors on top of each other may cause problems with PhysicX (as it needs to compute the overlaps).
-				ChildActor = Service->SpawnActor(ActorClass, PrefabActor->GetActorTransform(), PrefabActor->GetLevel(), Template);
+				FTransform WorldTransform = ActorItemData.RelativeTransform * PrefabActor->GetTransform();
+				ChildActor = Service->SpawnActor(ActorClass, WorldTransform, PrefabActor->GetLevel(), Template);
 				if (!Template) {
 					LoadActorState(ChildActor, ActorItemData, InSettings);
 					if (InState.IsValid()) {
