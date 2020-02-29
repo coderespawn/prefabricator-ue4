@@ -191,6 +191,179 @@ void FPrefabTools::AssignAssetUserData(AActor* InActor, const FGuid& InItemID, A
 	InActor->GetRootComponent()->AddAssetUserData(PrefabUserData);
 }
 
+namespace
+{
+	bool HasDefaultValue(UObject* InContainer, const FString& InPropertyPath, UObject* DefaultObject) {
+		if (!InContainer) return false;
+
+		// JB: If no default object was passed we use the CDO.
+		if (!DefaultObject)
+		{
+			UClass* ObjClass = InContainer->GetClass();
+			if (!ObjClass) return false;
+			DefaultObject = ObjClass->GetDefaultObject();
+		}
+		if (!DefaultObject) return false;
+
+		FString PropertyValue, DefaultValue;
+		PropertyPathHelpers::GetPropertyValueAsString(InContainer, InPropertyPath, PropertyValue);
+		PropertyPathHelpers::GetPropertyValueAsString(DefaultObject, InPropertyPath, DefaultValue);
+		return PropertyValue == DefaultValue;
+	}
+
+	// JB: Returns a set of properties to serialize.
+	void GetPropertiesToSerialize(UObject* ObjectToSerialize, TSet<const UProperty*>& OutPropertiesToSerialize)
+	{
+		// JB: We cannot use the class default object (CDO) directly when checking if a component's property has the default value.
+		// JB: The problem is that user can set a different default value for the component variable inside an actor.
+		// JB: Then modify this value in an instance that is part of a prefab such that it is now set back to the CDO value (different from the default value in actor).
+		// JB: If the CDO value is the same as the modified value in the instance the value will not be stored.
+		// JB: When spawning the prefab, the (wrong) default value from the actor will be used which is different from the instance used to create the prefab and from the CDO value.
+		// JB: To save on computation we identify the correct default object already here.
+		UActorComponent* Component = Cast<UActorComponent>(ObjectToSerialize);
+		AActor* SpawnedDefaultActor = nullptr;
+		UObject* DefaultObject = nullptr;
+		if (Component)
+		{
+			AActor* ComponentOwner = Component->GetOwner();
+			//JB: this should newer fail for standard prefab use, but just in case
+			if (ComponentOwner)
+			{
+				UClass* ComponentOwnerClass = ComponentOwner->GetClass();
+				AActor* ComponentOwnerDefaultObject = nullptr;
+				// JB: To make it more complicated the blueprint compiled classes do not have a correct CDO.
+				// JB: TODO: There may be a better way to do this.
+				if (ComponentOwnerClass->GetClassFlags() & EClassFlags::CLASS_CompiledFromBlueprint)
+				{
+					FTransform Transform = FTransform::Identity;
+					FActorSpawnParameters SpawnParameters;
+					SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+					SpawnedDefaultActor = Component->GetWorld()->SpawnActor(ComponentOwnerClass, &Transform, SpawnParameters);
+					DefaultObject = SpawnedDefaultActor;
+				}
+				else
+				{
+					//JB: For native classes we can use component owner CDO.
+					ComponentOwnerDefaultObject = Cast<AActor>(ComponentOwnerClass->GetDefaultObject());
+				}
+				//JB: This should hopefully never fail, but just in case.
+				if (ComponentOwnerDefaultObject)
+				{
+					//JB: We find the corresponding component and set it as the default object to compare the property values.
+					TArray<UActorComponent*> DefaultComponents;
+					ComponentOwnerDefaultObject->GetComponents(DefaultComponents);
+					for (UActorComponent* DefaultComponent : DefaultComponents)
+					{
+						if (DefaultComponent->GetClass() == Component->GetClass() &&
+							DefaultComponent->GetName().Equals(Component->GetName()))
+						{
+							//JB: TODO check what happens if two components have the same name (if this is even possible)
+							DefaultObject = DefaultComponent;
+							break;
+						}
+					}
+				}
+			}
+			if(SpawnedDefaultActor)
+			{
+				SpawnedDefaultActor->Destroy();
+			}
+		}
+
+		for (TFieldIterator<UProperty> PropertyIterator(ObjectToSerialize->GetClass()); PropertyIterator; ++PropertyIterator) {
+			UProperty* Property = *PropertyIterator;
+			if (!Property) continue;
+			if (Property->HasAnyPropertyFlags(CPF_Transient) || !Property->HasAnyPropertyFlags(CPF_Edit | CPF_Interp)) {
+				continue;
+			}
+
+			if (FPrefabTools::ShouldIgnorePropertySerialization(Property->GetFName())) {
+				continue;
+			}
+
+			bool bForceSerialize = FPrefabTools::ShouldForcePropertySerialization(Property->GetFName());
+
+			// Check if it has the default value
+			if (!bForceSerialize && HasDefaultValue(ObjectToSerialize, Property->GetName(), DefaultObject)) {
+				continue;
+			}
+
+			OutPropertiesToSerialize.Add(Property);
+		}
+	}
+
+	// JB: Few possible cases:
+	// JB:    - a new property to serialize was added or removed -> easy to check for array sizes
+	// JB:    - existing property was modified -> we check the values
+	// JB:    - same number or properties is added and removed -> it is enough to check if a property was added
+	bool WasPropertiesChanged(UObject* ObjectToCheck, const TArray<UPrefabricatorProperty*>& Properties)
+	{
+		// JB: Creates a map of properties by their name.
+		TMap<FString, UPrefabricatorProperty*> PropertiesByName;
+		for (UPrefabricatorProperty* Property : Properties) {
+			if (!Property) continue;
+			PropertiesByName.Add(Property->PropertyName, Property);
+		}
+
+		TSet<const UProperty*> PropertiesToSerialize;
+		GetPropertiesToSerialize(ObjectToCheck, PropertiesToSerialize);
+
+		//JB: Checks if a list of properties to serialize is different - if so, the actor was changed.
+		if (PropertiesByName.Num() != PropertiesToSerialize.Num()) return true;
+
+		// JB: Checks if a property was modified.
+		for (const UProperty* Property : PropertiesToSerialize)
+		{
+			UPrefabricatorProperty** ExistingProperty = PropertiesByName.Find(Property->GetName());
+			if (!ExistingProperty) return true; // JB: There is a new property that was not there before.
+
+			FString CurrentPropertyValue;
+			PropertyPathHelpers::GetPropertyValueAsString(ObjectToCheck, Property->GetName(), CurrentPropertyValue);
+			if ((*ExistingProperty)->ExportedValue != CurrentPropertyValue)
+			{
+				return true; // JB: The property value was modified.
+			}
+		}
+
+		return false; // JB: Nothing changed.
+	}
+
+	bool WasActorChanged(AActor* ActorToCheck, const FPrefabricatorActorData& InActorData)
+	{
+		if (!ActorToCheck) return true;
+
+		// JB: Checks actor properties.
+		if (WasPropertiesChanged(ActorToCheck, InActorData.Properties)) return true;
+
+		// JB: We also need to check the actor components.
+		TArray<UActorComponent*> Components;
+		ActorToCheck->GetComponents(Components);
+
+		// JB: Check if the number of components changed.
+		if (Components.Num() != InActorData.Components.Num()) return true;
+
+		// JB: If we have the same number of components we check properties for all of them.
+		TMap<FString, UActorComponent*> ComponentsByName;
+		for (UActorComponent* Component : Components) {
+			FString ComponentPath = Component->GetPathName(ActorToCheck);
+			ComponentsByName.Add(ComponentPath, Component);
+		}
+
+		for (const FPrefabricatorComponentData& ComponentData : InActorData.Components) {
+			if (UActorComponent** SearchResult = ComponentsByName.Find(ComponentData.ComponentName)) {
+				UActorComponent* Component = *SearchResult;
+				if (WasPropertiesChanged(Component, ComponentData.Properties)) return true; //JB: There was a change.
+			}
+			else
+			{
+				// JB: There is also a special case when the same number of component were added and removed. 
+				// JB: Checking if some were removed is enough.
+				return true;
+			}
+		}
+		return false; // JB: Nothing changed.
+	}
+}
 
 void FPrefabTools::SaveStateToPrefabAsset(APrefabActor* PrefabActor)
 {
@@ -205,8 +378,14 @@ void FPrefabTools::SaveStateToPrefabAsset(APrefabActor* PrefabActor)
 		return;
 	}
 
-	PrefabAsset->PrefabMobility = PrefabActor->GetRootComponent()->Mobility;
+	// JB: We store the old prefab actor data before resetting it.
+	TMap<FGuid, FPrefabricatorActorData> OldActorDataById;
+	for (FPrefabricatorActorData& OldActorData : PrefabAsset->ActorData)
+	{
+		OldActorDataById.Add(OldActorData.PrefabItemID, OldActorData);
+	}
 
+	PrefabAsset->PrefabMobility = PrefabActor->GetRootComponent()->Mobility;
 	PrefabAsset->ActorData.Reset();
 
 	TArray<AActor*> Children;
@@ -234,12 +413,21 @@ void FPrefabTools::SaveStateToPrefabAsset(APrefabActor* PrefabActor)
 			UPrefabricatorAssetUserData* ChildUserData = ChildActor->GetRootComponent()->GetAssetUserData<UPrefabricatorAssetUserData>();
 			FGuid ItemID;
 			if (ChildUserData && ChildUserData->PrefabActor == PrefabActor) {
-				ItemID = ChildUserData->ItemID;
+				// JB: If an object was modified we need to generate a new ItemID for it to avoid reusing the old version in existing prefabs on load.
+				FPrefabricatorActorData* OldActorData = OldActorDataById.Find(ChildUserData->ItemID);
+				if (OldActorData && !WasActorChanged(ChildActor, *OldActorData))
+				{
+					ItemID = ChildUserData->ItemID;
+				}
+				else
+				{
+					ItemID = FGuid::NewGuid();
+				}
 			}
 			else {
 				ItemID = FGuid::NewGuid();
 			}
-			
+
 			AssignAssetUserData(ChildActor, ItemID, PrefabActor);
 			int32 NewItemIndex = PrefabAsset->ActorData.AddDefaulted();
 			FPrefabricatorActorData& ActorData = PrefabAsset->ActorData[NewItemIndex];
@@ -273,19 +461,6 @@ namespace {
 			ObjectToTest = ObjectToTest->GetOuter();
 		}
 		return false;
-	}
-
-	bool HasDefaultValue(UObject* InContainer, const FString& InPropertyPath) {
-		if (!InContainer) return false;
-
-		UClass* ObjClass = InContainer->GetClass();
-		if (!ObjClass) return false;
-		UObject* DefaultObject = ObjClass->GetDefaultObject();
-
-		FString PropertyValue, DefaultValue;
-		PropertyPathHelpers::GetPropertyValueAsString(InContainer, InPropertyPath, PropertyValue);
-		PropertyPathHelpers::GetPropertyValueAsString(DefaultObject, InPropertyPath, DefaultValue);
-		return PropertyValue == DefaultValue;
 	}
 
 	bool ShouldSkipSerialization(const UProperty* Property, UObject* ObjToSerialize, APrefabActor* PrefabActor) {
@@ -348,27 +523,10 @@ namespace {
 			return;
 		}
 
+		// JB: I have opted to move the code to a separate function as we need to make sure that we use the same list 
+		// JB: during serialization and when checking if an actor was modified.
 		TSet<const UProperty*> PropertiesToSerialize;
-		for (TFieldIterator<UProperty> PropertyIterator(ObjToSerialize->GetClass()); PropertyIterator; ++PropertyIterator) {
-			UProperty* Property = *PropertyIterator;
-			if (!Property) continue;
-			if (Property->HasAnyPropertyFlags(CPF_Transient) || !Property->HasAnyPropertyFlags(CPF_Edit | CPF_Interp)) {
-				continue;
-			}
-
-			if (FPrefabTools::ShouldIgnorePropertySerialization(Property->GetFName())) {
-				continue;
-			}
-
-			bool bForceSerialize = FPrefabTools::ShouldForcePropertySerialization(Property->GetFName());
-
-			// Check if it has the default value
-			if (!bForceSerialize && HasDefaultValue(ObjToSerialize, Property->GetName())) {
-				continue;
-			}
-
-			PropertiesToSerialize.Add(Property);
-		}
+		GetPropertiesToSerialize(ObjToSerialize, PropertiesToSerialize);
 
 		for (const UProperty* Property : PropertiesToSerialize) {
 			if (!Property) continue;
@@ -379,7 +537,7 @@ namespace {
 			UPrefabricatorProperty* PrefabProperty = nullptr;
 			FString PropertyName = Property->GetName();
 
-			
+
 			if (ShouldSkipSerialization(Property, ObjToSerialize, PrefabActor)) {
 				continue;
 			}
@@ -564,7 +722,7 @@ void FPrefabTools::UnlinkAndDestroyPrefabActor(APrefabActor* PrefabActor)
 	PrefabActor->GetAttachedActors(ChildActors);
 
 	// Detach them from the prefab actor and cleanup
-	for (AActor* ChildActor: ChildActors) {
+	for (AActor* ChildActor : ChildActors) {
 		ChildActor->DetachFromActor(FDetachmentTransformRules(EDetachmentRule::KeepWorld, true));
 		ChildActor->GetRootComponent()->RemoveUserDataOfClass(UPrefabricatorAssetUserData::StaticClass());
 	}
