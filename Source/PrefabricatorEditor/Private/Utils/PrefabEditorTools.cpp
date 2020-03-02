@@ -2,22 +2,22 @@
 
 #include "Utils/PrefabEditorTools.h"
 
+#include "Asset/PrefabricatorAsset.h"
+#include "Asset/Thumbnail/PrefabricatorAssetThumbnailScene.h"
 #include "Prefab/PrefabActor.h"
 #include "Prefab/PrefabActor.h"
 #include "Prefab/PrefabComponent.h"
 
+#include "AssetData.h"
 #include "EditorViewportClient.h"
+#include "Engine/Canvas.h"
+#include "Engine/TextureRenderTarget2D.h"
+#include "EngineModule.h"
 #include "EngineUtils.h"
 #include "Framework/Notifications/NotificationManager.h"
-#include "ObjectTools.h"
-#include "AssetData.h"
-#include "Asset/PrefabricatorAsset.h"
 #include "Kismet/KismetRenderingLibrary.h"
-#include "Engine/TextureRenderTarget2D.h"
-#include "Asset/Thumbnail/PrefabricatorAssetThumbnailScene.h"
-#include "EngineModule.h"
 #include "LegacyScreenPercentageDriver.h"
-#include "Engine/Canvas.h"
+#include "ObjectTools.h"
 
 void FPrefabEditorTools::ReloadPrefabsInLevel(UWorld* World, UPrefabricatorAsset* InAsset)
 {

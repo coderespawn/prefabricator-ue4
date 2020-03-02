@@ -31,3 +31,16 @@ public:
 	static FReply HandleRandomize(IDetailLayoutBuilder* DetailBuilder);
 };
 
+
+class PREFABRICATOREDITOR_API FPrefabDebugCustomization : public IDetailCustomization {
+public:
+	// IDetailCustomization interface
+	virtual void CustomizeDetails(IDetailLayoutBuilder& DetailBuilder) override;
+	// End of IDetailCustomization interface
+
+	static TSharedRef<IDetailCustomization> MakeInstance();
+
+	static FReply SaveDebugData(IDetailLayoutBuilder* DetailBuilder);
+	static FReply LoadDebugData(IDetailLayoutBuilder* DetailBuilder);
+};
+
