@@ -485,7 +485,7 @@ void FPrefabTools::SaveActorState(AActor* InActor, APrefabActor* PrefabActor, FP
 		SerializeFields(Component, PrefabActor, ComponentData.Properties);
 	}
 
-	DumpSerializedData(OutActorData);
+	//DumpSerializedData(OutActorData);
 }
 
 void FPrefabTools::LoadActorState(AActor* InActor, const FPrefabricatorActorData& InActorData, const FPrefabLoadSettings& InSettings)
