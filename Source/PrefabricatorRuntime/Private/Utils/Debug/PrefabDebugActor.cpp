@@ -18,6 +18,11 @@ void APrefabDebugActor::LoadActorData()
 		UObject* Obj = Actor->GetComponents().Array()[0];
 		FObjectReader ObectReader(Obj, ActorData);
 
+		Obj->PostLoad();
+		Actor->PostLoad();
+		Actor->ReregisterAllComponents();
+		Actor->PostActorCreated();
+
 #if WITH_EDITOR
 		FCoreUObjectDelegates::OnObjectModified.Broadcast(Obj);
 		//Obj->PostEditChange();
