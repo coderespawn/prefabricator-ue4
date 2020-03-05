@@ -20,6 +20,7 @@
 #include "Modules/ModuleManager.h"
 #include "Widgets/Input/SButton.h"
 #include "Widgets/SBoxPanel.h"
+#include "Utils/Debug/PrefabDebugActor.h"
 
 #define LOCTEXT_NAMESPACE "PrefabActorCustomization" 
 
@@ -271,5 +272,56 @@ FReply FPrefabRandomizerCustomization::HandleRandomize(IDetailLayoutBuilder* Det
 	return FReply::Handled();
 }
 
-#undef LOCTEXT_NAMESPACE 
+///////////////////////////////// FPrefabRandomizerCustomization /////////////////////////////////
 
+void FPrefabDebugCustomization::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
+{
+	IDetailCategoryBuilder& Category = DetailBuilder.EditCategory("Prefab Debug", FText::GetEmpty(), ECategoryPriority::Important);
+	Category.AddCustomRow(LOCTEXT("PrefabDebugCommand_SaveFilter", "save debug prefab"))
+		.WholeRowContent()
+		[
+			SNew(SButton)
+			.Text(LOCTEXT("PrefabDebugCommand_Save", "Save Actor Data"))
+			.OnClicked(FOnClicked::CreateStatic(&FPrefabDebugCustomization::SaveDebugData, &DetailBuilder))
+		];
+
+	Category.AddCustomRow(LOCTEXT("PrefabDebugCommand_LoadFilter", "load debug prefab"))
+		.WholeRowContent()
+		[
+			SNew(SButton)
+			.Text(LOCTEXT("PrefabDebugCommand_lOAD", "Load Actor Data"))
+			.OnClicked(FOnClicked::CreateStatic(&FPrefabDebugCustomization::LoadDebugData, &DetailBuilder))
+		];
+
+}
+
+TSharedRef<IDetailCustomization> FPrefabDebugCustomization::MakeInstance()
+{
+	return MakeShareable(new FPrefabDebugCustomization);
+}
+
+FReply FPrefabDebugCustomization::SaveDebugData(IDetailLayoutBuilder* DetailBuilder)
+{
+	TArray<APrefabDebugActor*> DebugActors = GetDetailObject<APrefabDebugActor>(DetailBuilder);
+	for (APrefabDebugActor* DebugActor : DebugActors) {
+		if (DebugActor) {
+			DebugActor->SaveActorData();
+		}
+	}
+
+	return FReply::Handled();
+}
+
+FReply FPrefabDebugCustomization::LoadDebugData(IDetailLayoutBuilder* DetailBuilder)
+{
+	TArray<APrefabDebugActor*> DebugActors = GetDetailObject<APrefabDebugActor>(DetailBuilder);
+	for (APrefabDebugActor* DebugActor : DebugActors) {
+		if (DebugActor) {
+			DebugActor->LoadActorData();
+		}
+	}
+
+	return FReply::Handled();
+}
+
+#undef LOCTEXT_NAMESPACE 

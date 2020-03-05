@@ -3,7 +3,9 @@
 #include "Prefab/Random/PrefabRandomizerActor.h"
 
 #include "Prefab/PrefabActor.h"
+#include "Prefab/PrefabTools.h"
 #include "Prefab/Random/PrefabSeedLinker.h"
+#include "Utils/PrefabricatorService.h"
 
 #include "Components/BillboardComponent.h"
 #include "Components/SceneComponent.h"
@@ -11,8 +13,6 @@
 #include "GameFramework/Actor.h"
 #include "Math/RandomStream.h"
 #include "UObject/ConstructorHelpers.h"
-#include "Prefab/PrefabTools.h"
-#include "Utils/PrefabricatorService.h"
 
 APrefabRandomizer::APrefabRandomizer(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
