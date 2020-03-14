@@ -18,6 +18,10 @@ struct PREFABRICATORRUNTIME_API FPrefabricatorPropertyAssetMapping {
 	UPROPERTY()
 	FName AssetObjectPath;
 
+	// JB: The ItemID of the referenced ID.
+	UPROPERTY()
+	FGuid AssetItemID;
+
 	UPROPERTY()
 	bool bUseQuotes = false;
 };
@@ -36,7 +40,8 @@ public:
 	TArray<FPrefabricatorPropertyAssetMapping> AssetSoftReferenceMappings;
 
 	void SaveReferencedAssetValues();
-	void LoadReferencedAssetValues();
+	// JB: The InChildActors map contains all actors spawned by the prefab stored by their ItemID.
+	void LoadReferencedAssetValues(const TMap<FGuid, AActor*>& InChildActors);
 };
 
 USTRUCT()

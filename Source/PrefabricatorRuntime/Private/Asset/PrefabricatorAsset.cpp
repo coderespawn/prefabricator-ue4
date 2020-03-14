@@ -11,6 +11,7 @@
 #include "GameFramework/Actor.h"
 #include "Internationalization/Regex.h"
 #include "Misc/PackageName.h"
+#include "PrefabricatorAssetUserData.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogPrefabricatorAsset, Log, All);
 
@@ -166,6 +167,17 @@ void UPrefabricatorProperty::SaveReferencedAssetValues()
 		Mapping.AssetReference = SoftPath;
 		//if (Mapping.AssetReference.IsValid()) 
 		{
+			//JB: If possible we store the AssetUserData.ItemID
+			AActor* Actor = Cast<AActor>(SoftPath.ResolveObject());
+			if (Actor && Actor->GetRootComponent())
+			{
+				//JB: This could be also passed to the function, but I tried to change the API as little as possible 
+				UPrefabricatorAssetUserData* AssetUserData = Actor->GetRootComponent()->GetAssetUserData<UPrefabricatorAssetUserData>();
+				if (AssetUserData)
+				{
+					Mapping.AssetItemID = AssetUserData->ItemID;
+				}
+			}
 			//FString ObjectPathString;
 			//FPackageName::ParseExportTextPath(AssetPath, &Mapping.AssetClassName, &ObjectPathString);
 			Mapping.AssetClassName = ClassName;
@@ -177,7 +189,7 @@ void UPrefabricatorProperty::SaveReferencedAssetValues()
 	}
 }
 
-void UPrefabricatorProperty::LoadReferencedAssetValues()
+void UPrefabricatorProperty::LoadReferencedAssetValues(const TMap<FGuid, AActor*>& InChildActors)
 {
 	SCOPE_CYCLE_COUNTER(STAT_LoadReferencedAssetValues);
 	bool bModified = false;
@@ -191,6 +203,14 @@ void UPrefabricatorProperty::LoadReferencedAssetValues()
 		{
 			//SCOPE_CYCLE_COUNTER(STAT_LoadReferencedAssetValues_GetAssetPathName);
 			ReferencedPath = Mapping.AssetReference.GetAssetPathName();
+			
+			// JB: We try to find the corresponding actor inside the prefab using the stored ItemID.
+			if (InChildActors.Contains(Mapping.AssetItemID))
+			{
+				AActor* ReferencedActor = *InChildActors.Find(Mapping.AssetItemID);
+				ReferencedPath = *ReferencedActor->GetPathName();
+			}
+
 			if (ReferencedPath.ToString().IsEmpty()) {
 				continue;
 			}

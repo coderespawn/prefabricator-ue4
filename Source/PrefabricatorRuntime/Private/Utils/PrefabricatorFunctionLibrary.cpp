@@ -13,7 +13,8 @@ APrefabActor* UPrefabricatorBlueprintLibrary::SpawnPrefab(const UObject* WorldCo
 {
 	APrefabActor* PrefabActor = nullptr;
 	UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull);
-	if (World) {
+	// JB: Added check if the Prefab is not nullptr.
+	if (World && Prefab) {
 		if (Prefab->bReplicates) {
 			FActorSpawnParameters SpawnParams;
 			PrefabActor = World->SpawnActor<AReplicablePrefabActor>(AReplicablePrefabActor::StaticClass(), Transform);

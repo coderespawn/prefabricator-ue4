@@ -229,6 +229,9 @@ void FPrefabTools::SaveStateToPrefabAsset(APrefabActor* PrefabActor)
 		}
 	}
 
+	// JB: Map storing all child actors based on their index in the PrefabAsset->ActorData array.
+	TMap<int32, AActor*> ChildrenToStore;
+	// JB: Prepares the actor data for all child actors and makes sure that all have ItemID.
 	for (AActor* ChildActor : Children) {
 		if (ChildActor && ChildActor->GetRootComponent()) {
 			UPrefabricatorAssetUserData* ChildUserData = ChildActor->GetRootComponent()->GetAssetUserData<UPrefabricatorAssetUserData>();
@@ -244,9 +247,17 @@ void FPrefabTools::SaveStateToPrefabAsset(APrefabActor* PrefabActor)
 			int32 NewItemIndex = PrefabAsset->ActorData.AddDefaulted();
 			FPrefabricatorActorData& ActorData = PrefabAsset->ActorData[NewItemIndex];
 			ActorData.PrefabItemID = ItemID;
-			SaveActorState(ChildActor, PrefabActor, ActorData);
+			ChildrenToStore.Add(NewItemIndex, ChildActor);
 		}
 	}
+
+	// JB: Stores the children actors state.
+	// JB: We need to do it after all the actor data are prepared in order to correctly reference the actors.
+	for (auto& ChildToStoreElement : ChildrenToStore)
+	{
+		SaveActorState(ChildToStoreElement.Value, PrefabActor, PrefabAsset->ActorData[ChildToStoreElement.Key]);
+	}
+
 	PrefabAsset->Version = (uint32)EPrefabricatorAssetVersion::LatestVersion;
 
 	PrefabActor->PrefabComponent->UpdateBounds();
@@ -301,7 +312,8 @@ namespace {
 		return false;
 	}
 
-	void DeserializeFields(UObject* InObjToDeserialize, const TArray<UPrefabricatorProperty*>& InProperties) {
+	// JB: The InChildActors map contains all actors spawned by the prefab stored by their ItemID.
+	void DeserializeFields(UObject* InObjToDeserialize, const TArray<UPrefabricatorProperty*>& InProperties, const TMap<FGuid, AActor*>& InChildActors) {
 		if (!InObjToDeserialize) return;
 
 		TMap<FString, UPrefabricatorProperty*> PropertiesByName;
@@ -326,7 +338,7 @@ namespace {
 				if (PrefabProperty) {
 					{
 						SCOPE_CYCLE_COUNTER(STAT_DeserializeFields_Iterate_LoadValue);
-						PrefabProperty->LoadReferencedAssetValues();
+						PrefabProperty->LoadReferencedAssetValues(InChildActors);
 					}
 					{
 						SCOPE_CYCLE_COUNTER(STAT_DeserializeFields_Iterate_SetValue);
@@ -372,6 +384,7 @@ namespace {
 
 		for (const UProperty* Property : PropertiesToSerialize) {
 			if (!Property) continue;
+			// JB: This was already checked few lines above and cannot ever happen - you may consider removing it.
 			if (FPrefabTools::ShouldIgnorePropertySerialization(Property->GetFName())) {
 				continue;
 			}
@@ -476,6 +489,7 @@ void FPrefabTools::SaveActorState(AActor* InActor, APrefabActor* PrefabActor, FP
 		int32 ComponentDataIdx = OutActorData.Components.AddDefaulted();
 		FPrefabricatorComponentData& ComponentData = OutActorData.Components[ComponentDataIdx];
 		ComponentData.ComponentName = Component->GetPathName(InActor);
+		// JB: As far as I can tell ComponentData.RelativeTransform is never used - you may consider removing it to save some disk space.
 		if (USceneComponent* SceneComponent = Cast<USceneComponent>(Component)) {
 			ComponentData.RelativeTransform = SceneComponent->GetComponentTransform();
 		}
@@ -488,7 +502,7 @@ void FPrefabTools::SaveActorState(AActor* InActor, APrefabActor* PrefabActor, FP
 	//DumpSerializedData(OutActorData);
 }
 
-void FPrefabTools::LoadActorState(AActor* InActor, const FPrefabricatorActorData& InActorData, const FPrefabLoadSettings& InSettings)
+void FPrefabTools::LoadActorState(AActor* InActor, const FPrefabricatorActorData& InActorData, const FPrefabLoadSettings& InSettings, const TMap<FGuid, AActor*>& InChildActors)
 {
 	if (!InActor) {
 		return;
@@ -502,7 +516,7 @@ void FPrefabTools::LoadActorState(AActor* InActor, const FPrefabricatorActorData
 
 	{
 		//SCOPE_CYCLE_COUNTER(STAT_LoadStateFromPrefabAsset_DeserializeFieldsActor);
-		DeserializeFields(InActor, InActorData.Properties);
+		DeserializeFields(InActor, InActorData.Properties, InChildActors);
 	}
 
 	TMap<FString, UActorComponent*> ComponentsByName;
@@ -526,7 +540,7 @@ void FPrefabTools::LoadActorState(AActor* InActor, const FPrefabricatorActorData
 
 				{
 					//SCOPE_CYCLE_COUNTER(STAT_LoadStateFromPrefabAsset_DeserializeFieldsComponents);
-					DeserializeFields(Component, ComponentData.Properties);
+					DeserializeFields(Component, ComponentData.Properties, InChildActors);
 				}
 
 				{
@@ -637,6 +651,14 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 		}
 	}
 
+	// JB: A map storing all spawned actors based on their index in the PrefabAsset->ActorData array.
+	TMap<int32, AActor*> SpawnedActors;
+	// JB: A map storing all actor templates.
+	TMap<int32, AActor*> Templates;
+	// JB: A map storing all spawned actors based on their ItemID.
+	TMap<FGuid, AActor*> ChildActors;
+	// JB: The index used to access the correct ActorData.
+	int32 ActorIndex = 0;
 	for (FPrefabricatorActorData& ActorItemData : PrefabAsset->ActorData) {
 		// Handle backward compatibility
 		{
@@ -665,10 +687,11 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 			}
 		}
 
+		// JB: We first spawn the actors as placeholders only.
+		AActor* Template = nullptr;
 		if (!ChildActor) {
 			TSharedPtr<IPrefabricatorService> Service = FPrefabricatorService::Get();
 			if (Service.IsValid()) {
-				AActor* Template = nullptr;
 				if (InState.IsValid()) {
 					TWeakObjectPtr<AActor>* SearchResult = InState->PrefabItemTemplates.Find(ActorItemData.PrefabItemID);
 					if (SearchResult) {
@@ -680,18 +703,6 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 				}
 
 				ChildActor = Service->SpawnActor(ActorClass, FTransform::Identity, PrefabActor->GetLevel(), Template);
-				if (!Template) {
-					LoadActorState(ChildActor, ActorItemData, InSettings);
-					if (InState.IsValid()) {
-						InState->PrefabItemTemplates.Add(ActorItemData.PrefabItemID, ChildActor);
-						InState->_Stat_SlowSpawns++;
-					}
-				}
-				else {
-					if (InState.IsValid()) {
-						InState->_Stat_FastSpawns++;
-					}
-				}
 			}
 		}
 		else {
@@ -701,29 +712,56 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 		}
 
 		if (ChildActor) {
-			ParentActors(PrefabActor, ChildActor);
-			AssignAssetUserData(ChildActor, ActorItemData.PrefabItemID, PrefabActor);
+			// JB: Fills the data maps with the proper references.
+			SpawnedActors.Add(ActorIndex, ChildActor);
+			Templates.Add(ActorIndex, Template);
+			ChildActors.Add(ActorItemData.PrefabItemID, ChildActor);
+		}
+		ActorIndex++;
+	}
 
-			// Set the transform
-			FTransform WorldTransform = ActorItemData.RelativeTransform * PrefabActor->GetTransform();
-			if (ChildActor->GetRootComponent()) {
-				EComponentMobility::Type OldChildMobility = EComponentMobility::Movable;
-				if (ChildActor->GetRootComponent()) {
-					OldChildMobility = ChildActor->GetRootComponent()->Mobility;
-				}
-				ChildActor->GetRootComponent()->SetMobility(EComponentMobility::Movable);
-				ChildActor->SetActorTransform(WorldTransform);
-				ChildActor->GetRootComponent()->SetMobility(OldChildMobility);
+	// JB: Now we load the saved actor data into the actors.
+	for (auto& SpawnedActorElement : SpawnedActors)
+	{
+		FPrefabricatorActorData& ActorItemData = PrefabAsset->ActorData[SpawnedActorElement.Key];
+		AActor* ChildActor = SpawnedActorElement.Value;
+		AActor* Template = Templates[SpawnedActorElement.Key];
+
+		if (!Template) {
+			LoadActorState(ChildActor, ActorItemData, InSettings, ChildActors);
+			if (InState.IsValid()) {
+				InState->PrefabItemTemplates.Add(ActorItemData.PrefabItemID, ChildActor);
+				InState->_Stat_SlowSpawns++;
 			}
+		}
+		else {
+			if (InState.IsValid()) {
+				InState->_Stat_FastSpawns++;
+			}
+		}
+		ParentActors(PrefabActor, ChildActor);
+		AssignAssetUserData(ChildActor, ActorItemData.PrefabItemID, PrefabActor);
 
-			if (APrefabActor* ChildPrefab = Cast<APrefabActor>(ChildActor)) {
-				if (InSettings.bRandomizeNestedSeed && InSettings.Random) {
-					// This is a nested child prefab.  Randomize the seed of the child prefab
-					ChildPrefab->Seed = FPrefabTools::GetRandomSeed(*InSettings.Random);
-				}
-				if (InSettings.bSynchronousBuild) {
-					LoadStateFromPrefabAsset(ChildPrefab, InSettings, InState);
-				}
+		// Set the transform
+		FTransform WorldTransform = ActorItemData.RelativeTransform * PrefabActor->GetTransform();
+		if (ChildActor->GetRootComponent()) {
+			EComponentMobility::Type OldChildMobility = EComponentMobility::Movable;
+			if (ChildActor->GetRootComponent()) {
+				OldChildMobility = ChildActor->GetRootComponent()->Mobility;
+			}
+			ChildActor->GetRootComponent()->SetMobility(EComponentMobility::Movable);
+			ChildActor->SetActorTransform(WorldTransform);
+			ChildActor->GetRootComponent()->SetMobility(OldChildMobility);
+		}
+
+		// JB: TODO: spawn all nested prefab actors already above in order to allow referencing them.
+		if (APrefabActor* ChildPrefab = Cast<APrefabActor>(ChildActor)) {
+			if (InSettings.bRandomizeNestedSeed && InSettings.Random) {
+				// This is a nested child prefab.  Randomize the seed of the child prefab
+				ChildPrefab->Seed = FPrefabTools::GetRandomSeed(*InSettings.Random);
+			}
+			if (InSettings.bSynchronousBuild) {
+				LoadStateFromPrefabAsset(ChildPrefab, InSettings, InState);
 			}
 		}
 	}
