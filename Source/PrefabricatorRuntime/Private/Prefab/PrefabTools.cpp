@@ -500,12 +500,12 @@ void FPrefabTools::LoadActorState(AActor* InActor, const FPrefabricatorActorData
 
 	TSharedPtr<IPrefabricatorService> Service = FPrefabricatorService::Get();
 	if (Service.IsValid()) {
-		//SCOPE_CYCLE_COUNTER(STAT_LoadStateFromPrefabAsset_BeginTransaction);
+		SCOPE_CYCLE_COUNTER(STAT_LoadStateFromPrefabAsset_BeginTransaction);
 		Service->BeginTransaction(LOCTEXT("TransLabel_LoadPrefab", "Load Prefab"));
 	}
 
 	{
-		//SCOPE_CYCLE_COUNTER(STAT_LoadStateFromPrefabAsset_DeserializeFieldsActor);
+		SCOPE_CYCLE_COUNTER(STAT_LoadStateFromPrefabAsset_DeserializeFieldsActor);
 		DeserializeFields(InActor, InActorData.Properties);
 	}
 
@@ -519,29 +519,45 @@ void FPrefabTools::LoadActorState(AActor* InActor, const FPrefabricatorActorData
 		for (const FPrefabricatorComponentData& ComponentData : InActorData.Components) {
 			if (UActorComponent** SearchResult = ComponentsByName.Find(ComponentData.ComponentName)) {
 				UActorComponent* Component = *SearchResult;
-				bool bPreviouslyRegister;
+				//bool bPreviouslyRegister;
 				{
+					/*
 					//SCOPE_CYCLE_COUNTER(STAT_LoadStateFromPrefabAsset_UnregisterComponent);
 					bPreviouslyRegister = Component->IsRegistered();
 					if (InSettings.bUnregisterComponentsBeforeLoading && bPreviouslyRegister) {
 						Component->UnregisterComponent();
 					}
+					*/
 				}
 
 				{
-					//SCOPE_CYCLE_COUNTER(STAT_LoadStateFromPrefabAsset_DeserializeFieldsComponents);
+					SCOPE_CYCLE_COUNTER(STAT_LoadStateFromPrefabAsset_DeserializeFieldsComponents);
 					DeserializeFields(Component, ComponentData.Properties);
 				}
 
 				{
+					/*
 					//SCOPE_CYCLE_COUNTER(STAT_LoadStateFromPrefabAsset_RegisterComponent);
 					if (InSettings.bUnregisterComponentsBeforeLoading && bPreviouslyRegister) {
 						Component->RegisterComponent();
 					}
+					*/
 				}
 
-				if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component)) {
-					Primitive->RecreatePhysicsState();
+				// Check if we need to recreate the physics state
+				{
+					if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component)) {
+						bool bRecreatePhysicsState = false;
+						for (UPrefabricatorProperty* Property : ComponentData.Properties) {
+							if (Property->PropertyName == "BodyInstance") {
+								bRecreatePhysicsState = true;
+								break;
+							}
+						}
+						if (bRecreatePhysicsState) {
+							//Primitive->RecreatePhysicsState();
+						}
+					}
 				}
 			}
 		}
@@ -560,7 +576,6 @@ void FPrefabTools::LoadActorState(AActor* InActor, const FPrefabricatorActorData
 		SCOPE_CYCLE_COUNTER(STAT_LoadStateFromPrefabAsset_EndTransaction);
 		Service->EndTransaction();
 	}
-
 }
 
 void FPrefabTools::UnlinkAndDestroyPrefabActor(APrefabActor* PrefabActor)

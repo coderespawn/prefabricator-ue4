@@ -68,6 +68,7 @@ void APrefabActor::PostActorCreated()
 {
 	Super::PostActorCreated();
 
+	LoadPrefab();
 }
 
 #if WITH_EDITOR
