@@ -285,6 +285,9 @@ namespace {
 		FString PropertyValue, DefaultValue;
 		PropertyPathHelpers::GetPropertyValueAsString(InContainer, InPropertyPath, PropertyValue);
 		PropertyPathHelpers::GetPropertyValueAsString(DefaultObject, InPropertyPath, DefaultValue);
+		if (PropertyValue != DefaultValue) {
+			UE_LOG(LogPrefabTools, Log, TEXT("Property differs: %s\n> %s\n> %s"), *InPropertyPath, *PropertyValue, *DefaultValue);
+		}
 		return PropertyValue == DefaultValue;
 	}
 
@@ -447,7 +450,8 @@ bool FPrefabTools::ShouldIgnorePropertySerialization(const FName& InPropertyName
 bool FPrefabTools::ShouldForcePropertySerialization(const FName& PropertyName)
 {
 	static const TSet<FName> FieldsToForceSerialize = {
-		"Mobility"
+		"Mobility",
+		"bUseDefaultCollision"
 	};
 
 	return FieldsToForceSerialize.Contains(PropertyName);
@@ -535,6 +539,10 @@ void FPrefabTools::LoadActorState(AActor* InActor, const FPrefabricatorActorData
 						Component->RegisterComponent();
 					}
 				}
+
+				if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component)) {
+					Primitive->RecreatePhysicsState();
+				}
 			}
 		}
 	}
@@ -544,6 +552,9 @@ void FPrefabTools::LoadActorState(AActor* InActor, const FPrefabricatorActorData
 		InActor->SetActorLabel(InActorData.ActorName);
 	}
 #endif // WITH_EDITOR
+
+	InActor->PostLoad();
+	InActor->ReregisterAllComponents();
 
 	if (Service.IsValid()) {
 		SCOPE_CYCLE_COUNTER(STAT_LoadStateFromPrefabAsset_EndTransaction);
@@ -680,27 +691,16 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 				}
 
 				ChildActor = Service->SpawnActor(ActorClass, FTransform::Identity, PrefabActor->GetLevel(), Template);
-				if (!Template) {
-					LoadActorState(ChildActor, ActorItemData, InSettings);
-					if (InState.IsValid()) {
-						InState->PrefabItemTemplates.Add(ActorItemData.PrefabItemID, ChildActor);
-						InState->_Stat_SlowSpawns++;
-					}
+				if (InState.IsValid()) {
+					InState->PrefabItemTemplates.Add(ActorItemData.PrefabItemID, ChildActor);
+					InState->_Stat_SlowSpawns++;
 				}
-				else {
-					if (InState.IsValid()) {
-						InState->_Stat_FastSpawns++;
-					}
-				}
-			}
-		}
-		else {
-			if (InState.IsValid()) {
-				InState->_Stat_ReuseSpawns++;
 			}
 		}
 
 		if (ChildActor) {
+			LoadActorState(ChildActor, ActorItemData, InSettings);
+
 			ParentActors(PrefabActor, ChildActor);
 			AssignAssetUserData(ChildActor, ActorItemData.PrefabItemID, PrefabActor);
 
