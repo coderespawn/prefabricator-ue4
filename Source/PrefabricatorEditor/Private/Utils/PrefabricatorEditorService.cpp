@@ -83,12 +83,31 @@ FVector FPrefabricatorEditorService::SnapToGrid(const FVector& InLocation)
 
 void FPrefabricatorEditorService::SetDetailsViewObject(UObject* InObject)
 {
+	if (!InObject) return;
+
 	FPropertyEditorModule& PropertyEditorModule = FModuleManager::GetModuleChecked<FPropertyEditorModule>("PropertyEditor");
-	TArray<UObject*> ObjectList;
-	ObjectList.Add(InObject);
-	PropertyEditorModule.UpdatePropertyViews(ObjectList);
+	static const FName LevelEditorDetailsId = TEXT("LevelEditorSelectionDetails");
+	TSharedPtr<IDetailsView> LevelEditorDetailsView = PropertyEditorModule.FindDetailView(LevelEditorDetailsId);
+	if (LevelEditorDetailsView.IsValid()) {
+		LevelEditorDetailsView->SetObject(InObject, true);
+	}
 }
 
+
+void FPrefabricatorEditorService::RefreshDetailsViewObject(UObject* InObject)
+{
+	if (!InObject) return;
+
+	FPropertyEditorModule& PropertyEditorModule = FModuleManager::GetModuleChecked<FPropertyEditorModule>("PropertyEditor");
+	static const FName LevelEditorDetailsId = TEXT("LevelEditorSelectionDetails");
+	TSharedPtr<IDetailsView> LevelEditorDetailsView = PropertyEditorModule.FindDetailView(LevelEditorDetailsId);
+	if (LevelEditorDetailsView.IsValid()) {
+		TArray<TWeakObjectPtr<UObject>> CurrentSelection = LevelEditorDetailsView->GetSelectedObjects();
+		if (CurrentSelection.Num() == 1 && CurrentSelection[0].Get() == InObject) {
+			LevelEditorDetailsView->SetObject(InObject, true);
+		}
+	}
+}
 
 AActor* FPrefabricatorEditorService::SpawnActor(TSubclassOf<AActor> InActorClass, const FTransform& InTransform, ULevel* InLevel, AActor* InTemplate)
 {
