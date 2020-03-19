@@ -17,9 +17,6 @@ struct PREFABRICATORRUNTIME_API FPrefabLoadSettings {
 
 struct PREFABRICATORRUNTIME_API FPrefabLoadState {
 	TMap<FGuid, TWeakObjectPtr<AActor>> PrefabItemTemplates;
-	int32 _Stat_SlowSpawns = 0;
-	int32 _Stat_FastSpawns = 0;
-	int32 _Stat_ReuseSpawns = 0;
 };
 typedef TSharedPtr<FPrefabLoadState> FPrefabLoadStatePtr;
 

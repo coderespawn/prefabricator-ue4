@@ -693,16 +693,19 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 				}
 
 				ChildActor = Service->SpawnActor(ActorClass, FTransform::Identity, PrefabActor->GetLevel(), Template);
-				if (InState.IsValid()) {
-					InState->PrefabItemTemplates.Add(ActorItemData.PrefabItemID, ChildActor);
-					InState->_Stat_SlowSpawns++;
+				if (Template == nullptr) {
+					// Load the actor state since the template was empty
+					LoadActorState(ChildActor, ActorItemData, InSettings);
+
+					// Save this as a template for future reuse
+					if (InState.IsValid()) {
+						InState->PrefabItemTemplates.Add(ActorItemData.PrefabItemID, ChildActor);
+					}
 				}
 			}
 		}
 
 		if (ChildActor) {
-			LoadActorState(ChildActor, ActorItemData, InSettings);
-
 			ParentActors(PrefabActor, ChildActor);
 			AssignAssetUserData(ChildActor, ActorItemData.PrefabItemID, PrefabActor);
 

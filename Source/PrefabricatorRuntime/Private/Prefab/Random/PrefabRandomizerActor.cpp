@@ -50,10 +50,6 @@ void APrefabRandomizer::Tick(float DeltaSeconds)
 			if (Service.IsValid()) {
 				Service->RunGC();
 			}
-
-			if (LoadState.IsValid()) {
-				UE_LOG(LogTemp, Log, TEXT("Slow[%d], Fast[%d], Reuse[%d]"), LoadState->_Stat_SlowSpawns, LoadState->_Stat_FastSpawns, LoadState->_Stat_ReuseSpawns);
-			}
 		}
 	}
 }
