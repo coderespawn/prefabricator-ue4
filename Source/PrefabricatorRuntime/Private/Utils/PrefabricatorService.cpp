@@ -39,12 +39,15 @@ AActor* IPrefabricatorService::SpawnActor(TSubclassOf<AActor> InClass, const FTr
 	SpawnParams.OverrideLevel = InLevel;
 	SpawnParams.Template = InTemplate;
 	UWorld* World = InLevel->GetWorld();
+
 	AActor* Actor = World->SpawnActor<AActor>(InClass, InTransform, SpawnParams);
+
 	TSharedPtr<IPrefabricatorService> Service = FPrefabricatorService::Get();
 	if (Actor && InTemplate && Service.IsValid()) {
 		// Attach the template children back
 		for (AActor* TemplateChild : AttachedToTemplate) {
-			Service->ParentActors(InTemplate, TemplateChild);
+			TemplateChild->AttachToActor(InTemplate, FAttachmentTransformRules(EAttachmentRule::KeepWorld, false));
+			//Service->ParentActors(InTemplate, TemplateChild);
 		}
 	}
 	return Actor;
@@ -53,7 +56,7 @@ AActor* IPrefabricatorService::SpawnActor(TSubclassOf<AActor> InClass, const FTr
 /////////////////////////// FPrefabricatorRuntimeService /////////////////////////// 
 void FPrefabricatorRuntimeService::ParentActors(AActor* ParentActor, AActor* ChildActor)
 {
-	ChildActor->AttachToActor(ParentActor, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
+	ChildActor->AttachToActor(ParentActor, FAttachmentTransformRules(EAttachmentRule::KeepWorld, false));
 }
 
 void FPrefabricatorRuntimeService::SelectPrefabActor(AActor* PrefabActor)

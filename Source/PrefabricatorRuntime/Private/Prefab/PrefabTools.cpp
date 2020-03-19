@@ -639,7 +639,7 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 
 	UPrefabricatorAsset* PrefabAsset = PrefabActor->GetPrefabAsset();
 	if (!PrefabAsset) {
-		UE_LOG(LogPrefabTools, Error, TEXT("Prefab asset is not assigned correctly"));
+		//UE_LOG(LogPrefabTools, Error, TEXT("Prefab asset is not assigned correctly"));
 		return;
 	}
 
@@ -681,15 +681,24 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 			AActor* ChildActor = nullptr;
 			if (AActor** SearchResult = ActorByItemID.Find(ActorItemData.PrefabItemID)) {
 				ChildActor = *SearchResult;
-				FString ExistingClassName = ChildActor->GetClass()->GetPathName();
-				FString RequiredClassName = ActorItemData.ClassPathRef.GetAssetPathString();
-				if (ExistingClassName == RequiredClassName) {
-					// We can reuse this actor
-					ExistingActorPool.Remove(ChildActor);
+				if (ChildActor) {
+					FString ExistingClassName = ChildActor->GetClass()->GetPathName();
+					FString RequiredClassName = ActorItemData.ClassPathRef.GetAssetPathString();
+					if (ExistingClassName == RequiredClassName) {
+						// We can reuse this actor
+						ExistingActorPool.Remove(ChildActor);
+					}
+					else {
+						ChildActor = nullptr;
+					}
 				}
 			}
 
-			if (!ChildActor) {
+			FTransform WorldTransform = ActorItemData.RelativeTransform * PrefabActor->GetTransform();
+			if (ChildActor) {
+				ChildActor->SetActorTransform(WorldTransform);
+			}
+			else {
 				SCOPE_CYCLE_COUNTER(STAT_LoadStateFromPrefabAsset1);
 				TSharedPtr<IPrefabricatorService> Service = FPrefabricatorService::Get();
 				if (Service.IsValid()) {
@@ -699,7 +708,7 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 						Template = LoadState->GetTemplate(ActorItemData.PrefabItemID, PrefabAsset->LastUpdateID);
 					}
 
-					ChildActor = Service->SpawnActor(ActorClass, FTransform::Identity, PrefabActor->GetLevel(), Template);
+					ChildActor = Service->SpawnActor(ActorClass, WorldTransform, PrefabActor->GetLevel(), Template);
 					if (Template == nullptr) {
 						// Load the actor state since the template was empty
 						LoadActorState(ChildActor, ActorItemData, InSettings);
@@ -725,12 +734,8 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 				{
 					SCOPE_CYCLE_COUNTER(STAT_LoadStateFromPrefabAsset4);
 					// Set the transform
-					FTransform WorldTransform = ActorItemData.RelativeTransform * PrefabActor->GetTransform();
 					if (ChildActor->GetRootComponent()) {
-						EComponentMobility::Type OldChildMobility = EComponentMobility::Movable;
-						if (ChildActor->GetRootComponent()) {
-							OldChildMobility = ChildActor->GetRootComponent()->Mobility;
-						}
+						EComponentMobility::Type OldChildMobility = ChildActor->GetRootComponent()->Mobility;
 						ChildActor->GetRootComponent()->SetMobility(EComponentMobility::Movable);
 						ChildActor->SetActorTransform(WorldTransform);
 						ChildActor->GetRootComponent()->SetMobility(OldChildMobility);
