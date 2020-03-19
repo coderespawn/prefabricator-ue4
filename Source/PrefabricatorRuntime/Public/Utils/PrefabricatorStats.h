@@ -7,6 +7,7 @@ DECLARE_STATS_GROUP(TEXT("Prefabricator"), STATGROUP_Prefabricator, STATCAT_Adva
 DECLARE_CYCLE_STAT(TEXT("Randomize - LoadPrefab"), STAT_Randomize_LoadPrefab, STATGROUP_Prefabricator);
 DECLARE_CYCLE_STAT(TEXT("Randomize - GetChildActor"), STAT_Randomize_GetChildActor, STATGROUP_Prefabricator);
 
+DECLARE_CYCLE_STAT(TEXT("LoadState [ALL]"), STAT_LoadStateFromPrefabAsset, STATGROUP_Prefabricator);
 DECLARE_CYCLE_STAT(TEXT("LoadState - DeserializeFields [Actor]"), STAT_LoadStateFromPrefabAsset_DeserializeFieldsActor, STATGROUP_Prefabricator);
 DECLARE_CYCLE_STAT(TEXT("LoadState - Begin Transaction"), STAT_LoadStateFromPrefabAsset_BeginTransaction, STATGROUP_Prefabricator);
 DECLARE_CYCLE_STAT(TEXT("LoadState - End Transaction"), STAT_LoadStateFromPrefabAsset_EndTransaction, STATGROUP_Prefabricator);

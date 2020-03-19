@@ -15,22 +15,19 @@ struct PREFABRICATORRUNTIME_API FPrefabLoadSettings {
 	const FRandomStream* Random = nullptr;
 };
 
+struct PREFABRICATORRUNTIME_API FPrefabInstanceTemplateInfo {
+	TWeakObjectPtr<AActor> TemplatePtr;
+	FGuid PrefabLastUpdateId;
+};
+
 class PREFABRICATORRUNTIME_API FPrefabInstanceTemplates {
 public:
-	FORCEINLINE void RegisterTemplate(const FGuid& InActorId, AActor* InActor) {
-		TWeakObjectPtr<AActor>& TemplateRef = PrefabItemTemplates.FindOrAdd(InActorId);
-		TemplateRef = InActor;
-	}
+	void RegisterTemplate(const FGuid& InPrefabItemId, FGuid InPrefabLastUpdateId, AActor* InActor);
 
-	FORCEINLINE AActor* GetTemplate(const FGuid& InActorId) {
-		TWeakObjectPtr<AActor>* SearchResult = PrefabItemTemplates.Find(InActorId);
-		if (!SearchResult) return nullptr;
-		TWeakObjectPtr<AActor> ActorPtr = *SearchResult;
-		return ActorPtr.Get();
-	}
+	AActor* GetTemplate(const FGuid& InPrefabItemId, FGuid InPrefabLastUpdateId);
 
 private:
-	TMap<FGuid, TWeakObjectPtr<AActor>> PrefabItemTemplates;
+	TMap<FGuid, FPrefabInstanceTemplateInfo> PrefabItemTemplates;
 };
 
 class PREFABRICATORRUNTIME_API FGlobalPrefabInstanceTemplates {

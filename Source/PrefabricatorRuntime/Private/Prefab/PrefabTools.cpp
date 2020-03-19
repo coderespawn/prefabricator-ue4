@@ -623,6 +623,7 @@ FBox FPrefabTools::GetPrefabBounds(AActor* PrefabActor, bool bNonColliding)
 
 void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPrefabLoadSettings& InSettings)
 {
+	SCOPE_CYCLE_COUNTER(STAT_LoadStateFromPrefabAsset);
 	if (!PrefabActor) {
 		UE_LOG(LogPrefabTools, Error, TEXT("Invalid prefab actor reference"));
 		return;
@@ -678,14 +679,13 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 			}
 		}
 
-
 		if (!ChildActor) {
 			TSharedPtr<IPrefabricatorService> Service = FPrefabricatorService::Get();
 			if (Service.IsValid()) {
 				AActor* Template = nullptr;
 				FPrefabInstanceTemplates* LoadState = FGlobalPrefabInstanceTemplates::Get();
 				if (LoadState) {
-					Template = LoadState->GetTemplate(ActorItemData.PrefabItemID);
+					Template = LoadState->GetTemplate(ActorItemData.PrefabItemID, PrefabAsset->LastUpdateID);
 				}
 
 				ChildActor = Service->SpawnActor(ActorClass, FTransform::Identity, PrefabActor->GetLevel(), Template);
@@ -695,7 +695,7 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 
 					// Save this as a template for future reuse
 					if (LoadState) {
-						LoadState->RegisterTemplate(ActorItemData.PrefabItemID, ChildActor);
+						LoadState->RegisterTemplate(ActorItemData.PrefabItemID, PrefabAsset->LastUpdateID, ChildActor);
 					}
 				}
 			}
@@ -798,4 +798,31 @@ void FGlobalPrefabInstanceTemplates::_ReleaseSingleton()
 {
 	delete Instance;
 	Instance = nullptr;
+}
+
+void FPrefabInstanceTemplates::RegisterTemplate(const FGuid& InPrefabItemId, FGuid InPrefabLastUpdateId, AActor* InActor)
+{
+	FPrefabInstanceTemplateInfo& TemplateRef = PrefabItemTemplates.FindOrAdd(InPrefabItemId);
+	TemplateRef.TemplatePtr = InActor;
+	TemplateRef.PrefabLastUpdateId = InPrefabLastUpdateId;
+}
+
+AActor* FPrefabInstanceTemplates::GetTemplate(const FGuid& InPrefabItemId, FGuid InPrefabLastUpdateId)
+{
+	FPrefabInstanceTemplateInfo* SearchResult = PrefabItemTemplates.Find(InPrefabItemId);
+	if (!SearchResult) return nullptr;
+	FPrefabInstanceTemplateInfo& Info = *SearchResult;
+	AActor* Actor = Info.TemplatePtr.Get();
+
+	if (Info.PrefabLastUpdateId != InPrefabLastUpdateId) {
+		// The prefab has been changed since we last cached this template. Invalidate it
+		Actor = nullptr;
+	}
+
+	// Remove from the map if the actor state is stale
+	if (!Actor) {
+		PrefabItemTemplates.Remove(InPrefabItemId);
+	}
+
+	return Actor;
 }
