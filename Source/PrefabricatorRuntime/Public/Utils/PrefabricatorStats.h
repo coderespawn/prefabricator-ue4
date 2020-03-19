@@ -15,6 +15,10 @@ DECLARE_CYCLE_STAT(TEXT("LoadStateFromPrefabAsset 3"), STAT_LoadStateFromPrefabA
 DECLARE_CYCLE_STAT(TEXT("LoadStateFromPrefabAsset 4"), STAT_LoadStateFromPrefabAsset4, STATGROUP_Prefabricator);
 DECLARE_CYCLE_STAT(TEXT("LoadStateFromPrefabAsset 5"), STAT_LoadStateFromPrefabAsset5, STATGROUP_Prefabricator);
 
+DECLARE_CYCLE_STAT(TEXT("ParentActors - [ALL]"), STAT_ParentActors, STATGROUP_Prefabricator);
+DECLARE_CYCLE_STAT(TEXT("ParentActors - 1"), STAT_ParentActors1, STATGROUP_Prefabricator);
+DECLARE_CYCLE_STAT(TEXT("ParentActors - 2"), STAT_ParentActors2, STATGROUP_Prefabricator);
+
 
 DECLARE_CYCLE_STAT(TEXT("LoadActorState [ALL]"), STAT_LoadActorState, STATGROUP_Prefabricator);
 DECLARE_CYCLE_STAT(TEXT("LoadActorState - Begin Transaction"), STAT_LoadActorState_BeginTransaction, STATGROUP_Prefabricator);

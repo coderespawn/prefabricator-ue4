@@ -40,11 +40,18 @@ int FPrefabTools::GetNumSelectedActors()
 
 void FPrefabTools::ParentActors(AActor* ParentActor, AActor* ChildActor)
 {
+	SCOPE_CYCLE_COUNTER(STAT_ParentActors);
 	if (ChildActor && ParentActor) {
-		ChildActor->DetachFromActor(FDetachmentTransformRules(EDetachmentRule::KeepWorld, true));
-		TSharedPtr<IPrefabricatorService> Service = FPrefabricatorService::Get();
-		if (Service.IsValid()) {
-			Service->ParentActors(ParentActor, ChildActor);
+		{
+			SCOPE_CYCLE_COUNTER(STAT_ParentActors1);
+			ChildActor->DetachFromActor(FDetachmentTransformRules(EDetachmentRule::KeepWorld, false));
+		}
+		{
+			SCOPE_CYCLE_COUNTER(STAT_ParentActors2);
+			TSharedPtr<IPrefabricatorService> Service = FPrefabricatorService::Get();
+			if (Service.IsValid()) {
+				Service->ParentActors(ParentActor, ChildActor);
+			}
 		}
 	}
 }

@@ -24,9 +24,40 @@
 
 void FPrefabricatorEditorService::ParentActors(AActor* ParentActor, AActor* ChildActor)
 {
+	/*
 	if (GEditor) {
 		GEditor->ParentActors(ParentActor, ChildActor, NAME_None);
 	}
+	*/
+
+	USceneComponent* ChildRoot = ChildActor->GetRootComponent();
+	USceneComponent* ParentRoot = ParentActor->GetDefaultAttachComponent();
+
+	check(ChildRoot);	// CanParentActors() call should ensure this
+	check(ParentRoot);	// CanParentActors() call should ensure this
+
+	// modify parent and child
+	// TODO: Check if we need to modify
+	ChildActor->Modify();
+	ParentActor->Modify();
+
+	// If child is already attached to something, modify the old parent and detach
+	if (ChildRoot->GetAttachParent() != nullptr)
+	{
+		AActor* OldParentActor = ChildRoot->GetAttachParent()->GetOwner();
+		OldParentActor->Modify();
+		ChildRoot->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
+	}
+
+	// If the parent is already attached to this child, modify its parent and detach so we can allow the attachment
+	if (ParentRoot->IsAttachedTo(ChildRoot))
+	{
+		ParentRoot->GetAttachParent()->GetOwner()->Modify();
+		ParentRoot->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
+	}
+
+	// Snap to socket if a valid socket name was provided, otherwise attach without changing the relative transform
+	ChildRoot->AttachToComponent(ParentRoot, FAttachmentTransformRules::KeepWorldTransform, NAME_None);
 }
 
 void FPrefabricatorEditorService::SelectPrefabActor(AActor* PrefabActor)
