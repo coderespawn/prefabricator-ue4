@@ -606,18 +606,20 @@ void FPrefabTools::GetActorChildren(AActor* InParent, TArray<AActor*>& OutChildr
 
 namespace {
 	void GetPrefabBoundsRecursive(AActor* InActor, FBox& OutBounds, bool bNonColliding) {
-		if (!InActor->IsA<APrefabActor>()) {
-			FBox ActorBounds = InActor->GetComponentsBoundingBox(bNonColliding);
-			if (ActorBounds.GetExtent() == FVector::ZeroVector) {
-				ActorBounds = FBox({ InActor->GetActorLocation() });
+		if (InActor && InActor->IsLevelBoundsRelevant()) {
+			if (!InActor->IsA<APrefabActor>()) {
+				FBox ActorBounds = InActor->GetComponentsBoundingBox(bNonColliding);
+				if (ActorBounds.GetExtent() == FVector::ZeroVector) {
+					ActorBounds = FBox({ InActor->GetActorLocation() });
+				}
+				OutBounds += ActorBounds;
 			}
-			OutBounds += ActorBounds;
-		}
 
-		TArray<AActor*> AttachedActors;
-		InActor->GetAttachedActors(AttachedActors);
-		for (AActor* AttachedActor : AttachedActors) {
-			GetPrefabBoundsRecursive(AttachedActor, OutBounds, bNonColliding);
+			TArray<AActor*> AttachedActors;
+			InActor->GetAttachedActors(AttachedActors);
+			for (AActor* AttachedActor : AttachedActors) {
+				GetPrefabBoundsRecursive(AttachedActor, OutBounds, bNonColliding);
+			}
 		}
 	}
 }
@@ -695,10 +697,7 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 			}
 
 			FTransform WorldTransform = ActorItemData.RelativeTransform * PrefabActor->GetTransform();
-			if (ChildActor) {
-				ChildActor->SetActorTransform(WorldTransform);
-			}
-			else {
+			if (!ChildActor) {
 				SCOPE_CYCLE_COUNTER(STAT_LoadStateFromPrefabAsset1);
 				TSharedPtr<IPrefabricatorService> Service = FPrefabricatorService::Get();
 				if (Service.IsValid()) {
