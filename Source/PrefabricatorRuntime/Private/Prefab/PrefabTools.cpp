@@ -262,14 +262,6 @@ void FPrefabTools::SaveStateToPrefabAsset(APrefabActor* PrefabActor)
 	}
 }
 
-#define IF_ASSIGN(PName, Index)	\
-	if (PrefabProperty->PropertyName == #PName) {	\
-		SCOPE_CYCLE_COUNTER(STAT_DeserializeFields_Iterate_SetValue##Index);	\
-		PropertyPathHelpers::SetPropertyValueFromString(InObjToDeserialize, PrefabProperty->PropertyName, PrefabProperty->ExportedValue);	\
-	}	\
-
-#define ELIF_ASSIGN(PName, Index) else IF_ASSIGN(PName, Index)
-
 namespace {
 	void GetPropertyData(UProperty* Property, UObject* Obj, FString& OutPropertyData) {
 		Property->ExportTextItem(OutPropertyData, Property->ContainerPtrToValuePtr<void>(Obj), nullptr, Obj, PPF_None);

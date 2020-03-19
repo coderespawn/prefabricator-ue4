@@ -19,22 +19,6 @@ DECLARE_CYCLE_STAT(TEXT("DeserializeFields - BuildMap"), STAT_DeserializeFields_
 DECLARE_CYCLE_STAT(TEXT("DeserializeFields - Iterate"), STAT_DeserializeFields_Iterate, STATGROUP_Prefabricator);
 DECLARE_CYCLE_STAT(TEXT("DeserializeFields - Iterate -> LoadValue"), STAT_DeserializeFields_Iterate_LoadValue, STATGROUP_Prefabricator);
 DECLARE_CYCLE_STAT(TEXT("DeserializeFields - Iterate -> SetValue"), STAT_DeserializeFields_Iterate_SetValue, STATGROUP_Prefabricator);
-DECLARE_CYCLE_STAT(TEXT("DeserializeFields - Iterate -> SetValue 1"), STAT_DeserializeFields_Iterate_SetValue1, STATGROUP_Prefabricator);
-DECLARE_CYCLE_STAT(TEXT("DeserializeFields - Iterate -> SetValue 2"), STAT_DeserializeFields_Iterate_SetValue2, STATGROUP_Prefabricator);
-DECLARE_CYCLE_STAT(TEXT("DeserializeFields - Iterate -> SetValue 3"), STAT_DeserializeFields_Iterate_SetValue3, STATGROUP_Prefabricator);
-DECLARE_CYCLE_STAT(TEXT("DeserializeFields - Iterate -> SetValue 4"), STAT_DeserializeFields_Iterate_SetValue4, STATGROUP_Prefabricator);
-DECLARE_CYCLE_STAT(TEXT("DeserializeFields - Iterate -> SetValue 5"), STAT_DeserializeFields_Iterate_SetValue5, STATGROUP_Prefabricator);
-DECLARE_CYCLE_STAT(TEXT("DeserializeFields - Iterate -> SetValue 6"), STAT_DeserializeFields_Iterate_SetValue6, STATGROUP_Prefabricator);
-DECLARE_CYCLE_STAT(TEXT("DeserializeFields - Iterate -> SetValue 7"), STAT_DeserializeFields_Iterate_SetValue7, STATGROUP_Prefabricator);
-DECLARE_CYCLE_STAT(TEXT("DeserializeFields - Iterate -> SetValue 8"), STAT_DeserializeFields_Iterate_SetValue8, STATGROUP_Prefabricator);
-DECLARE_CYCLE_STAT(TEXT("DeserializeFields - Iterate -> SetValue 9"), STAT_DeserializeFields_Iterate_SetValue9, STATGROUP_Prefabricator);
-DECLARE_CYCLE_STAT(TEXT("DeserializeFields - Iterate -> SetValue 10"), STAT_DeserializeFields_Iterate_SetValue10, STATGROUP_Prefabricator);
-DECLARE_CYCLE_STAT(TEXT("DeserializeFields - Iterate -> SetValue 11"), STAT_DeserializeFields_Iterate_SetValue11, STATGROUP_Prefabricator);
-DECLARE_CYCLE_STAT(TEXT("DeserializeFields - Iterate -> SetValue 12"), STAT_DeserializeFields_Iterate_SetValue12, STATGROUP_Prefabricator);
-DECLARE_CYCLE_STAT(TEXT("DeserializeFields - Iterate -> SetValue 13"), STAT_DeserializeFields_Iterate_SetValue13, STATGROUP_Prefabricator);
-DECLARE_CYCLE_STAT(TEXT("DeserializeFields - Iterate -> SetValue 14"), STAT_DeserializeFields_Iterate_SetValue14, STATGROUP_Prefabricator);
-DECLARE_CYCLE_STAT(TEXT("DeserializeFields - Iterate -> SetValue 15"), STAT_DeserializeFields_Iterate_SetValue15, STATGROUP_Prefabricator);
-DECLARE_CYCLE_STAT(TEXT("DeserializeFields - Iterate -> SetValue 16"), STAT_DeserializeFields_Iterate_SetValue16, STATGROUP_Prefabricator);
 
 DECLARE_CYCLE_STAT(TEXT("LoadRefVal"), STAT_LoadReferencedAssetValues, STATGROUP_Prefabricator);
 DECLARE_CYCLE_STAT(TEXT("LoadRefVal - GetAssetPathName"), STAT_LoadReferencedAssetValues_GetAssetPathName, STATGROUP_Prefabricator);
