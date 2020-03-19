@@ -91,8 +91,7 @@ void APrefabActor::PostDuplicate(EDuplicateMode::Type DuplicateMode)
 		FPrefabLoadSettings LoadSettings;
 		LoadSettings.bRandomizeNestedSeed = true;
 		LoadSettings.Random = &Random;
-		FPrefabLoadStatePtr LoadState = MakeShareable(new FPrefabLoadState);
-		FPrefabTools::LoadStateFromPrefabAsset(this, LoadSettings, LoadState);
+		FPrefabTools::LoadStateFromPrefabAsset(this, LoadSettings);
 	}
 }
 
@@ -106,8 +105,7 @@ FName APrefabActor::GetCustomIconName() const
 
 void APrefabActor::LoadPrefab()
 {
-	FPrefabLoadStatePtr LoadState = MakeShareable(new FPrefabLoadState);
-	FPrefabTools::LoadStateFromPrefabAsset(this, FPrefabLoadSettings(), LoadState);
+	FPrefabTools::LoadStateFromPrefabAsset(this, FPrefabLoadSettings());
 }
 
 void APrefabActor::SavePrefab()
@@ -192,11 +190,10 @@ void FPrefabBuildSystem::PushCommand(FPrefabBuildSystemCommandPtr InCommand)
 	BuildStack.Push(InCommand);
 }
 
-FPrefabBuildSystemCommand_BuildPrefab::FPrefabBuildSystemCommand_BuildPrefab(TWeakObjectPtr<APrefabActor> InPrefab, bool bInRandomizeNestedSeed, FRandomStream* InRandom, FPrefabLoadStatePtr InLoadState)
+FPrefabBuildSystemCommand_BuildPrefab::FPrefabBuildSystemCommand_BuildPrefab(TWeakObjectPtr<APrefabActor> InPrefab, bool bInRandomizeNestedSeed, FRandomStream* InRandom)
 	: Prefab(InPrefab)
 	, bRandomizeNestedSeed(bInRandomizeNestedSeed)
 	, Random(InRandom)
-	, LoadState(InLoadState)
 {
 }
 
@@ -212,7 +209,7 @@ void FPrefabBuildSystemCommand_BuildPrefab::Execute(FPrefabBuildSystem& BuildSys
 
 		{
 			SCOPE_CYCLE_COUNTER(STAT_Randomize_LoadPrefab);
-			FPrefabTools::LoadStateFromPrefabAsset(Prefab.Get(), LoadSettings, LoadState);
+			FPrefabTools::LoadStateFromPrefabAsset(Prefab.Get(), LoadSettings);
 		}
 
 		// Push a build complete notification request. Since this is a stack, it will execute after all the children are processed below
@@ -228,7 +225,7 @@ void FPrefabBuildSystemCommand_BuildPrefab::Execute(FPrefabBuildSystem& BuildSys
 	}
 	for (AActor* ChildActor : ChildActors) {
 		if (APrefabActor* ChildPrefab = Cast<APrefabActor>(ChildActor)) {
-			FPrefabBuildSystemCommandPtr ChildBuildCommand = MakeShareable(new FPrefabBuildSystemCommand_BuildPrefab(ChildPrefab, bRandomizeNestedSeed, Random, LoadState));
+			FPrefabBuildSystemCommandPtr ChildBuildCommand = MakeShareable(new FPrefabBuildSystemCommand_BuildPrefab(ChildPrefab, bRandomizeNestedSeed, Random));
 			BuildSystem.PushCommand(ChildBuildCommand);
 		}
 	}
@@ -236,11 +233,10 @@ void FPrefabBuildSystemCommand_BuildPrefab::Execute(FPrefabBuildSystem& BuildSys
 
 /////////////////////////////////////
 
-FPrefabBuildSystemCommand_BuildPrefabSync::FPrefabBuildSystemCommand_BuildPrefabSync(TWeakObjectPtr<APrefabActor> InPrefab, bool bInRandomizeNestedSeed, FRandomStream* InRandom, FPrefabLoadStatePtr InLoadState)
+FPrefabBuildSystemCommand_BuildPrefabSync::FPrefabBuildSystemCommand_BuildPrefabSync(TWeakObjectPtr<APrefabActor> InPrefab, bool bInRandomizeNestedSeed, FRandomStream* InRandom)
 	: Prefab(InPrefab)
 	, bRandomizeNestedSeed(bInRandomizeNestedSeed)
 	, Random(InRandom) 
-	, LoadState(InLoadState)
 {
 }
 
@@ -253,7 +249,7 @@ void FPrefabBuildSystemCommand_BuildPrefabSync::Execute(FPrefabBuildSystem& Buil
 		FPrefabLoadSettings LoadSettings;
 		LoadSettings.bRandomizeNestedSeed = true;
 		LoadSettings.Random = Random;
-		FPrefabTools::LoadStateFromPrefabAsset(Prefab.Get(), LoadSettings, LoadState);
+		FPrefabTools::LoadStateFromPrefabAsset(Prefab.Get(), LoadSettings);
 	}
 	double EndTime = FPlatformTime::Seconds();
 	UE_LOG(LogTemp, Warning, TEXT("Exec Time: %fs"), (EndTime - StartTime));

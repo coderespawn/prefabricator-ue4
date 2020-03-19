@@ -15,10 +15,34 @@ struct PREFABRICATORRUNTIME_API FPrefabLoadSettings {
 	const FRandomStream* Random = nullptr;
 };
 
-struct PREFABRICATORRUNTIME_API FPrefabLoadState {
+class PREFABRICATORRUNTIME_API FPrefabInstanceTemplates {
+public:
+	FORCEINLINE void RegisterTemplate(const FGuid& InActorId, AActor* InActor) {
+		TWeakObjectPtr<AActor>& TemplateRef = PrefabItemTemplates.FindOrAdd(InActorId);
+		TemplateRef = InActor;
+	}
+
+	FORCEINLINE AActor* GetTemplate(const FGuid& InActorId) {
+		TWeakObjectPtr<AActor>* SearchResult = PrefabItemTemplates.Find(InActorId);
+		if (!SearchResult) return nullptr;
+		TWeakObjectPtr<AActor> ActorPtr = *SearchResult;
+		return ActorPtr.Get();
+	}
+
+private:
 	TMap<FGuid, TWeakObjectPtr<AActor>> PrefabItemTemplates;
 };
-typedef TSharedPtr<FPrefabLoadState> FPrefabLoadStatePtr;
+
+class PREFABRICATORRUNTIME_API FGlobalPrefabInstanceTemplates {
+public:
+	FORCEINLINE static FPrefabInstanceTemplates* Get() { return Instance; }
+
+	static void _CreateSingleton();
+	static void _ReleaseSingleton();
+
+private:
+	static FPrefabInstanceTemplates* Instance;
+};
 
 class PREFABRICATORRUNTIME_API FPrefabTools {
 public:
@@ -28,7 +52,7 @@ public:
 	static void AssignAssetUserData(AActor* InActor, const FGuid& InItemID, APrefabActor* Prefab);
 
 	static void SaveStateToPrefabAsset(APrefabActor* PrefabActor);
-	static void LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPrefabLoadSettings& InSettings = FPrefabLoadSettings(), FPrefabLoadStatePtr InState = nullptr);
+	static void LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPrefabLoadSettings& InSettings = FPrefabLoadSettings());
 
 	static void UnlinkAndDestroyPrefabActor(APrefabActor* PrefabActor);
 	static void GetActorChildren(AActor* InParent, TArray<AActor*>& OutChildren);

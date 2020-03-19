@@ -621,7 +621,7 @@ FBox FPrefabTools::GetPrefabBounds(AActor* PrefabActor, bool bNonColliding)
 	return Result;
 }
 
-void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPrefabLoadSettings& InSettings, FPrefabLoadStatePtr InState)
+void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPrefabLoadSettings& InSettings)
 {
 	if (!PrefabActor) {
 		UE_LOG(LogPrefabTools, Error, TEXT("Invalid prefab actor reference"));
@@ -678,18 +678,14 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 			}
 		}
 
+
 		if (!ChildActor) {
 			TSharedPtr<IPrefabricatorService> Service = FPrefabricatorService::Get();
 			if (Service.IsValid()) {
 				AActor* Template = nullptr;
-				if (InState.IsValid()) {
-					TWeakObjectPtr<AActor>* SearchResult = InState->PrefabItemTemplates.Find(ActorItemData.PrefabItemID);
-					if (SearchResult) {
-						TWeakObjectPtr<AActor> ActorTemplatePtr = *SearchResult;
-						if (ActorTemplatePtr.IsValid()) {
-							Template = ActorTemplatePtr.Get();
-						}
-					}
+				FPrefabInstanceTemplates* LoadState = FGlobalPrefabInstanceTemplates::Get();
+				if (LoadState) {
+					Template = LoadState->GetTemplate(ActorItemData.PrefabItemID);
 				}
 
 				ChildActor = Service->SpawnActor(ActorClass, FTransform::Identity, PrefabActor->GetLevel(), Template);
@@ -698,8 +694,8 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 					LoadActorState(ChildActor, ActorItemData, InSettings);
 
 					// Save this as a template for future reuse
-					if (InState.IsValid()) {
-						InState->PrefabItemTemplates.Add(ActorItemData.PrefabItemID, ChildActor);
+					if (LoadState) {
+						LoadState->RegisterTemplate(ActorItemData.PrefabItemID, ChildActor);
 					}
 				}
 			}
@@ -727,7 +723,7 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 					ChildPrefab->Seed = FPrefabTools::GetRandomSeed(*InSettings.Random);
 				}
 				if (InSettings.bSynchronousBuild) {
-					LoadStateFromPrefabAsset(ChildPrefab, InSettings, InState);
+					LoadStateFromPrefabAsset(ChildPrefab, InSettings);
 				}
 			}
 		}
@@ -788,3 +784,18 @@ void FPrefabVersionControl::UpgradeFromVersion_AddedSoftReferences(UPrefabricato
 
 #undef LOCTEXT_NAMESPACE
 
+
+/////////////////////// FGlobalPrefabLoadState /////////////////////// 
+
+FPrefabInstanceTemplates* FGlobalPrefabInstanceTemplates::Instance = nullptr;
+void FGlobalPrefabInstanceTemplates::_CreateSingleton()
+{
+	check(Instance == nullptr);
+	Instance = new FPrefabInstanceTemplates();
+}
+
+void FGlobalPrefabInstanceTemplates::_ReleaseSingleton()
+{
+	delete Instance;
+	Instance = nullptr;
+}

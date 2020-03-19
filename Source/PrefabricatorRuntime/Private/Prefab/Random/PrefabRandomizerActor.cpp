@@ -119,15 +119,14 @@ void APrefabRandomizer::Randomize(int32 InSeed)
 	}
 
 	BuildSystem = MakeShareable(new FPrefabBuildSystem(MaxBuildTimePerFrame));
-	LoadState = bUseOptimizedPooling ? MakeShareable(new FPrefabLoadState) : nullptr;
 
 	for (APrefabActor* TopLevelPrefab : TopLevelPrefabs) {
 		FPrefabBuildSystemCommandPtr BuildCommand;
 		if (bFastSyncBuild) {
-			BuildCommand = MakeShareable(new FPrefabBuildSystemCommand_BuildPrefabSync(TopLevelPrefab, true, &Random, LoadState));
+			BuildCommand = MakeShareable(new FPrefabBuildSystemCommand_BuildPrefabSync(TopLevelPrefab, true, &Random));
 		}
 		else {
-			BuildCommand = MakeShareable(new FPrefabBuildSystemCommand_BuildPrefab(TopLevelPrefab, true, &Random, LoadState));
+			BuildCommand = MakeShareable(new FPrefabBuildSystemCommand_BuildPrefab(TopLevelPrefab, true, &Random));
 		}
 
 		BuildSystem->PushCommand(BuildCommand);
