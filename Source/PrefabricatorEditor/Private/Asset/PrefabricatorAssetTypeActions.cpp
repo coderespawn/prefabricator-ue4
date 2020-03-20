@@ -102,6 +102,17 @@ void FPrefabricatorAssetTypeActions::ExecuteUpgradePrefabs(TArray<TWeakObjectPtr
 	}
 }
 
+void FPrefabricatorAssetTypeActions::ExecuteRecaptureThumbnails(TArray<TWeakObjectPtr<UPrefabricatorAsset>> InPrefabAssetPtrs)
+{
+	for (TWeakObjectPtr<UPrefabricatorAsset> PrefabAssetPtr : InPrefabAssetPtrs) {
+		if (PrefabAssetPtr.IsValid()) {
+			UPrefabricatorAsset* PrefabAsset = PrefabAssetPtr.Get();
+			FPrefabEditorTools::CapturePrefabAssetThumbnail(PrefabAsset);
+		}
+	}
+	
+}
+
 void FPrefabricatorAssetTypeActions::GetActions(const TArray<UObject*>& InObjects, FMenuBuilder& MenuBuilder)
 {
 	auto PrefabAssets = GetTypedWeakObjectPtrs<UPrefabricatorAsset>(InObjects);
@@ -130,8 +141,8 @@ void FPrefabricatorAssetTypeActions::GetActions(const TArray<UObject*>& InObject
 
 	if (PrefabAssets.Num() > 0) {
 		MenuBuilder.AddMenuEntry(
-			NSLOCTEXT("AssetTypeActions_PrefabricatorAsset", "ObjectContext_CaptureThumb", "Create Prefab Collection"),
-			NSLOCTEXT("AssetTypeActions_PrefabricatorAsset", "ObjectContext_CaptureThumbTooltip", "Creates a prefab collection, which can be used to randomly select one based on weights"),
+			NSLOCTEXT("AssetTypeActions_PrefabricatorAsset", "ObjectContext_CreatePrefabCollection", "Create Prefab Collection"),
+			NSLOCTEXT("AssetTypeActions_PrefabricatorAsset", "ObjectContext_CreatePrefabCollectionTooltip", "Creates a prefab collection, which can be used to randomly select one based on weights"),
 			FSlateIcon(),
 			FUIAction(
 				FExecuteAction::CreateSP(this, &FPrefabricatorAssetTypeActions::ExecuteCreatePrefabCollection, PrefabAssets),
@@ -140,6 +151,17 @@ void FPrefabricatorAssetTypeActions::GetActions(const TArray<UObject*>& InObject
 		);
 	}
 
+
+	// Recapture thumbnail
+	MenuBuilder.AddMenuEntry(
+		NSLOCTEXT("AssetTypeActions_PrefabricatorAsset", "ObjectContext_RecaptureThumb", "Recapture Thumbnail"),
+		NSLOCTEXT("AssetTypeActions_PrefabricatorAsset", "ObjectContext_RecaptureThumbTooltip", "Recaptures the thumbnail of the selected prefab assets"),
+		FSlateIcon(),
+		FUIAction(
+			FExecuteAction::CreateSP(this, &FPrefabricatorAssetTypeActions::ExecuteRecaptureThumbnails, PrefabAssets),
+			FCanExecuteAction()
+		)
+	);
 }
 
 //////////////////////////////////////////////////////////////////////////

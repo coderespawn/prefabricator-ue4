@@ -23,6 +23,7 @@ public:
 
 	void ExecuteCreatePrefabCollection(TArray<TWeakObjectPtr<UPrefabricatorAsset>> InPrefabAssetPtrs);
 	void ExecuteUpgradePrefabs(TArray<TWeakObjectPtr<UPrefabricatorAsset>> InPrefabAssetPtrs);
+	void ExecuteRecaptureThumbnails(TArray<TWeakObjectPtr<UPrefabricatorAsset>> InPrefabAssetPtrs);
 };
 
 
