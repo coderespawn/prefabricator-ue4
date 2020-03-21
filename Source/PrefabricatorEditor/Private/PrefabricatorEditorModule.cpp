@@ -5,7 +5,6 @@
 #include "Asset/PrefabricatorAsset.h"
 #include "Asset/PrefabricatorAssetBroker.h"
 #include "Asset/PrefabricatorAssetTypeActions.h"
-#include "Asset/Thumbnail/PrefabricatorAssetThumbnailRenderer.h"
 #include "Prefab/PrefabTools.h"
 #include "PrefabEditorCommands.h"
 #include "PrefabEditorStyle.h"
