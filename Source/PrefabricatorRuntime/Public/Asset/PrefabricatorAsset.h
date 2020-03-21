@@ -172,6 +172,11 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Prefabricator")
 	TArray<FPrefabricatorAssetCollectionItem> Prefabs;
 
+#if WITH_EDITORONLY_DATA
+	UPROPERTY(EditAnywhere, Category = "Prefabricator")
+	TSoftObjectPtr<UTexture2D> CustomThumbnail;
+#endif // WITH_EDITORONLY_DATA
+
 	UPROPERTY()
 	uint32 Version;
 

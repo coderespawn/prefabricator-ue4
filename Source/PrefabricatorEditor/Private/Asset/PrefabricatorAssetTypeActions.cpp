@@ -92,14 +92,14 @@ void FPrefabricatorAssetTypeActions::ExecuteCreatePrefabCollection(TArray<TWeakO
 
 void FPrefabricatorAssetTypeActions::ExecuteUpgradePrefabs(TArray<TWeakObjectPtr<UPrefabricatorAsset>> InPrefabAssetPtrs)
 {
-	for (TWeakObjectPtr<UPrefabricatorAsset> PrefabAssetPtr : InPrefabAssetPtrs) {
-		if (PrefabAssetPtr.IsValid()) {
-			UPrefabricatorAsset* PrefabAsset = PrefabAssetPtr.Get();
-			if (PrefabAsset->Version != (uint32)EPrefabricatorAssetVersion::LatestVersion) {
-				FPrefabVersionControl::UpgradeToLatestVersion(PrefabAsset);
-			}
+for (TWeakObjectPtr<UPrefabricatorAsset> PrefabAssetPtr : InPrefabAssetPtrs) {
+	if (PrefabAssetPtr.IsValid()) {
+		UPrefabricatorAsset* PrefabAsset = PrefabAssetPtr.Get();
+		if (PrefabAsset->Version != (uint32)EPrefabricatorAssetVersion::LatestVersion) {
+			FPrefabVersionControl::UpgradeToLatestVersion(PrefabAsset);
 		}
 	}
+}
 }
 
 void FPrefabricatorAssetTypeActions::ExecuteRecaptureThumbnails(TArray<TWeakObjectPtr<UPrefabricatorAsset>> InPrefabAssetPtrs)
@@ -110,7 +110,7 @@ void FPrefabricatorAssetTypeActions::ExecuteRecaptureThumbnails(TArray<TWeakObje
 			FPrefabEditorTools::CapturePrefabAssetThumbnail(PrefabAsset);
 		}
 	}
-	
+
 }
 
 void FPrefabricatorAssetTypeActions::GetActions(const TArray<UObject*>& InObjects, FMenuBuilder& MenuBuilder)
@@ -180,6 +180,36 @@ FColor FPrefabricatorAssetCollectionTypeActions::GetTypeColor() const
 UClass* FPrefabricatorAssetCollectionTypeActions::GetSupportedClass() const
 {
 	return UPrefabricatorAssetCollection::StaticClass();
+}
+
+class FPrefabCollectionAssetEditor : public FSimpleAssetEditor {
+public:
+	void InitCollectionEditor(const EToolkitMode::Type Mode, const TSharedPtr< class IToolkitHost >& InitToolkitHost, const TArray<UObject*>& ObjectsToEdit) {
+		AssetObjects = ObjectsToEdit;
+		InitEditor(Mode, InitToolkitHost, ObjectsToEdit, FSimpleAssetEditor::FGetDetailsViewObjects());
+	}
+
+	virtual void SaveAsset_Execute() override {
+		for (UObject* Obj : AssetObjects) {
+			if (UPrefabricatorAssetCollection* Collection = Cast<UPrefabricatorAssetCollection>(Obj)) {
+				UTexture2D* CustomThumb = Collection->CustomThumbnail.LoadSynchronous();
+				if (CustomThumb) {
+					FPrefabEditorTools::AssignPrefabAssetThumbnail(Collection, CustomThumb);
+				}
+			}
+		}
+		FSimpleAssetEditor::SaveAsset_Execute();
+	}
+
+private:
+	TArray<UObject*> AssetObjects;
+};
+
+
+void FPrefabricatorAssetCollectionTypeActions::OpenAssetEditor(const TArray<UObject*>& InObjects, TSharedPtr<class IToolkitHost> EditWithinLevelEditor /*= TSharedPtr<IToolkitHost>()*/)
+{
+	TSharedRef<FPrefabCollectionAssetEditor> NewEditor(new FPrefabCollectionAssetEditor());
+	NewEditor->InitCollectionEditor(EToolkitMode::Standalone, EditWithinLevelEditor, InObjects);
 }
 
 uint32 FPrefabricatorAssetCollectionTypeActions::GetCategories()
