@@ -9,6 +9,7 @@
 #include "Widgets/Notifications/SNotificationList.h"
 
 class UPrefabricatorAsset;
+class UPrefabricatorAssetInterface;
 
 class PREFABRICATOREDITOR_API FPrefabEditorTools {
 public:
@@ -19,6 +20,8 @@ public:
 	static void SwitchLevelViewportToRealtimeMode();
 
 	static void CapturePrefabAssetThumbnail(UPrefabricatorAsset* InAsset);
+	static void AssignPrefabAssetThumbnail(UPrefabricatorAssetInterface* InAsset, const TArray<FColor>& InBitmap, int32 Width, int32 Height);
+	static void AssignPrefabAssetThumbnail(UPrefabricatorAssetInterface* InAsset, UTexture2D* ThumbTexture);
 
 	template<typename T>
 	static T* CreateAssetOnContentBrowser(const FString& InAssetName, bool bSyncBrowserToAsset)

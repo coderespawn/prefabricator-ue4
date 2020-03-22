@@ -119,22 +119,24 @@ void FPrefabEditorTools::CapturePrefabAssetThumbnail(UPrefabricatorAsset* InAsse
 		UKismetRenderingLibrary::EndDrawCanvasToRenderTarget(World, RenderContext);
 		UKismetRenderingLibrary::ReleaseRenderTarget2D(RTT);
 	}
-	/*
-	Bitmap.AddUninitialized(ThumbSize * ThumbSize);
-	for (int i = 0; i < Bitmap.Num(); i++) {
-		Bitmap[i] = FColor::Blue;
-	}
-	*/
+
+	AssignPrefabAssetThumbnail(InAsset, Bitmap, ThumbSize, ThumbSize);
+}
+
+void FPrefabEditorTools::AssignPrefabAssetThumbnail(UPrefabricatorAssetInterface* InAsset, const TArray<FColor>& InBitmap, int32 Width, int32 Height)
+{
+	if (InBitmap.Num() == 0 || Width == 0 || Height == 0) return;
+	check(InBitmap.Num() == Width * Height);
 
 	//setup actual thumbnail
 	FObjectThumbnail TempThumbnail;
-	TempThumbnail.SetImageSize(ThumbSize, ThumbSize);
+	TempThumbnail.SetImageSize(Width, Height);
 	TArray<uint8>& ThumbnailByteArray = TempThumbnail.AccessImageData();
 
 	// Copy scaled image into destination thumb
-	int32 MemorySize = ThumbSize * ThumbSize * sizeof(FColor);
+	int32 MemorySize = Width * Height * sizeof(FColor);
 	ThumbnailByteArray.AddUninitialized(MemorySize);
-	FMemory::Memcpy(&(ThumbnailByteArray[0]), &(Bitmap[0]), MemorySize);
+	FMemory::Memcpy(&(ThumbnailByteArray[0]), &(InBitmap[0]), MemorySize);
 
 	FAssetToolsModule& AssetToolsModule = FModuleManager::LoadModuleChecked<FAssetToolsModule>("AssetTools");
 
@@ -169,5 +171,47 @@ void FPrefabEditorTools::CapturePrefabAssetThumbnail(UPrefabricatorAsset* InAsse
 			}
 		}
 	}
+}
+
+void FPrefabEditorTools::AssignPrefabAssetThumbnail(UPrefabricatorAssetInterface* InAsset, UTexture2D* ThumbTexture)
+{
+	TArray<FColor> Bitmap;
+	if (!ThumbTexture) return;
+
+	int32 TexWidth = ThumbTexture->GetSizeX();
+	int32 TexHeight = ThumbTexture->GetSizeY();
+	Bitmap.AddUninitialized(TexWidth * TexHeight);
+	const FColor* FormatedImageData = static_cast<const FColor*>(ThumbTexture->PlatformData->Mips[0].BulkData.LockReadOnly());
+	if (FormatedImageData) {
+		for (int32 X = 0; X < TexWidth; X++) {
+			for (int32 Y = 0; Y < TexHeight; Y++) {
+				int32 Idx = Y * TexWidth + X;
+				FColor PixelColor = FormatedImageData[Idx];
+				FLinearColor LinearColor(PixelColor);
+				LinearColor *= LinearColor.A;
+				Bitmap[Idx] = LinearColor.ToFColor(false);
+			}
+		}
+	}
+	ThumbTexture->PlatformData->Mips[0].BulkData.Unlock();
+	AssignPrefabAssetThumbnail(InAsset, Bitmap, TexWidth, TexHeight);
+
+	/*
+	const FColor* MipData = reinterpret_cast<FColor*>(ThumbTexture->PlatformData->Mips[0].BulkData.Lock(LOCK_READ_ONLY));
+	if (MipData) {
+		const int32 TexWidth = ThumbTexture->GetSurfaceWidth();
+		const int32 TexHeight = ThumbTexture->GetSurfaceHeight();
+
+		Bitmap.AddUninitialized(TexWidth * TexHeight);
+		for (int32 Y = 0; Y < TexHeight; ++Y) {
+			for (int32 X = 0; X < TexWidth; ++X) {
+				int32 Idx = Y * TexWidth + X;
+				Bitmap[Idx] = Y > TexHeight / 2 ? FColor::Red : FColor::Blue; // MipData[Idx];
+			}
+		}
+		AssignPrefabAssetThumbnail(InAsset, Bitmap, TexWidth, TexHeight);
+	}
+	ThumbTexture->PlatformData->Mips[0].BulkData.Unlock();
+	*/
 }
 

@@ -217,8 +217,7 @@ FReply FPrefabActorCustomization::RandomizePrefabCollection(IDetailLayoutBuilder
 			FPrefabLoadSettings LoadSettings;
 			LoadSettings.bRandomizeNestedSeed = true;
 			LoadSettings.Random = &Random;
-			FPrefabLoadStatePtr LoadState = MakeShareable(new FPrefabLoadState);
-			FPrefabTools::LoadStateFromPrefabAsset(PrefabActor, LoadSettings, LoadState);
+			FPrefabTools::LoadStateFromPrefabAsset(PrefabActor, LoadSettings);
 		}
 	}
 	return FReply::Handled();

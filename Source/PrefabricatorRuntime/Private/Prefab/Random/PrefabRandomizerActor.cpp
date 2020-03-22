@@ -50,10 +50,6 @@ void APrefabRandomizer::Tick(float DeltaSeconds)
 			if (Service.IsValid()) {
 				Service->RunGC();
 			}
-
-			if (LoadState.IsValid()) {
-				UE_LOG(LogTemp, Log, TEXT("Slow[%d], Fast[%d], Reuse[%d]"), LoadState->_Stat_SlowSpawns, LoadState->_Stat_FastSpawns, LoadState->_Stat_ReuseSpawns);
-			}
 		}
 	}
 }
@@ -123,15 +119,14 @@ void APrefabRandomizer::Randomize(int32 InSeed)
 	}
 
 	BuildSystem = MakeShareable(new FPrefabBuildSystem(MaxBuildTimePerFrame));
-	LoadState = bUseOptimizedPooling ? MakeShareable(new FPrefabLoadState) : nullptr;
 
 	for (APrefabActor* TopLevelPrefab : TopLevelPrefabs) {
 		FPrefabBuildSystemCommandPtr BuildCommand;
 		if (bFastSyncBuild) {
-			BuildCommand = MakeShareable(new FPrefabBuildSystemCommand_BuildPrefabSync(TopLevelPrefab, true, &Random, LoadState));
+			BuildCommand = MakeShareable(new FPrefabBuildSystemCommand_BuildPrefabSync(TopLevelPrefab, true, &Random));
 		}
 		else {
-			BuildCommand = MakeShareable(new FPrefabBuildSystemCommand_BuildPrefab(TopLevelPrefab, true, &Random, LoadState));
+			BuildCommand = MakeShareable(new FPrefabBuildSystemCommand_BuildPrefab(TopLevelPrefab, true, &Random));
 		}
 
 		BuildSystem->PushCommand(BuildCommand);

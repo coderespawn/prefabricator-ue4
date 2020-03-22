@@ -55,7 +55,6 @@ public:
 /////////////////////////////// BuildSystem /////////////////////////////// 
 
 class FPrefabBuildSystem;
-typedef TSharedPtr<struct FPrefabLoadState> FPrefabLoadStatePtr;
 
 class PREFABRICATORRUNTIME_API FPrefabBuildSystemCommand {
 public:
@@ -67,7 +66,7 @@ typedef TSharedPtr<FPrefabBuildSystemCommand> FPrefabBuildSystemCommandPtr;
 
 class PREFABRICATORRUNTIME_API FPrefabBuildSystemCommand_BuildPrefab : public FPrefabBuildSystemCommand {
 public:
-	FPrefabBuildSystemCommand_BuildPrefab(TWeakObjectPtr<APrefabActor> InPrefab, bool bInRandomizeNestedSeed, FRandomStream* InRandom, FPrefabLoadStatePtr InLoadState);
+	FPrefabBuildSystemCommand_BuildPrefab(TWeakObjectPtr<APrefabActor> InPrefab, bool bInRandomizeNestedSeed, FRandomStream* InRandom);
 
 	virtual void Execute(FPrefabBuildSystem& BuildSystem) override;
 
@@ -75,12 +74,11 @@ private:
 	TWeakObjectPtr<APrefabActor> Prefab;
 	bool bRandomizeNestedSeed = false;
 	FRandomStream* Random = nullptr;
-	FPrefabLoadStatePtr LoadState;
 };
 
 class PREFABRICATORRUNTIME_API FPrefabBuildSystemCommand_BuildPrefabSync : public FPrefabBuildSystemCommand {
 public:
-	FPrefabBuildSystemCommand_BuildPrefabSync(TWeakObjectPtr<APrefabActor> InPrefab, bool bInRandomizeNestedSeed, FRandomStream* InRandom, FPrefabLoadStatePtr InLoadState);
+	FPrefabBuildSystemCommand_BuildPrefabSync(TWeakObjectPtr<APrefabActor> InPrefab, bool bInRandomizeNestedSeed, FRandomStream* InRandom);
 
 	virtual void Execute(FPrefabBuildSystem& BuildSystem) override;
 
@@ -88,7 +86,6 @@ private:
 	TWeakObjectPtr<APrefabActor> Prefab;
 	bool bRandomizeNestedSeed = false;
 	FRandomStream* Random = nullptr;
-	FPrefabLoadStatePtr LoadState;
 };
 
 class PREFABRICATORRUNTIME_API FPrefabBuildSystemCommand_NotifyBuildComplete : public FPrefabBuildSystemCommand {

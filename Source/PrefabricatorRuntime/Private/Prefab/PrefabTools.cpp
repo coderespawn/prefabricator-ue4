@@ -40,11 +40,18 @@ int FPrefabTools::GetNumSelectedActors()
 
 void FPrefabTools::ParentActors(AActor* ParentActor, AActor* ChildActor)
 {
+	SCOPE_CYCLE_COUNTER(STAT_ParentActors);
 	if (ChildActor && ParentActor) {
-		ChildActor->DetachFromActor(FDetachmentTransformRules(EDetachmentRule::KeepWorld, true));
-		TSharedPtr<IPrefabricatorService> Service = FPrefabricatorService::Get();
-		if (Service.IsValid()) {
-			Service->ParentActors(ParentActor, ChildActor);
+		{
+			SCOPE_CYCLE_COUNTER(STAT_ParentActors1);
+			ChildActor->DetachFromActor(FDetachmentTransformRules(EDetachmentRule::KeepWorld, false));
+		}
+		{
+			SCOPE_CYCLE_COUNTER(STAT_ParentActors2);
+			TSharedPtr<IPrefabricatorService> Service = FPrefabricatorService::Get();
+			if (Service.IsValid()) {
+				Service->ParentActors(ParentActor, ChildActor);
+			}
 		}
 	}
 }
@@ -285,6 +292,9 @@ namespace {
 		FString PropertyValue, DefaultValue;
 		PropertyPathHelpers::GetPropertyValueAsString(InContainer, InPropertyPath, PropertyValue);
 		PropertyPathHelpers::GetPropertyValueAsString(DefaultObject, InPropertyPath, DefaultValue);
+		if (PropertyValue != DefaultValue) {
+			UE_LOG(LogPrefabTools, Log, TEXT("Property differs: %s\n> %s\n> %s"), *InPropertyPath, *PropertyValue, *DefaultValue);
+		}
 		return PropertyValue == DefaultValue;
 	}
 
@@ -304,34 +314,21 @@ namespace {
 	void DeserializeFields(UObject* InObjToDeserialize, const TArray<UPrefabricatorProperty*>& InProperties) {
 		if (!InObjToDeserialize) return;
 
-		TMap<FString, UPrefabricatorProperty*> PropertiesByName;
-		{
-			//SCOPE_CYCLE_COUNTER(STAT_DeserializeFields_BuildMap);
-			for (UPrefabricatorProperty* Property : InProperties) {
-				if (!Property) continue;
-				PropertiesByName.Add(Property->PropertyName, Property);
-			}
-		}
+		for (UPrefabricatorProperty* PrefabProperty : InProperties) {
+			if (!PrefabProperty) continue;
+			FString PropertyName = PrefabProperty->PropertyName;
+			if (PropertyName == "AssetUserData") continue;		// Skip this as assignment is very slow and is not needed
 
-		{
-			SCOPE_CYCLE_COUNTER(STAT_DeserializeFields_Iterate);
-			for (TFieldIterator<UProperty> PropertyIterator(InObjToDeserialize->GetClass()); PropertyIterator; ++PropertyIterator) {
-				UProperty* Property = *PropertyIterator;
-				if (!Property) continue;
+			UProperty* Property = InObjToDeserialize->GetClass()->FindPropertyByName(*PropertyName);
+			if (Property) {
+				{
+					SCOPE_CYCLE_COUNTER(STAT_DeserializeFields_Iterate_LoadValue);
+					PrefabProperty->LoadReferencedAssetValues();
+				}
 
-				FString PropertyName = Property->GetName();
-				UPrefabricatorProperty** SearchResult = PropertiesByName.Find(PropertyName);
-				if (!SearchResult) continue;
-				UPrefabricatorProperty* PrefabProperty = *SearchResult;
-				if (PrefabProperty) {
-					{
-						SCOPE_CYCLE_COUNTER(STAT_DeserializeFields_Iterate_LoadValue);
-						PrefabProperty->LoadReferencedAssetValues();
-					}
-					{
-						SCOPE_CYCLE_COUNTER(STAT_DeserializeFields_Iterate_SetValue);
-						PropertyPathHelpers::SetPropertyValueFromString(InObjToDeserialize, PrefabProperty->PropertyName, PrefabProperty->ExportedValue);
-					}
+				{
+					SCOPE_CYCLE_COUNTER(STAT_DeserializeFields_Iterate_SetValue);
+					PropertyPathHelpers::SetPropertyValueFromString(InObjToDeserialize, PrefabProperty->PropertyName, PrefabProperty->ExportedValue);
 				}
 			}
 		}
@@ -447,7 +444,8 @@ bool FPrefabTools::ShouldIgnorePropertySerialization(const FName& InPropertyName
 bool FPrefabTools::ShouldForcePropertySerialization(const FName& PropertyName)
 {
 	static const TSet<FName> FieldsToForceSerialize = {
-		"Mobility"
+		"Mobility",
+		"bUseDefaultCollision"
 	};
 
 	return FieldsToForceSerialize.Contains(PropertyName);
@@ -490,18 +488,19 @@ void FPrefabTools::SaveActorState(AActor* InActor, APrefabActor* PrefabActor, FP
 
 void FPrefabTools::LoadActorState(AActor* InActor, const FPrefabricatorActorData& InActorData, const FPrefabLoadSettings& InSettings)
 {
+	SCOPE_CYCLE_COUNTER(STAT_LoadActorState);
 	if (!InActor) {
 		return;
 	}
 
 	TSharedPtr<IPrefabricatorService> Service = FPrefabricatorService::Get();
 	if (Service.IsValid()) {
-		//SCOPE_CYCLE_COUNTER(STAT_LoadStateFromPrefabAsset_BeginTransaction);
-		Service->BeginTransaction(LOCTEXT("TransLabel_LoadPrefab", "Load Prefab"));
+		SCOPE_CYCLE_COUNTER(STAT_LoadActorState_BeginTransaction);
+		//Service->BeginTransaction(LOCTEXT("TransLabel_LoadPrefab", "Load Prefab"));
 	}
 
 	{
-		//SCOPE_CYCLE_COUNTER(STAT_LoadStateFromPrefabAsset_DeserializeFieldsActor);
+		SCOPE_CYCLE_COUNTER(STAT_LoadActorState_DeserializeFieldsActor);
 		DeserializeFields(InActor, InActorData.Properties);
 	}
 
@@ -515,24 +514,44 @@ void FPrefabTools::LoadActorState(AActor* InActor, const FPrefabricatorActorData
 		for (const FPrefabricatorComponentData& ComponentData : InActorData.Components) {
 			if (UActorComponent** SearchResult = ComponentsByName.Find(ComponentData.ComponentName)) {
 				UActorComponent* Component = *SearchResult;
-				bool bPreviouslyRegister;
+				//bool bPreviouslyRegister;
 				{
-					//SCOPE_CYCLE_COUNTER(STAT_LoadStateFromPrefabAsset_UnregisterComponent);
+					/*
+					//SCOPE_CYCLE_COUNTER(STAT_LoadActorState_UnregisterComponent);
 					bPreviouslyRegister = Component->IsRegistered();
 					if (InSettings.bUnregisterComponentsBeforeLoading && bPreviouslyRegister) {
 						Component->UnregisterComponent();
 					}
+					*/
 				}
 
 				{
-					//SCOPE_CYCLE_COUNTER(STAT_LoadStateFromPrefabAsset_DeserializeFieldsComponents);
+					SCOPE_CYCLE_COUNTER(STAT_LoadActorState_DeserializeFieldsComponents);
 					DeserializeFields(Component, ComponentData.Properties);
 				}
 
 				{
-					//SCOPE_CYCLE_COUNTER(STAT_LoadStateFromPrefabAsset_RegisterComponent);
+					/*
+					//SCOPE_CYCLE_COUNTER(STAT_LoadActorState_RegisterComponent);
 					if (InSettings.bUnregisterComponentsBeforeLoading && bPreviouslyRegister) {
 						Component->RegisterComponent();
+					}
+					*/
+				}
+
+				// Check if we need to recreate the physics state
+				{
+					if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component)) {
+						bool bRecreatePhysicsState = false;
+						for (UPrefabricatorProperty* Property : ComponentData.Properties) {
+							if (Property->PropertyName == "BodyInstance") {
+								bRecreatePhysicsState = true;
+								break;
+							}
+						}
+						if (bRecreatePhysicsState) {
+							Primitive->RecreatePhysicsState();
+						}
 					}
 				}
 			}
@@ -545,11 +564,13 @@ void FPrefabTools::LoadActorState(AActor* InActor, const FPrefabricatorActorData
 	}
 #endif // WITH_EDITOR
 
-	if (Service.IsValid()) {
-		SCOPE_CYCLE_COUNTER(STAT_LoadStateFromPrefabAsset_EndTransaction);
-		Service->EndTransaction();
-	}
+	InActor->PostLoad();
+	InActor->ReregisterAllComponents();
 
+	if (Service.IsValid()) {
+		SCOPE_CYCLE_COUNTER(STAT_LoadActorState_EndTransaction);
+		//Service->EndTransaction();
+	}
 }
 
 void FPrefabTools::UnlinkAndDestroyPrefabActor(APrefabActor* PrefabActor)
@@ -585,18 +606,20 @@ void FPrefabTools::GetActorChildren(AActor* InParent, TArray<AActor*>& OutChildr
 
 namespace {
 	void GetPrefabBoundsRecursive(AActor* InActor, FBox& OutBounds, bool bNonColliding) {
-		if (!InActor->IsA<APrefabActor>()) {
-			FBox ActorBounds = InActor->GetComponentsBoundingBox(bNonColliding);
-			if (ActorBounds.GetExtent() == FVector::ZeroVector) {
-				ActorBounds = FBox({ InActor->GetActorLocation() });
+		if (InActor && InActor->IsLevelBoundsRelevant()) {
+			if (!InActor->IsA<APrefabActor>()) {
+				FBox ActorBounds = InActor->GetComponentsBoundingBox(bNonColliding);
+				if (ActorBounds.GetExtent() == FVector::ZeroVector) {
+					ActorBounds = FBox({ InActor->GetActorLocation() });
+				}
+				OutBounds += ActorBounds;
 			}
-			OutBounds += ActorBounds;
-		}
 
-		TArray<AActor*> AttachedActors;
-		InActor->GetAttachedActors(AttachedActors);
-		for (AActor* AttachedActor : AttachedActors) {
-			GetPrefabBoundsRecursive(AttachedActor, OutBounds, bNonColliding);
+			TArray<AActor*> AttachedActors;
+			InActor->GetAttachedActors(AttachedActors);
+			for (AActor* AttachedActor : AttachedActors) {
+				GetPrefabBoundsRecursive(AttachedActor, OutBounds, bNonColliding);
+			}
 		}
 	}
 }
@@ -608,8 +631,9 @@ FBox FPrefabTools::GetPrefabBounds(AActor* PrefabActor, bool bNonColliding)
 	return Result;
 }
 
-void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPrefabLoadSettings& InSettings, FPrefabLoadStatePtr InState)
+void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPrefabLoadSettings& InSettings)
 {
+	SCOPE_CYCLE_COUNTER(STAT_LoadStateFromPrefabAsset);
 	if (!PrefabActor) {
 		UE_LOG(LogPrefabTools, Error, TEXT("Invalid prefab actor reference"));
 		return;
@@ -617,17 +641,17 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 
 	UPrefabricatorAsset* PrefabAsset = PrefabActor->GetPrefabAsset();
 	if (!PrefabAsset) {
-		UE_LOG(LogPrefabTools, Error, TEXT("Prefab asset is not assigned correctly"));
+		//UE_LOG(LogPrefabTools, Error, TEXT("Prefab asset is not assigned correctly"));
 		return;
 	}
 
 	PrefabActor->GetRootComponent()->SetMobility(PrefabAsset->PrefabMobility);
 
+	// Pool existing child actors that belong to this prefab
 	TArray<AActor*> ExistingActorPool;
 	GetActorChildren(PrefabActor, ExistingActorPool);
-	TMap<FGuid, AActor*> ActorByItemID;
 
-	// Delete existing child actors that belong to this prefab
+	TMap<FGuid, AActor*> ActorByItemID;
 	for (AActor* ExistingActor : ExistingActorPool) {
 		if (ExistingActor && ExistingActor->GetRootComponent()) {
 			UPrefabricatorAssetUserData* PrefabUserData = ExistingActor->GetRootComponent()->GetAssetUserData<UPrefabricatorAssetUserData>();
@@ -637,92 +661,95 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 		}
 	}
 
-	for (FPrefabricatorActorData& ActorItemData : PrefabAsset->ActorData) {
-		// Handle backward compatibility
-		{
-			if (!ActorItemData.ClassPathRef.IsValid()) {
-				ActorItemData.ClassPathRef = ActorItemData.ClassPath;
-			}
-
-			if (ActorItemData.ClassPathRef.GetAssetPathString() != ActorItemData.ClassPath) {
-				ActorItemData.ClassPath = ActorItemData.ClassPathRef.GetAssetPathString();
-			}
-		}
-
-
-		UClass* ActorClass = LoadObject<UClass>(nullptr, *ActorItemData.ClassPathRef.GetAssetPathString());
-		if (!ActorClass) continue;
-
+	{
+		SCOPE_CYCLE_COUNTER(STAT_LoadStateFromPrefabAsset_ActorLoop);
 		UWorld* World = PrefabActor->GetWorld();
-		AActor* ChildActor = nullptr;
-		if (AActor** SearchResult = ActorByItemID.Find(ActorItemData.PrefabItemID)) {
-			ChildActor = *SearchResult;
-			FString ExistingClassName = ChildActor->GetClass()->GetPathName();
-			FString RequiredClassName = ActorItemData.ClassPathRef.GetAssetPathString();
-			if (ExistingClassName == RequiredClassName) {
-				// We can reuse this actor
-				ExistingActorPool.Remove(ChildActor);
-			}
-		}
+		for (FPrefabricatorActorData& ActorItemData : PrefabAsset->ActorData) {
+			// Handle backward compatibility
+			{
+				if (!ActorItemData.ClassPathRef.IsValid()) {
+					ActorItemData.ClassPathRef = ActorItemData.ClassPath;
+				}
 
-		if (!ChildActor) {
-			TSharedPtr<IPrefabricatorService> Service = FPrefabricatorService::Get();
-			if (Service.IsValid()) {
-				AActor* Template = nullptr;
-				if (InState.IsValid()) {
-					TWeakObjectPtr<AActor>* SearchResult = InState->PrefabItemTemplates.Find(ActorItemData.PrefabItemID);
-					if (SearchResult) {
-						TWeakObjectPtr<AActor> ActorTemplatePtr = *SearchResult;
-						if (ActorTemplatePtr.IsValid()) {
-							Template = ActorTemplatePtr.Get();
+				if (ActorItemData.ClassPathRef.GetAssetPathString() != ActorItemData.ClassPath) {
+					ActorItemData.ClassPath = ActorItemData.ClassPathRef.GetAssetPathString();
+				}
+			}
+
+
+			UClass* ActorClass = LoadObject<UClass>(nullptr, *ActorItemData.ClassPathRef.GetAssetPathString());
+			if (!ActorClass) continue;
+
+			AActor* ChildActor = nullptr;
+			if (AActor** SearchResult = ActorByItemID.Find(ActorItemData.PrefabItemID)) {
+				ChildActor = *SearchResult;
+				if (ChildActor) {
+					FString ExistingClassName = ChildActor->GetClass()->GetPathName();
+					FString RequiredClassName = ActorItemData.ClassPathRef.GetAssetPathString();
+					if (ExistingClassName == RequiredClassName) {
+						// We can reuse this actor
+						ExistingActorPool.Remove(ChildActor);
+					}
+					else {
+						ChildActor = nullptr;
+					}
+				}
+			}
+
+			FTransform WorldTransform = ActorItemData.RelativeTransform * PrefabActor->GetTransform();
+			if (!ChildActor) {
+				SCOPE_CYCLE_COUNTER(STAT_LoadStateFromPrefabAsset1);
+				TSharedPtr<IPrefabricatorService> Service = FPrefabricatorService::Get();
+				if (Service.IsValid()) {
+					AActor* Template = nullptr;
+					FPrefabInstanceTemplates* LoadState = FGlobalPrefabInstanceTemplates::Get();
+					if (LoadState) {
+						Template = LoadState->GetTemplate(ActorItemData.PrefabItemID, PrefabAsset->LastUpdateID);
+					}
+
+					ChildActor = Service->SpawnActor(ActorClass, WorldTransform, PrefabActor->GetLevel(), Template);
+					if (Template == nullptr) {
+						// Load the actor state since the template was empty
+						LoadActorState(ChildActor, ActorItemData, InSettings);
+
+						// Save this as a template for future reuse
+						if (LoadState) {
+							LoadState->RegisterTemplate(ActorItemData.PrefabItemID, PrefabAsset->LastUpdateID, ChildActor);
 						}
 					}
 				}
+			}
 
-				ChildActor = Service->SpawnActor(ActorClass, FTransform::Identity, PrefabActor->GetLevel(), Template);
-				if (!Template) {
-					LoadActorState(ChildActor, ActorItemData, InSettings);
-					if (InState.IsValid()) {
-						InState->PrefabItemTemplates.Add(ActorItemData.PrefabItemID, ChildActor);
-						InState->_Stat_SlowSpawns++;
+			if (ChildActor) {
+				{
+					SCOPE_CYCLE_COUNTER(STAT_LoadStateFromPrefabAsset2);
+					ParentActors(PrefabActor, ChildActor);
+				}
+				{
+					SCOPE_CYCLE_COUNTER(STAT_LoadStateFromPrefabAsset3);
+					AssignAssetUserData(ChildActor, ActorItemData.PrefabItemID, PrefabActor);
+				}
+
+				{
+					SCOPE_CYCLE_COUNTER(STAT_LoadStateFromPrefabAsset4);
+					// Set the transform
+					if (ChildActor->GetRootComponent()) {
+						EComponentMobility::Type OldChildMobility = ChildActor->GetRootComponent()->Mobility;
+						ChildActor->GetRootComponent()->SetMobility(EComponentMobility::Movable);
+						ChildActor->SetActorTransform(WorldTransform);
+						ChildActor->GetRootComponent()->SetMobility(OldChildMobility);
 					}
 				}
-				else {
-					if (InState.IsValid()) {
-						InState->_Stat_FastSpawns++;
+
+				if (APrefabActor* ChildPrefab = Cast<APrefabActor>(ChildActor)) {
+					SCOPE_CYCLE_COUNTER(STAT_LoadStateFromPrefabAsset5);
+					if (InSettings.bRandomizeNestedSeed && InSettings.Random) {
+						// This is a nested child prefab.  Randomize the seed of the child prefab
+						ChildPrefab->Seed = FPrefabTools::GetRandomSeed(*InSettings.Random);
 					}
-				}
-			}
-		}
-		else {
-			if (InState.IsValid()) {
-				InState->_Stat_ReuseSpawns++;
-			}
-		}
-
-		if (ChildActor) {
-			ParentActors(PrefabActor, ChildActor);
-			AssignAssetUserData(ChildActor, ActorItemData.PrefabItemID, PrefabActor);
-
-			// Set the transform
-			FTransform WorldTransform = ActorItemData.RelativeTransform * PrefabActor->GetTransform();
-			if (ChildActor->GetRootComponent()) {
-				EComponentMobility::Type OldChildMobility = EComponentMobility::Movable;
-				if (ChildActor->GetRootComponent()) {
-					OldChildMobility = ChildActor->GetRootComponent()->Mobility;
-				}
-				ChildActor->GetRootComponent()->SetMobility(EComponentMobility::Movable);
-				ChildActor->SetActorTransform(WorldTransform);
-				ChildActor->GetRootComponent()->SetMobility(OldChildMobility);
-			}
-
-			if (APrefabActor* ChildPrefab = Cast<APrefabActor>(ChildActor)) {
-				if (InSettings.bRandomizeNestedSeed && InSettings.Random) {
-					// This is a nested child prefab.  Randomize the seed of the child prefab
-					ChildPrefab->Seed = FPrefabTools::GetRandomSeed(*InSettings.Random);
-				}
-				if (InSettings.bSynchronousBuild) {
-					LoadStateFromPrefabAsset(ChildPrefab, InSettings, InState);
+					if (InSettings.bSynchronousBuild) {
+						LoadStateFromPrefabAsset(ChildPrefab, InSettings);
+					}
 				}
 			}
 		}
@@ -783,3 +810,45 @@ void FPrefabVersionControl::UpgradeFromVersion_AddedSoftReferences(UPrefabricato
 
 #undef LOCTEXT_NAMESPACE
 
+
+/////////////////////// FGlobalPrefabLoadState /////////////////////// 
+
+FPrefabInstanceTemplates* FGlobalPrefabInstanceTemplates::Instance = nullptr;
+void FGlobalPrefabInstanceTemplates::_CreateSingleton()
+{
+	check(Instance == nullptr);
+	Instance = new FPrefabInstanceTemplates();
+}
+
+void FGlobalPrefabInstanceTemplates::_ReleaseSingleton()
+{
+	delete Instance;
+	Instance = nullptr;
+}
+
+void FPrefabInstanceTemplates::RegisterTemplate(const FGuid& InPrefabItemId, FGuid InPrefabLastUpdateId, AActor* InActor)
+{
+	FPrefabInstanceTemplateInfo& TemplateRef = PrefabItemTemplates.FindOrAdd(InPrefabItemId);
+	TemplateRef.TemplatePtr = InActor;
+	TemplateRef.PrefabLastUpdateId = InPrefabLastUpdateId;
+}
+
+AActor* FPrefabInstanceTemplates::GetTemplate(const FGuid& InPrefabItemId, FGuid InPrefabLastUpdateId)
+{
+	FPrefabInstanceTemplateInfo* SearchResult = PrefabItemTemplates.Find(InPrefabItemId);
+	if (!SearchResult) return nullptr;
+	FPrefabInstanceTemplateInfo& Info = *SearchResult;
+	AActor* Actor = Info.TemplatePtr.Get();
+
+	if (Info.PrefabLastUpdateId != InPrefabLastUpdateId) {
+		// The prefab has been changed since we last cached this template. Invalidate it
+		Actor = nullptr;
+	}
+
+	// Remove from the map if the actor state is stale
+	if (!Actor) {
+		PrefabItemTemplates.Remove(InPrefabItemId);
+	}
+
+	return Actor;
+}
