@@ -27,6 +27,7 @@ AActor* IPrefabricatorService::SpawnActor(TSubclassOf<AActor> InClass, const FTr
 		return nullptr;
 	}
 
+	/*
 	TArray<AActor*> AttachedToTemplate;
 	if (InTemplate) {
 		InTemplate->GetAttachedActors(AttachedToTemplate);
@@ -34,14 +35,20 @@ AActor* IPrefabricatorService::SpawnActor(TSubclassOf<AActor> InClass, const FTr
 			TemplateChild->DetachFromActor(FDetachmentTransformRules(EDetachmentRule::KeepWorld, false));
 		}
 	}
+	*/
 
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.OverrideLevel = InLevel;
 	SpawnParams.Template = InTemplate;
+	SpawnParams.bDeferConstruction = true;
+
 	UWorld* World = InLevel->GetWorld();
+	AActor* Actor = World->SpawnActor<AActor>(InClass, SpawnParams);
+	Actor->SetActorTransform(FTransform::Identity);
+	Actor->FinishSpawning(InTransform);
+	Actor->DetachFromActor(FDetachmentTransformRules(EDetachmentRule::KeepWorld, false));
 
-	AActor* Actor = World->SpawnActor<AActor>(InClass, InTransform, SpawnParams);
-
+	/*
 	TSharedPtr<IPrefabricatorService> Service = FPrefabricatorService::Get();
 	if (Actor && InTemplate && Service.IsValid()) {
 		// Attach the template children back
@@ -50,6 +57,8 @@ AActor* IPrefabricatorService::SpawnActor(TSubclassOf<AActor> InClass, const FTr
 			//Service->ParentActors(InTemplate, TemplateChild);
 		}
 	}
+	*/
+
 	return Actor;
 }
 

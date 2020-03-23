@@ -622,6 +622,18 @@ namespace {
 			}
 		}
 	}
+
+	void DestroyActorTree(AActor* InActor) {
+		if (!InActor) return;
+		TArray<AActor*> Children;
+		InActor->GetAttachedActors(Children);
+
+		for (AActor* Child : Children) {
+			DestroyActorTree(Child);
+		}
+
+		InActor->Destroy();
+	}
 }
 
 FBox FPrefabTools::GetPrefabBounds(AActor* PrefabActor, bool bNonColliding)
@@ -652,8 +664,9 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 	GetActorChildren(PrefabActor, ExistingActorPool);
 
 	FPrefabInstanceTemplates* LoadState = FGlobalPrefabInstanceTemplates::Get();
+	TSharedPtr<IPrefabricatorService> Service = FPrefabricatorService::Get();
 
-	{
+	if (Service.IsValid()) {
 		UWorld* World = PrefabActor->GetWorld();
 		for (FPrefabricatorActorData& ActorItemData : PrefabAsset->ActorData) {
 			// Handle backward compatibility
@@ -675,6 +688,8 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 
 			AActor* ChildActor = nullptr;
 			FTransform WorldTransform = ActorItemData.RelativeTransform * PrefabActor->GetTransform();
+
+			/*
 			FActorSpawnParameters SpawnParams;
 			SpawnParams.OverrideLevel = PrefabActor->GetLevel();
 			SpawnParams.Template = Template;
@@ -683,6 +698,11 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 			ChildActor = World->SpawnActor<AActor>(ActorClass, SpawnParams);
 			ChildActor->SetActorTransform(FTransform::Identity);
 			ChildActor->FinishSpawning(WorldTransform);
+			ChildActor->DetachFromActor(FDetachmentTransformRules(EDetachmentRule::KeepWorld, false));
+			*/
+
+			ChildActor = Service->SpawnActor(ActorClass, WorldTransform, PrefabActor->GetLevel(), Template);
+
 			ParentActors(PrefabActor, ChildActor);
 			if (Template == nullptr) {
 				LoadActorState(ChildActor, ActorItemData, InSettings);
@@ -817,7 +837,7 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 
 	// Destroy the unused actors from the pool
 	for (AActor* UnusedActor : ExistingActorPool) {
-		UnusedActor->Destroy();
+		DestroyActorTree(UnusedActor);
 	}
 
 	PrefabActor->LastUpdateID = PrefabAsset->LastUpdateID;
