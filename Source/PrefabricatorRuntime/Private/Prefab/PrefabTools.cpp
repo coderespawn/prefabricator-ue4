@@ -651,6 +651,65 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 	TArray<AActor*> ExistingActorPool;
 	GetActorChildren(PrefabActor, ExistingActorPool);
 
+	FPrefabInstanceTemplates* LoadState = FGlobalPrefabInstanceTemplates::Get();
+
+	{
+		UWorld* World = PrefabActor->GetWorld();
+		for (FPrefabricatorActorData& ActorItemData : PrefabAsset->ActorData) {
+			// Handle backward compatibility
+			if (!ActorItemData.ClassPathRef.IsValid()) {
+				ActorItemData.ClassPathRef = ActorItemData.ClassPath;
+			}
+
+			if (ActorItemData.ClassPathRef.GetAssetPathString() != ActorItemData.ClassPath) {
+				ActorItemData.ClassPath = ActorItemData.ClassPathRef.GetAssetPathString();
+			}
+
+			UClass* ActorClass = LoadObject<UClass>(nullptr, *ActorItemData.ClassPathRef.GetAssetPathString());
+			if (!ActorClass) continue;
+
+			AActor* Template = nullptr;
+			if (LoadState) {
+				Template = LoadState->GetTemplate(ActorItemData.PrefabItemID, PrefabAsset->LastUpdateID);
+			}
+
+			AActor* ChildActor = nullptr;
+			FTransform WorldTransform = ActorItemData.RelativeTransform * PrefabActor->GetTransform();
+			FActorSpawnParameters SpawnParams;
+			SpawnParams.OverrideLevel = PrefabActor->GetLevel();
+			SpawnParams.Template = Template;
+			SpawnParams.bDeferConstruction = true;
+
+			ChildActor = World->SpawnActor<AActor>(ActorClass, SpawnParams);
+			ChildActor->SetActorTransform(FTransform::Identity);
+			ChildActor->FinishSpawning(WorldTransform);
+			ParentActors(PrefabActor, ChildActor);
+			if (Template == nullptr) {
+				LoadActorState(ChildActor, ActorItemData, InSettings);
+			}
+
+			// Save this as a template for future reuse
+			if (LoadState && !Template) {
+				LoadState->RegisterTemplate(ActorItemData.PrefabItemID, PrefabAsset->LastUpdateID, ChildActor);
+			}
+
+			AssignAssetUserData(ChildActor, ActorItemData.PrefabItemID, PrefabActor);
+
+			if (APrefabActor* ChildPrefab = Cast<APrefabActor>(ChildActor)) {
+				SCOPE_CYCLE_COUNTER(STAT_LoadStateFromPrefabAsset5);
+				if (InSettings.bRandomizeNestedSeed && InSettings.Random) {
+					// This is a nested child prefab.  Randomize the seed of the child prefab
+					ChildPrefab->Seed = FPrefabTools::GetRandomSeed(*InSettings.Random);
+				}
+				if (InSettings.bSynchronousBuild) {
+					LoadStateFromPrefabAsset(ChildPrefab, InSettings);
+				}
+			}
+
+		}
+	}
+
+	/*
 	TMap<FGuid, AActor*> ActorByItemID;
 	for (AActor* ExistingActor : ExistingActorPool) {
 		if (ExistingActor && ExistingActor->GetRootComponent()) {
@@ -754,6 +813,7 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 			}
 		}
 	}
+	*/
 
 	// Destroy the unused actors from the pool
 	for (AActor* UnusedActor : ExistingActorPool) {
