@@ -666,6 +666,21 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 	FPrefabInstanceTemplates* LoadState = FGlobalPrefabInstanceTemplates::Get();
 	TSharedPtr<IPrefabricatorService> Service = FPrefabricatorService::Get();
 
+	TMap<FGuid, AActor*> ActorByItemID;
+	for (AActor* ExistingActor : ExistingActorPool) {
+		if (ExistingActor && ExistingActor->GetRootComponent()) {
+			UPrefabricatorAssetUserData* PrefabUserData = ExistingActor->GetRootComponent()->GetAssetUserData<UPrefabricatorAssetUserData>();
+			if (PrefabUserData && PrefabUserData->PrefabActor == PrefabActor) {
+				TArray<AActor*> ChildActors;
+				ExistingActor->GetAttachedActors(ChildActors);
+				if (ChildActors.Num() == 0) {
+					// Only reuse actors that have no children
+					ActorByItemID.Add(PrefabUserData->ItemID, ExistingActor);
+				}
+			}
+		}
+	}
+
 	if (Service.IsValid()) {
 		UWorld* World = PrefabActor->GetWorld();
 		for (FPrefabricatorActorData& ActorItemData : PrefabAsset->ActorData) {
@@ -681,37 +696,56 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 			UClass* ActorClass = LoadObject<UClass>(nullptr, *ActorItemData.ClassPathRef.GetAssetPathString());
 			if (!ActorClass) continue;
 
-			AActor* Template = nullptr;
-			if (LoadState) {
-				Template = LoadState->GetTemplate(ActorItemData.PrefabItemID, PrefabAsset->LastUpdateID);
-			}
 
 			AActor* ChildActor = nullptr;
+			if (AActor** SearchResult = ActorByItemID.Find(ActorItemData.PrefabItemID)) {
+				ChildActor = *SearchResult;
+				if (ChildActor) {
+					FString ExistingClassName = ChildActor->GetClass()->GetPathName();
+					FString RequiredClassName = ActorItemData.ClassPathRef.GetAssetPathString();
+					if (ExistingClassName == RequiredClassName) {
+						// We can reuse this actor
+						ExistingActorPool.Remove(ChildActor);
+						ActorByItemID.Remove(ActorItemData.PrefabItemID);
+					}
+					else {
+						ChildActor = nullptr;
+					}
+				}
+			}
+
 			FTransform WorldTransform = ActorItemData.RelativeTransform * PrefabActor->GetTransform();
+			if (!ChildActor) {
+				AActor* Template = nullptr;
+				if (LoadState) {
+					Template = LoadState->GetTemplate(ActorItemData.PrefabItemID, PrefabAsset->LastUpdateID);
+				}
 
-			/*
-			FActorSpawnParameters SpawnParams;
-			SpawnParams.OverrideLevel = PrefabActor->GetLevel();
-			SpawnParams.Template = Template;
-			SpawnParams.bDeferConstruction = true;
+				ChildActor = Service->SpawnActor(ActorClass, WorldTransform, PrefabActor->GetLevel(), Template);
 
-			ChildActor = World->SpawnActor<AActor>(ActorClass, SpawnParams);
-			ChildActor->SetActorTransform(FTransform::Identity);
-			ChildActor->FinishSpawning(WorldTransform);
-			ChildActor->DetachFromActor(FDetachmentTransformRules(EDetachmentRule::KeepWorld, false));
-			*/
+				ParentActors(PrefabActor, ChildActor);
+				if (Template == nullptr) {
+					LoadActorState(ChildActor, ActorItemData, InSettings);
+				}
+				// Save this as a template for future reuse
+				if (LoadState && !Template) {
+					LoadState->RegisterTemplate(ActorItemData.PrefabItemID, PrefabAsset->LastUpdateID, ChildActor);
+				}
+			}
+			else {
+				// Set the transform
+				ChildActor->DetachFromActor(FDetachmentTransformRules(EDetachmentRule::KeepWorld, true));
+				ParentActors(PrefabActor, ChildActor);
 
-			ChildActor = Service->SpawnActor(ActorClass, WorldTransform, PrefabActor->GetLevel(), Template);
-
-			ParentActors(PrefabActor, ChildActor);
-			if (Template == nullptr) {
-				LoadActorState(ChildActor, ActorItemData, InSettings);
+				// Update the world transform
+				if (ChildActor->GetRootComponent()) {
+					EComponentMobility::Type OldChildMobility = ChildActor->GetRootComponent()->Mobility;
+					ChildActor->GetRootComponent()->SetMobility(EComponentMobility::Movable);
+					ChildActor->SetActorTransform(WorldTransform);
+					ChildActor->GetRootComponent()->SetMobility(OldChildMobility);
+				}
 			}
 
-			// Save this as a template for future reuse
-			if (LoadState && !Template) {
-				LoadState->RegisterTemplate(ActorItemData.PrefabItemID, PrefabAsset->LastUpdateID, ChildActor);
-			}
 
 			AssignAssetUserData(ChildActor, ActorItemData.PrefabItemID, PrefabActor);
 
