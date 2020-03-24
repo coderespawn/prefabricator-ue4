@@ -1,4 +1,4 @@
-//$ Copyright 2015-19, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
+//$ Copyright 2015-20, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #pragma once
 #include "CoreMinimal.h"
@@ -25,10 +25,10 @@ public:
 
 	/* Position pivot on extreme corner (bottom, left up), instead of center. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, config, Category = "Settings")
-		EPrefabricatorPivotPosition PivotPosition;
+	EPrefabricatorPivotPosition PivotPosition;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, config, Category = "Settings")
-	bool bAllowDynamicUpdate;
+	bool bAllowDynamicUpdate = true;
 
 public:
 	UPrefabricatorSettings();

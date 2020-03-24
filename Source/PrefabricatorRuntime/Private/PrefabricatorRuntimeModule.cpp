@@ -1,8 +1,9 @@
-//$ Copyright 2015-19, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
+//$ Copyright 2015-20, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #include "PrefabricatorRuntimeModule.h"
 
 #include "Utils/PrefabricatorService.h"
+#include "Prefab/PrefabTools.h"
 
 class FPrefabricatorRuntime : public IPrefabricatorRuntime
 {
@@ -20,6 +21,8 @@ void FPrefabricatorRuntime::StartupModule()
 	if (!FPrefabricatorService::Get().IsValid()) {
 		FPrefabricatorService::Set(MakeShareable(new FPrefabricatorRuntimeService));
 	}
+
+	FGlobalPrefabInstanceTemplates::_CreateSingleton();
 }
 
 
@@ -27,5 +30,7 @@ void FPrefabricatorRuntime::ShutdownModule()
 {
 	// Clear the service object
 	FPrefabricatorService::Set(nullptr);
+
+	FGlobalPrefabInstanceTemplates::_ReleaseSingleton();
 }
 

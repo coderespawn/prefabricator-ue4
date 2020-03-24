@@ -1,9 +1,11 @@
-//$ Copyright 2015-19, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
+//$ Copyright 2015-20, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #include "Prefab/Random/PrefabRandomizerActor.h"
 
 #include "Prefab/PrefabActor.h"
+#include "Prefab/PrefabTools.h"
 #include "Prefab/Random/PrefabSeedLinker.h"
+#include "Utils/PrefabricatorService.h"
 
 #include "Components/BillboardComponent.h"
 #include "Components/SceneComponent.h"
@@ -38,6 +40,17 @@ void APrefabRandomizer::Tick(float DeltaSeconds)
 
 	if (BuildSystem.IsValid()) {
 		BuildSystem->Tick();
+		int32 NumRemaining = BuildSystem->GetNumPendingCommands();
+		if (NumRemaining == 0) {
+			OnRandomizationComplete.Broadcast();
+			BuildSystem = nullptr;
+
+			// Run GC in the editor
+			TSharedPtr<IPrefabricatorService> Service = FPrefabricatorService::Get();
+			if (Service.IsValid()) {
+				Service->RunGC();
+			}
+		}
 	}
 }
 
@@ -106,8 +119,16 @@ void APrefabRandomizer::Randomize(int32 InSeed)
 	}
 
 	BuildSystem = MakeShareable(new FPrefabBuildSystem(MaxBuildTimePerFrame));
+
 	for (APrefabActor* TopLevelPrefab : TopLevelPrefabs) {
-		FPrefabBuildSystemCommandPtr BuildCommand = MakeShareable(new FPrefabBuildSystemCommand_BuildPrefab(TopLevelPrefab, true, &Random));
+		FPrefabBuildSystemCommandPtr BuildCommand;
+		if (bFastSyncBuild) {
+			BuildCommand = MakeShareable(new FPrefabBuildSystemCommand_BuildPrefabSync(TopLevelPrefab, true, &Random));
+		}
+		else {
+			BuildCommand = MakeShareable(new FPrefabBuildSystemCommand_BuildPrefab(TopLevelPrefab, true, &Random));
+		}
+
 		BuildSystem->PushCommand(BuildCommand);
 	}
 

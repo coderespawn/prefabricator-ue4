@@ -1,4 +1,4 @@
-//$ Copyright 2015-19, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
+//$ Copyright 2015-20, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #include "Prefab/PrefabComponent.h"
 
@@ -34,7 +34,7 @@ void UPrefabComponent::OnRegister()
 	if (SpriteComponent)
 	{
 		SpriteComponent->SetSprite(EditorSpriteTexture);
-		SpriteComponent->RelativeScale3D = FVector(2.0f);
+		SpriteComponent->SetRelativeScale3D(FVector(2.0f));
 		SpriteComponent->SpriteInfo.Category = TEXT("Prefab");
 		SpriteComponent->SpriteInfo.DisplayName = NSLOCTEXT("PrefabComponent", "Prefab", "Prefab");
 		SpriteComponent->Mobility = EComponentMobility::Static;
@@ -58,6 +58,8 @@ FBoxSphereBounds UPrefabComponent::CalcBounds(const FTransform& LocalToWorld) co
 #if WITH_EDITOR
 void UPrefabComponent::PostEditChangeProperty(struct FPropertyChangedEvent& e)
 {
+	Super::PostEditChangeProperty(e);
+
 	if (e.Property) {
 		FName PropertyName = e.Property->GetFName();
 		if (PropertyName == GET_MEMBER_NAME_CHECKED(UPrefabComponent, PrefabAssetInterface)) {
@@ -70,7 +72,7 @@ void UPrefabComponent::PostEditChangeProperty(struct FPropertyChangedEvent& e)
 				// Update the property view so the new UI takes effect
 				TSharedPtr<IPrefabricatorService> Service = FPrefabricatorService::Get();
 				if (Service.IsValid()) {
-					Service->SetDetailsViewObject(PrefabActor);
+					Service->RefreshDetailsViewObject(PrefabActor);
 				}
 			}
 		}

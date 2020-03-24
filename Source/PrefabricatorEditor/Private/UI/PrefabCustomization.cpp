@@ -1,4 +1,4 @@
-//$ Copyright 2015-19, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
+//$ Copyright 2015-20, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #include "UI/PrefabCustomization.h"
 
@@ -20,6 +20,7 @@
 #include "Modules/ModuleManager.h"
 #include "Widgets/Input/SButton.h"
 #include "Widgets/SBoxPanel.h"
+#include "Utils/Debug/PrefabDebugActor.h"
 
 #define LOCTEXT_NAMESPACE "PrefabActorCustomization" 
 
@@ -146,7 +147,6 @@ void FPrefabActorCustomization::CustomizeDetails(IDetailLayoutBuilder& DetailBui
 			.Text(LOCTEXT("PrefabCollectionCommand_RecreateCollection", "Reload Prefab"))
 			.OnClicked(FOnClicked::CreateStatic(&FPrefabActorCustomization::HandleLoadFromAsset, &DetailBuilder))
 		];
-
 	}
 }
 
@@ -185,8 +185,7 @@ FReply FPrefabActorCustomization::HandleSaveToNewAsset(IDetailLayoutBuilder* Det
 			TArray<AActor*> Children;
 			PrefabActor->GetAttachedActors(Children);
 
-			if(Children.Num() > 0)
-			{
+			if(Children.Num() > 0) {
 				FPrefabTools::UnlinkAndDestroyPrefabActor(PrefabActor);
 				FPrefabTools::CreatePrefabFromActors(Children);
 			}
@@ -272,5 +271,56 @@ FReply FPrefabRandomizerCustomization::HandleRandomize(IDetailLayoutBuilder* Det
 	return FReply::Handled();
 }
 
-#undef LOCTEXT_NAMESPACE 
+///////////////////////////////// FPrefabRandomizerCustomization /////////////////////////////////
 
+void FPrefabDebugCustomization::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
+{
+	IDetailCategoryBuilder& Category = DetailBuilder.EditCategory("Prefab Debug", FText::GetEmpty(), ECategoryPriority::Important);
+	Category.AddCustomRow(LOCTEXT("PrefabDebugCommand_SaveFilter", "save debug prefab"))
+		.WholeRowContent()
+		[
+			SNew(SButton)
+			.Text(LOCTEXT("PrefabDebugCommand_Save", "Save Actor Data"))
+			.OnClicked(FOnClicked::CreateStatic(&FPrefabDebugCustomization::SaveDebugData, &DetailBuilder))
+		];
+
+	Category.AddCustomRow(LOCTEXT("PrefabDebugCommand_LoadFilter", "load debug prefab"))
+		.WholeRowContent()
+		[
+			SNew(SButton)
+			.Text(LOCTEXT("PrefabDebugCommand_lOAD", "Load Actor Data"))
+			.OnClicked(FOnClicked::CreateStatic(&FPrefabDebugCustomization::LoadDebugData, &DetailBuilder))
+		];
+
+}
+
+TSharedRef<IDetailCustomization> FPrefabDebugCustomization::MakeInstance()
+{
+	return MakeShareable(new FPrefabDebugCustomization);
+}
+
+FReply FPrefabDebugCustomization::SaveDebugData(IDetailLayoutBuilder* DetailBuilder)
+{
+	TArray<APrefabDebugActor*> DebugActors = GetDetailObject<APrefabDebugActor>(DetailBuilder);
+	for (APrefabDebugActor* DebugActor : DebugActors) {
+		if (DebugActor) {
+			DebugActor->SaveActorData();
+		}
+	}
+
+	return FReply::Handled();
+}
+
+FReply FPrefabDebugCustomization::LoadDebugData(IDetailLayoutBuilder* DetailBuilder)
+{
+	TArray<APrefabDebugActor*> DebugActors = GetDetailObject<APrefabDebugActor>(DetailBuilder);
+	for (APrefabDebugActor* DebugActor : DebugActors) {
+		if (DebugActor) {
+			DebugActor->LoadActorData();
+		}
+	}
+
+	return FReply::Handled();
+}
+
+#undef LOCTEXT_NAMESPACE 

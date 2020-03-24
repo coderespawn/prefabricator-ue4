@@ -1,4 +1,4 @@
-//$ Copyright 2015-19, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
+//$ Copyright 2015-20, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #include "Prefab/Random/PrefabSeedLinker.h"
 
@@ -28,7 +28,7 @@ void UPrefabSeedLinkerComponent::OnRegister()
 	if (SpriteComponent)
 	{
 		SpriteComponent->SetSprite(EditorSpriteTexture);
-		SpriteComponent->RelativeScale3D = FVector(2.0f);
+		SpriteComponent->SetRelativeScale3D(FVector(2.0f));
 		SpriteComponent->SpriteInfo.Category = TEXT("PrefabLinker");
 		SpriteComponent->SpriteInfo.DisplayName = NSLOCTEXT("PrefabLinkerComponent", "PrefabLinker", "PrefabLinker");
 		SpriteComponent->Mobility = EComponentMobility::Static;

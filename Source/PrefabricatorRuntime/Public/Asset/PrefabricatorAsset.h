@@ -1,4 +1,4 @@
-//$ Copyright 2015-19, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
+//$ Copyright 2015-20, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #pragma once
 #include "CoreMinimal.h"
@@ -74,6 +74,11 @@ struct PREFABRICATORRUNTIME_API FPrefabricatorActorData {
 
 	UPROPERTY()
 	TArray<FPrefabricatorComponentData> Components;
+
+#if WITH_EDITORONLY_DATA
+	UPROPERTY()
+	FString ActorName;
+#endif // WITH_EDITORONLY_DATA
 };
 
 struct FPrefabAssetSelectionConfig {
@@ -166,6 +171,11 @@ class PREFABRICATORRUNTIME_API UPrefabricatorAssetCollection : public UPrefabric
 public:
 	UPROPERTY(EditAnywhere, Category = "Prefabricator")
 	TArray<FPrefabricatorAssetCollectionItem> Prefabs;
+
+#if WITH_EDITORONLY_DATA
+	UPROPERTY(EditAnywhere, Category = "Prefabricator")
+	TSoftObjectPtr<UTexture2D> CustomThumbnail;
+#endif // WITH_EDITORONLY_DATA
 
 	UPROPERTY()
 	uint32 Version;

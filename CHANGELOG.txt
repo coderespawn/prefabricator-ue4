@@ -1,7 +1,25 @@
 CHANGELOG: Prefabricator
 ========================
-Version 1.2.0.hf1
+Version 1.3.1-hf1
 -----------------
+* New: Prefab Randomizer actor has a delegate to notify when randomization finishes
+
+Version 1.3.0
+-------------
+* New: Added a project setting to disable custom thumb renderer as it was causing performance issues on larger prefabs.    If it is disabled, another option will be preset to manually set the thumbnail, which would be captured from the level editor's current viewport.   (Edit > Project Settings > Prefabricator > Show Asset Thumbnails)
+
+Version 1.2.3
+-------------
+* New: Added UE 4.24 support
+
+Version 1.2.2
+-------------
+* Fix: Undo no longer crashes the editor [@grujicbr]
+
+Version 1.2.1
+-------------
+* New: Added 4.23 engine support
+* New: While saving a prefab, the names of the individual actors are also saved so they are restored correctly when the prefab is spawned
 * Fix: Added null pointer checks while serializing / deserializing prefabs to avoid crash issues with stale uobjects
 
 Version 1.2.0

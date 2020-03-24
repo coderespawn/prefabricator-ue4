@@ -1,14 +1,14 @@
-//$ Copyright 2015-19, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
+//$ Copyright 2015-20, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #include "PrefabricatorEditorModule.h"
 
 #include "Asset/PrefabricatorAsset.h"
 #include "Asset/PrefabricatorAssetBroker.h"
 #include "Asset/PrefabricatorAssetTypeActions.h"
-#include "Asset/Thumbnail/PrefabricatorAssetThumbnailRenderer.h"
 #include "Prefab/PrefabTools.h"
 #include "PrefabEditorCommands.h"
 #include "PrefabEditorStyle.h"
+#include "PrefabricatorSettings.h"
 #include "UI/EditorUIExtender.h"
 #include "UI/PrefabCustomization.h"
 #include "Utils/MapChangeHook.h"
@@ -54,16 +54,14 @@ class FPrefabricatorEditorModule : public IPrefabricatorEditorModule
 		FPropertyEditorModule& PropertyEditorModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>("PropertyEditor");
 		PropertyEditorModule.RegisterCustomClassLayout("PrefabActor", FOnGetDetailCustomizationInstance::CreateStatic(&FPrefabActorCustomization::MakeInstance));
 		PropertyEditorModule.RegisterCustomClassLayout("PrefabRandomizer", FOnGetDetailCustomizationInstance::CreateStatic(&FPrefabRandomizerCustomization::MakeInstance));
-		
+		PropertyEditorModule.RegisterCustomClassLayout("PrefabDebugActor", FOnGetDetailCustomizationInstance::CreateStatic(&FPrefabDebugCustomization::MakeInstance));
+
 		// Register the asset brokers (used for asset to component mapping)
 		PrefabAssetBroker = MakeShareable(new FPrefabricatorAssetBroker);
 		FComponentAssetBrokerage::RegisterBroker(PrefabAssetBroker, UPrefabComponent::StaticClass(), true, true);
 
 		// Override the prefabricator service with the editor version, so the runtime module can access it
 		FPrefabricatorService::Set(MakeShareable(new FPrefabricatorEditorService));
-
-		// Setup the thumbnail renderer for the prefab asset
-		UThumbnailManager::Get().RegisterCustomRenderer(UPrefabricatorAsset::StaticClass(), UPrefabricatorAssetThumbnailRenderer::StaticClass());
 	}
 
 	virtual void ShutdownModule() override {

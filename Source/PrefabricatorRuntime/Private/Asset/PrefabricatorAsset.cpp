@@ -1,4 +1,4 @@
-//$ Copyright 2015-19, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
+//$ Copyright 2015-20, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #include "Asset/PrefabricatorAsset.h"
 
@@ -6,6 +6,7 @@
 #include "PrefabricatorSettings.h"
 #include "Utils/PrefabricatorConstants.h"
 #include "Utils/PrefabricatorService.h"
+#include "Utils/PrefabricatorStats.h"
 
 #include "GameFramework/Actor.h"
 #include "Internationalization/Regex.h"
@@ -178,6 +179,7 @@ void UPrefabricatorProperty::SaveReferencedAssetValues()
 
 void UPrefabricatorProperty::LoadReferencedAssetValues()
 {
+	SCOPE_CYCLE_COUNTER(STAT_LoadReferencedAssetValues);
 	bool bModified = false;
 	for (FPrefabricatorPropertyAssetMapping& Mapping : AssetSoftReferenceMappings) {
 		// Check if the name has changed
@@ -185,34 +187,45 @@ void UPrefabricatorProperty::LoadReferencedAssetValues()
 		//	continue;
 		//}
 
-		FName ReferencedPath = Mapping.AssetReference.GetAssetPathName();
-		if (ReferencedPath.ToString().IsEmpty()) {
-			continue;
-		}
+		FName ReferencedPath;
+		{
+			//SCOPE_CYCLE_COUNTER(STAT_LoadReferencedAssetValues_GetAssetPathName);
+			ReferencedPath = Mapping.AssetReference.GetAssetPathName();
+			if (ReferencedPath.ToString().IsEmpty()) {
+				continue;
+			}
 
-		if (ReferencedPath == Mapping.AssetObjectPath) {
-			// No change in the exported text path and the referenced path
-			continue;
+			if (ReferencedPath == Mapping.AssetObjectPath) {
+				// No change in the exported text path and the referenced path
+				continue;
+			}
 		}
 
 		// The object path has changed.  Update it and mark as modified
 		FString ReplaceFrom, ReplaceTo;
-		if (Mapping.bUseQuotes) {
-			ReplaceFrom = FString::Printf(TEXT("%s\'\"%s\"\'"), *Mapping.AssetClassName, *Mapping.AssetObjectPath.ToString());
-			ReplaceTo = FString::Printf(TEXT("%s\'\"%s\"\'"), *Mapping.AssetClassName, *ReferencedPath.ToString());
-		}
-		else {
-			ReplaceFrom = FString::Printf(TEXT("%s\'%s\'"), *Mapping.AssetClassName, *Mapping.AssetObjectPath.ToString());
-			ReplaceTo = FString::Printf(TEXT("%s\'%s\'"), *Mapping.AssetClassName, *ReferencedPath.ToString());
+		{
+			SCOPE_CYCLE_COUNTER(STAT_LoadReferencedAssetValues_Replacements1);
+			if (Mapping.bUseQuotes) {
+				ReplaceFrom = FString::Printf(TEXT("%s\'\"%s\"\'"), *Mapping.AssetClassName, *Mapping.AssetObjectPath.ToString());
+				ReplaceTo = FString::Printf(TEXT("%s\'\"%s\"\'"), *Mapping.AssetClassName, *ReferencedPath.ToString());
+			}
+			else {
+				ReplaceFrom = FString::Printf(TEXT("%s\'%s\'"), *Mapping.AssetClassName, *Mapping.AssetObjectPath.ToString());
+				ReplaceTo = FString::Printf(TEXT("%s\'%s\'"), *Mapping.AssetClassName, *ReferencedPath.ToString());
+			}
 		}
 
-		ExportedValue = ExportedValue.Replace(*ReplaceFrom, *ReplaceTo);
+		{
+			SCOPE_CYCLE_COUNTER(STAT_LoadReferencedAssetValues_Replacements2);
+			ExportedValue = ExportedValue.Replace(*ReplaceFrom, *ReplaceTo);
+		}
 		Mapping.AssetObjectPath = ReferencedPath;
 
 		bModified = true;
 	}
 
 	if (bModified) {
+		SCOPE_CYCLE_COUNTER(STAT_LoadReferencedAssetValues_Modify);
 		Modify();
 	}
 }
