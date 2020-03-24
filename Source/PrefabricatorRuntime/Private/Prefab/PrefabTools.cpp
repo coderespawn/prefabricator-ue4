@@ -139,8 +139,8 @@ namespace {
 			}
 		}
 	}
-
 }
+
 APrefabActor* FPrefabTools::CreatePrefabFromActors(const TArray<AActor*>& InActors)
 {
 	TArray<AActor*> Actors;
@@ -191,11 +191,16 @@ void FPrefabTools::AssignAssetUserData(AActor* InActor, const FGuid& InItemID, A
 	if (!InActor || !InActor->GetRootComponent()) {
 		return;
 	}
-	
-	UPrefabricatorAssetUserData* PrefabUserData = NewObject<UPrefabricatorAssetUserData>(InActor->GetRootComponent());
+
+	UActorComponent* RootComponent = InActor->GetRootComponent();
+	UPrefabricatorAssetUserData* PrefabUserData = RootComponent->GetAssetUserData<UPrefabricatorAssetUserData>();
+	if (!PrefabUserData) {
+		PrefabUserData = NewObject<UPrefabricatorAssetUserData>(InActor->GetRootComponent());
+		RootComponent->AddAssetUserData(PrefabUserData);
+	}
+
 	PrefabUserData->PrefabActor = Prefab;
 	PrefabUserData->ItemID = InItemID;
-	InActor->GetRootComponent()->AddAssetUserData(PrefabUserData);
 }
 
 
@@ -514,15 +519,13 @@ void FPrefabTools::LoadActorState(AActor* InActor, const FPrefabricatorActorData
 		for (const FPrefabricatorComponentData& ComponentData : InActorData.Components) {
 			if (UActorComponent** SearchResult = ComponentsByName.Find(ComponentData.ComponentName)) {
 				UActorComponent* Component = *SearchResult;
-				//bool bPreviouslyRegister;
+				bool bPreviouslyRegister;
 				{
-					/*
 					//SCOPE_CYCLE_COUNTER(STAT_LoadActorState_UnregisterComponent);
 					bPreviouslyRegister = Component->IsRegistered();
 					if (InSettings.bUnregisterComponentsBeforeLoading && bPreviouslyRegister) {
 						Component->UnregisterComponent();
 					}
-					*/
 				}
 
 				{
@@ -531,12 +534,10 @@ void FPrefabTools::LoadActorState(AActor* InActor, const FPrefabricatorActorData
 				}
 
 				{
-					/*
 					//SCOPE_CYCLE_COUNTER(STAT_LoadActorState_RegisterComponent);
 					if (InSettings.bUnregisterComponentsBeforeLoading && bPreviouslyRegister) {
 						Component->RegisterComponent();
 					}
-					*/
 				}
 
 				// Check if we need to recreate the physics state
