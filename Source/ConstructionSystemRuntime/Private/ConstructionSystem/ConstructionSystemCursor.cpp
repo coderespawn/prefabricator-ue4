@@ -1,13 +1,15 @@
-//$ Copyright 2015-19, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
+//$ Copyright 2015-20, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #include "ConstructionSystem/ConstructionSystemCursor.h"
-#include "PrefabTools.h"
-#include "PrefabActor.h"
+
+#include "Asset/PrefabricatorAsset.h"
+#include "ConstructionSystem/ConstructionSystemSnap.h"
+#include "Prefab/PrefabActor.h"
+#include "Prefab/PrefabComponent.h"
+#include "Prefab/PrefabTools.h"
+#include "Utils/PrefabricatorFunctionLibrary.h"
+
 #include "Components/PrimitiveComponent.h"
-#include "PrefabricatorAsset.h"
-#include "PrefabComponent.h"
-#include "PrefabricatorFunctionLibrary.h"
-#include "ConstructionSystemSnap.h"
 
 void UConstructionSystemCursor::RecreateCursor(UWorld* InWorld, UPrefabricatorAssetInterface* InCursorPrefab)
 {
@@ -136,3 +138,4 @@ UPrefabricatorConstructionSnapComponent* UConstructionSystemCursor::GetActiveSna
 	}
 	return SnapComponents[ActiveSnapComponentIndex];
 }
+

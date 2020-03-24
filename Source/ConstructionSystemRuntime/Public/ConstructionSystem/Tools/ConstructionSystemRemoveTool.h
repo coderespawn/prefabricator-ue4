@@ -1,8 +1,9 @@
-//$ Copyright 2015-19, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
+//$ Copyright 2015-20, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #pragma once
 #include "CoreMinimal.h"
-#include "ConstructionSystemTool.h"
+#include "ConstructionSystem/Tools/ConstructionSystemTool.h"
+
 #include "Components/InputComponent.h"
 #include "ConstructionSystemRemoveTool.generated.h"
 
@@ -48,3 +49,4 @@ private:
 	FCSRemoveToolInputBindings InputBindings;
 
 };
+

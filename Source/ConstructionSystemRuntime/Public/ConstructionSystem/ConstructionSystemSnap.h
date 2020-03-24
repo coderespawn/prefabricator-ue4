@@ -1,9 +1,9 @@
-//$ Copyright 2015-19, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
+//$ Copyright 2015-20, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #pragma once
 #include "CoreMinimal.h"
-#include "Components/SphereComponent.h"
 #include "Components/BoxComponent.h"
+#include "Components/SphereComponent.h"
 #include "ConstructionSystemSnap.generated.h"
 
 class USphereComponent;
@@ -101,3 +101,4 @@ public:
 	/** Returns StaticMeshComponent subobject **/
 	class UPrefabricatorConstructionSnapComponent* GetSnapComponent() const { return ConstructionSnapComponent; }
 };
+

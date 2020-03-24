@@ -1,22 +1,23 @@
-//$ Copyright 2015-19, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
+//$ Copyright 2015-20, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #include "ConstructionSystem/Tools/ConstructionSystemBuildTool.h"
-#include "PrefabricatorAsset.h"
-#include "ConstructionSystemCursor.h"
-#include "Materials/MaterialInterface.h"
-#include "ConstructionSystemComponent.h"
-#include "GameFramework/PlayerController.h"
-#include "CollisionQueryParams.h"
-#include "PrefabTools.h"
-#include "Engine/World.h"
-#include "DrawDebugHelpers.h"
-#include "PrefabActor.h"
-#include "PrefabricatorFunctionLibrary.h"
-#include "PrefabComponent.h"
-#include "ConstructionSystemDefs.h"
-#include "ConstructionSystemUtils.h"
-#include "ConstructionSystemSnap.h"
 
+#include "Asset/PrefabricatorAsset.h"
+#include "ConstructionSystem/ConstructionSystemCursor.h"
+#include "ConstructionSystem/ConstructionSystemSnap.h"
+#include "ConstructionSystemComponent.h"
+#include "Prefab/PrefabActor.h"
+#include "Prefab/PrefabComponent.h"
+#include "Prefab/PrefabTools.h"
+#include "Utils/ConstructionSystemDefs.h"
+#include "Utils/ConstructionSystemUtils.h"
+#include "Utils/PrefabricatorFunctionLibrary.h"
+
+#include "CollisionQueryParams.h"
+#include "DrawDebugHelpers.h"
+#include "Engine/World.h"
+#include "GameFramework/PlayerController.h"
+#include "Materials/MaterialInterface.h"
 
 void UConstructionSystemBuildTool::InitializeTool(UConstructionSystemComponent* ConstructionComponent)
 {
@@ -316,3 +317,4 @@ void UConstructionSystemBuildTool::ConstructAtCursor()
 		}
 	}
 }
+

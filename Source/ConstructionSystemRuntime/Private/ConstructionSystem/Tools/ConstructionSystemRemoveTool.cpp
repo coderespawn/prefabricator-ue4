@@ -1,19 +1,20 @@
-//$ Copyright 2015-19, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
+//$ Copyright 2015-20, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
-#include "ConstructionSystemRemoveTool.h"
-#include "ConstructionSystemCursor.h"
+#include "ConstructionSystem/Tools/ConstructionSystemRemoveTool.h"
+
+#include "ConstructionSystem/ConstructionSystemCursor.h"
+#include "ConstructionSystem/ConstructionSystemSnap.h"
 #include "ConstructionSystemComponent.h"
-#include "ConstructionSystemUtils.h"
-#include "GameFramework/PlayerController.h"
-#include "ConstructionSystemDefs.h"
-#include "GameFramework/Pawn.h"
-#include "CollisionQueryParams.h"
-#include "Engine/World.h"
-#include "PrefabActor.h"
-#include "DrawDebugHelpers.h"
-#include "PrefabTools.h"
-#include "ConstructionSystemSnap.h"
+#include "Prefab/PrefabActor.h"
+#include "Prefab/PrefabTools.h"
+#include "Utils/ConstructionSystemDefs.h"
+#include "Utils/ConstructionSystemUtils.h"
 
+#include "CollisionQueryParams.h"
+#include "DrawDebugHelpers.h"
+#include "Engine/World.h"
+#include "GameFramework/Pawn.h"
+#include "GameFramework/PlayerController.h"
 
 void UConstructionSystemRemoveTool::InitializeTool(UConstructionSystemComponent* ConstructionComponent)
 {
@@ -117,3 +118,4 @@ void UConstructionSystemRemoveTool::UnregisterInputCallbacks(UInputComponent* In
 	InputBindings.RemoveAtCursor.ActionDelegate.Unbind();
 	InputBindings = FCSRemoveToolInputBindings();
 }
+

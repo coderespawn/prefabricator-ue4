@@ -1,10 +1,10 @@
-//$ Copyright 2015-19, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
+//$ Copyright 2015-20, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #include "ConstructionSystem/ConstructionSystemSnap.h"
-#include "Components/SphereComponent.h"
-#include "Components/ArrowComponent.h"
-#include "PrimitiveSceneProxy.h"
 
+#include "Components/ArrowComponent.h"
+#include "Components/SphereComponent.h"
+#include "PrimitiveSceneProxy.h"
 
 ///////////////////////////// UPrefabricatorBoxSnapComponent ///////////////////////////// 
 UPrefabricatorConstructionSnapComponent::UPrefabricatorConstructionSnapComponent(const FObjectInitializer& ObjectInitializer)
@@ -180,7 +180,7 @@ FPrimitiveSceneProxy* UPrefabricatorConstructionSnapComponent::CreateSceneProxy(
 APrefabricatorConstructionSnap::APrefabricatorConstructionSnap(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer) 
 {
-	bCanBeDamaged = false;
+	SetCanBeDamaged(false);
 	bRelevantForLevelBounds = false;
 
 	ConstructionSnapComponent = CreateDefaultSubobject<UPrefabricatorConstructionSnapComponent>(TEXT("SnapComponent"));

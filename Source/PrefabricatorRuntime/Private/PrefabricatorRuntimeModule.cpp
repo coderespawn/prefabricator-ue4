@@ -2,8 +2,8 @@
 
 #include "PrefabricatorRuntimeModule.h"
 
-#include "Utils/PrefabricatorService.h"
 #include "Prefab/PrefabTools.h"
+#include "Utils/PrefabricatorService.h"
 
 class FPrefabricatorRuntime : public IPrefabricatorRuntime
 {

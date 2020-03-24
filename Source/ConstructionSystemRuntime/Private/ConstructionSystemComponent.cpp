@@ -1,25 +1,27 @@
-//$ Copyright 2015-19, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
+//$ Copyright 2015-20, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #include "ConstructionSystemComponent.h"
-#include "GameFramework/PlayerController.h"
-#include "GameFramework/Pawn.h"
-#include "Engine/World.h"
-#include "ConstructionSystemTool.h"
-#include "ConstructionSystemBuildTool.h"
+
+#include "Asset/PrefabricatorAsset.h"
+#include "ConstructionSystem/Tools/ConstructionSystemBuildTool.h"
+#include "ConstructionSystem/Tools/ConstructionSystemRemoveTool.h"
+#include "ConstructionSystem/Tools/ConstructionSystemTool.h"
+#include "ConstructionSystem/UI/ConstructionSystemUI.h"
+#include "Prefab/PrefabActor.h"
+#include "Prefab/PrefabComponent.h"
+#include "Save/ConstructionSystemSaveGame.h"
+#include "Utils/ConstructionSystemUtils.h"
+#include "Utils/PrefabricatorFunctionLibrary.h"
+
+#include "Blueprint/UserWidget.h"
 #include "Engine/ActorChannel.h"
-#include "UnrealNetwork.h"
-#include "ConstructionSystemRemoveTool.h"
-#include "UserWidget.h"
-#include "ConstructionSystemUI.h"
-#include "PrefabActor.h"
-#include "PrefabricatorFunctionLibrary.h"
-#include "PrefabComponent.h"
-#include "PrefabricatorAsset.h"
-#include "ConstructionSystemSaveGame.h"
-#include "Kismet/GameplayStatics.h"
-#include "EngineUtils.h"
 #include "Engine/Engine.h"
-#include "ConstructionSystemUtils.h"
+#include "Engine/World.h"
+#include "EngineUtils.h"
+#include "GameFramework/Pawn.h"
+#include "GameFramework/PlayerController.h"
+#include "Kismet/GameplayStatics.h"
+#include "Net/UnrealNetwork.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogConstructionSystem, Log, All);
 
@@ -27,7 +29,6 @@ UConstructionSystemComponent::UConstructionSystemComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 	PrimaryComponentTick.bStartWithTickEnabled = true;
-	bReplicates = true;
 	bConstructionSystemEnabled = false;
 }
 
@@ -44,6 +45,13 @@ void UConstructionSystemComponent::EndPlay(const EEndPlayReason::Type EndPlayRea
 	Super::EndPlay(EndPlayReason);
 
 	DestroyTools();
+}
+
+void UConstructionSystemComponent::OnRegister()
+{
+	SetIsReplicated(true);
+
+	Super::OnRegister();
 }
 
 void UConstructionSystemComponent::SetActiveTool(EConstructionSystemToolType InToolType)
@@ -295,3 +303,4 @@ void UConstructionSystemComponent::ToggleConstructionSystem()
 		EnableConstructionSystem(ActiveToolType);
 	}
 }
+

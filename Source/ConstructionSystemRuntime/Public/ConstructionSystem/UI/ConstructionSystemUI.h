@@ -1,8 +1,8 @@
-//$ Copyright 2015-19, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
+//$ Copyright 2015-20, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #pragma once
 #include "CoreMinimal.h"
-#include "Interface.h"
+#include "UObject/Interface.h"
 #include "ConstructionSystemUI.generated.h"
 
 class UConstructionSystemComponent;
@@ -26,3 +26,4 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Prefabricator")
 	void SetConstructionSystem(UConstructionSystemComponent* ConstructionSystem);
 };
+

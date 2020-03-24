@@ -1,14 +1,16 @@
-//$ Copyright 2015-19, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
+//$ Copyright 2015-20, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
-#include "ConstructionSystemUtils.h"
-#include "Engine/CollisionProfile.h"
-#include "ConstructionSystemDefs.h"
-#include "ConstructionSystemSnap.h"
-#include "PrefabActor.h"
-#include "PrefabricatorAsset.h"
-#include "PrefabComponent.h"
-#include "PrefabricatorFunctionLibrary.h"
+#include "Utils/ConstructionSystemUtils.h"
+
+#include "Asset/PrefabricatorAsset.h"
+#include "ConstructionSystem/ConstructionSystemSnap.h"
 #include "ConstructionSystemComponent.h"
+#include "Prefab/PrefabActor.h"
+#include "Prefab/PrefabComponent.h"
+#include "Utils/ConstructionSystemDefs.h"
+#include "Utils/PrefabricatorFunctionLibrary.h"
+
+#include "Engine/CollisionProfile.h"
 
 ECollisionChannel FConstructionSystemUtils::FindPrefabSnapChannel()
 {
@@ -619,3 +621,4 @@ bool FConstructionSystemCollision::WallWallCollision(const FVector& ExtentA, con
 
 	return false;
 }
+

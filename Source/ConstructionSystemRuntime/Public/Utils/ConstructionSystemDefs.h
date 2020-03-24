@@ -3,7 +3,7 @@
 #pragma once
 #include "CoreMinimal.h"
 
-
 struct CONSTRUCTIONSYSTEMRUNTIME_API FConstructionSystemConstants {
 	static const FName PrefabSnapChannelName;
 };
+

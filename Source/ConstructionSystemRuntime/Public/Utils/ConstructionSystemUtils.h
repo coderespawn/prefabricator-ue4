@@ -1,4 +1,4 @@
-//$ Copyright 2015-19, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
+//$ Copyright 2015-20, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #pragma once
 #include "CoreMinimal.h"
@@ -22,3 +22,4 @@ public:
 	static bool WallWallCollision(const FVector& ExtentA, const FTransform& TransformA, const FVector& ExtentB, const FTransform& TransformB);
 	static bool WallBoxCollision(const FVector& WallExtent, const FTransform& WallTransform, const FVector& BoxExtent, const FTransform& BoxTransform);
 };
+

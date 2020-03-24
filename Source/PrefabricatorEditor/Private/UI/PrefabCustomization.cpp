@@ -9,6 +9,7 @@
 #include "Prefab/Random/PrefabRandomizerActor.h"
 #include "PrefabricatorEditorModule.h"
 #include "PrefabricatorSettings.h"
+#include "Utils/Debug/PrefabDebugActor.h"
 #include "Utils/PrefabEditorTools.h"
 
 #include "ContentBrowserModule.h"
@@ -20,7 +21,6 @@
 #include "Modules/ModuleManager.h"
 #include "Widgets/Input/SButton.h"
 #include "Widgets/SBoxPanel.h"
-#include "Utils/Debug/PrefabDebugActor.h"
 
 #define LOCTEXT_NAMESPACE "PrefabActorCustomization" 
 
@@ -324,3 +324,4 @@ FReply FPrefabDebugCustomization::LoadDebugData(IDetailLayoutBuilder* DetailBuil
 }
 
 #undef LOCTEXT_NAMESPACE 
+
