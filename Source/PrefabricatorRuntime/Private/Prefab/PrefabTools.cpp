@@ -696,7 +696,7 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 			UClass* ActorClass = LoadObject<UClass>(nullptr, *ActorItemData.ClassPathRef.GetAssetPathString());
 			if (!ActorClass) continue;
 
-
+			// Try to re-use an existing actor from this prefab
 			AActor* ChildActor = nullptr;
 			if (AActor** SearchResult = ActorByItemID.Find(ActorItemData.PrefabItemID)) {
 				ChildActor = *SearchResult;
@@ -716,6 +716,7 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 
 			FTransform WorldTransform = ActorItemData.RelativeTransform * PrefabActor->GetTransform();
 			if (!ChildActor) {
+				// Create a new child actor.  Try to create it from an existing template actor that is already preset in the scene
 				AActor* Template = nullptr;
 				if (LoadState) {
 					Template = LoadState->GetTemplate(ActorItemData.PrefabItemID, PrefabAsset->LastUpdateID);
@@ -725,19 +726,21 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 
 				ParentActors(PrefabActor, ChildActor);
 				if (Template == nullptr) {
+					// We couldn't use a template,  so load the prefab properties in
 					LoadActorState(ChildActor, ActorItemData, InSettings);
 				}
+
 				// Save this as a template for future reuse
 				if (LoadState && !Template) {
 					LoadState->RegisterTemplate(ActorItemData.PrefabItemID, PrefabAsset->LastUpdateID, ChildActor);
 				}
 			}
 			else {
-				// Set the transform
+				// This actor was reused.  re-parent it
 				ChildActor->DetachFromActor(FDetachmentTransformRules(EDetachmentRule::KeepWorld, true));
 				ParentActors(PrefabActor, ChildActor);
 
-				// Update the world transform
+				// Update the world transform.   The reuse happens only on leaf actors (which don't have any further child actors)
 				if (ChildActor->GetRootComponent()) {
 					EComponentMobility::Type OldChildMobility = ChildActor->GetRootComponent()->Mobility;
 					ChildActor->GetRootComponent()->SetMobility(EComponentMobility::Movable);
@@ -745,7 +748,6 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 					ChildActor->GetRootComponent()->SetMobility(OldChildMobility);
 				}
 			}
-
 
 			AssignAssetUserData(ChildActor, ActorItemData.PrefabItemID, PrefabActor);
 
