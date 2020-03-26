@@ -22,20 +22,37 @@ void UConstructionSystemCursor::RecreateCursor(UWorld* InWorld, UPrefabricatorAs
 
 
 			FRandomStream RandomStream(CursorSeed);
-			UPrefabricatorBlueprintLibrary::RandomizePrefab(CursorGhostActor, RandomStream);
+
+			CursorGhostActor->RandomizeSeed(RandomStream);
+
+			FPrefabLoadSettings LoadSettings;
+			LoadSettings.bRandomizeNestedSeed = true;
+			LoadSettings.Random = &RandomStream;
+			LoadSettings.bCanLoadFromCachedTemplate = false;
+			LoadSettings.bCanSaveToCachedTemplate = false;
+			FPrefabTools::LoadStateFromPrefabAsset(CursorGhostActor, LoadSettings);
+
 			CursorGhostActor->GetRootComponent()->SetMobility(EComponentMobility::Movable);
 
 			FPrefabTools::IterateChildrenRecursive(CursorGhostActor, [this](AActor* ChildActor) {
-				for (UActorComponent* Component : ChildActor->GetComponents()) {
-					if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component)) {
-						if (!Primitive->IsA<UPrefabricatorConstructionSnapComponent>()) {
-							// Disable collision
-							Primitive->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-						}
+				if (ChildActor) {
+					if (ChildActor->GetRootComponent()) {
+						ChildActor->GetRootComponent()->SetMobility(EComponentMobility::Movable);
 					}
 
-					if (UPrefabricatorConstructionSnapComponent* SnapComponent = Cast<UPrefabricatorConstructionSnapComponent>(Component)) {
-						SnapComponents.Add(SnapComponent);
+					ChildActor->SetActorEnableCollision(false);
+
+					for (UActorComponent* Component : ChildActor->GetComponents()) {
+						if (UPrimitiveComponent* Primitive = Cast<UPrimitiveComponent>(Component)) {
+							if (!Primitive->IsA<UPrefabricatorConstructionSnapComponent>()) {
+								// Disable collision
+								Primitive->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+							}
+						}
+
+						if (UPrefabricatorConstructionSnapComponent* SnapComponent = Cast<UPrefabricatorConstructionSnapComponent>(Component)) {
+							SnapComponents.Add(SnapComponent);
+						}
 					}
 				}
 			});

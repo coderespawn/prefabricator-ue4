@@ -12,6 +12,8 @@ struct PREFABRICATORRUNTIME_API FPrefabLoadSettings {
 	bool bUnregisterComponentsBeforeLoading = true;
 	bool bRandomizeNestedSeed = false;
 	bool bSynchronousBuild = true;
+	bool bCanLoadFromCachedTemplate = true;
+	bool bCanSaveToCachedTemplate = true;
 	const FRandomStream* Random = nullptr;
 };
 
@@ -80,6 +82,9 @@ public:
 private:
 	static void UpgradeFromVersion_InitialVersion(UPrefabricatorAsset* Prefab);
 	static void UpgradeFromVersion_AddedSoftReferences(UPrefabricatorAsset* Prefab);
+	static void UpgradeFromVersion_AddedSoftReferencesPrefabFix(UPrefabricatorAsset* Prefab);
 
+private:
+	static void RefreshReferenceList(UPrefabricatorAsset* Prefab);
 };
 

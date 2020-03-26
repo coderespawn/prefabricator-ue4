@@ -213,7 +213,7 @@ void UConstructionSystemComponent::BindInput(UInputComponent* InputComponent)
 
 void UConstructionSystemComponent::CreateBuildMenu()
 {
-	if (BuildMenuUI) {
+	if (BuildMenuUI && BuildMenuData) {
 		APlayerController* PlayerController = GetPlayerController();
 		if (PlayerController) {
 			BuildMenuUIInstance = CreateWidget(PlayerController, BuildMenuUI);

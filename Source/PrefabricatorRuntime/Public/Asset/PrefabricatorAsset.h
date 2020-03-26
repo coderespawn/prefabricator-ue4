@@ -112,6 +112,7 @@ public:
 enum class EPrefabricatorAssetVersion {
 	InitialVersion = 0,
 	AddedSoftReference,
+	AddedSoftReference_PrefabFix,
 
 	//----------- Versions should be placed above this line -----------------
 	LastVersionPlusOne,

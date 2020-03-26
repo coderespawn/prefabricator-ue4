@@ -725,7 +725,7 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 			if (!ChildActor) {
 				// Create a new child actor.  Try to create it from an existing template actor that is already preset in the scene
 				AActor* Template = nullptr;
-				if (LoadState) {
+				if (LoadState && InSettings.bCanLoadFromCachedTemplate) {
 					Template = LoadState->GetTemplate(ActorItemData.PrefabItemID, PrefabAsset->LastUpdateID);
 				}
 
@@ -738,7 +738,7 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 				}
 
 				// Save this as a template for future reuse
-				if (LoadState && !Template) {
+				if (LoadState && !Template && InSettings.bCanSaveToCachedTemplate) {
 					LoadState->RegisterTemplate(ActorItemData.PrefabItemID, PrefabAsset->LastUpdateID, ChildActor);
 				}
 			}
@@ -791,7 +791,11 @@ void FPrefabVersionControl::UpgradeToLatestVersion(UPrefabricatorAsset* PrefabAs
 	}
 
 	if (PrefabAsset->Version == (int32)EPrefabricatorAssetVersion::AddedSoftReference) {
-		// TODO: Handle any future upgrades here to move the asset to the next version
+		UpgradeFromVersion_AddedSoftReferences(PrefabAsset);
+	}
+
+	if (PrefabAsset->Version == (int32)EPrefabricatorAssetVersion::AddedSoftReference_PrefabFix) {
+		UpgradeFromVersion_AddedSoftReferencesPrefabFix(PrefabAsset);
 	}
 
 	//....
@@ -802,6 +806,29 @@ void FPrefabVersionControl::UpgradeFromVersion_InitialVersion(UPrefabricatorAsse
 {
 	check(PrefabAsset->Version == (int32)EPrefabricatorAssetVersion::InitialVersion);
 
+	RefreshReferenceList(PrefabAsset);
+
+	PrefabAsset->Version = (int32)EPrefabricatorAssetVersion::AddedSoftReference;
+}
+
+void FPrefabVersionControl::UpgradeFromVersion_AddedSoftReferences(UPrefabricatorAsset* PrefabAsset)
+{
+	check(PrefabAsset->Version == (int32)EPrefabricatorAssetVersion::AddedSoftReference);
+
+	RefreshReferenceList(PrefabAsset);
+
+	PrefabAsset->Version = (int32)EPrefabricatorAssetVersion::AddedSoftReference_PrefabFix;
+}
+
+void FPrefabVersionControl::UpgradeFromVersion_AddedSoftReferencesPrefabFix(UPrefabricatorAsset* PrefabAsset)
+{
+	check(PrefabAsset->Version == (int32)EPrefabricatorAssetVersion::AddedSoftReference_PrefabFix);
+
+	// Handle upgrade here to move to the next version
+}
+
+void FPrefabVersionControl::RefreshReferenceList(UPrefabricatorAsset* PrefabAsset)
+{
 	for (FPrefabricatorActorData& Entry : PrefabAsset->ActorData) {
 		for (UPrefabricatorProperty* ActorProperty : Entry.Properties) {
 			ActorProperty->SaveReferencedAssetValues();
@@ -814,19 +841,8 @@ void FPrefabVersionControl::UpgradeFromVersion_InitialVersion(UPrefabricatorAsse
 		}
 	}
 
-	PrefabAsset->Version = (int32)EPrefabricatorAssetVersion::AddedSoftReference;
 	PrefabAsset->Modify();
 }
-
-void FPrefabVersionControl::UpgradeFromVersion_AddedSoftReferences(UPrefabricatorAsset* PrefabAsset)
-{
-	check(PrefabAsset->Version == (int32)EPrefabricatorAssetVersion::AddedSoftReference);
-
-	// Handle future version upgrade here to move to next version
-}
-
-#undef LOCTEXT_NAMESPACE
-
 
 /////////////////////// FGlobalPrefabLoadState /////////////////////// 
 
@@ -869,3 +885,8 @@ AActor* FPrefabInstanceTemplates::GetTemplate(const FGuid& InPrefabItemId, FGuid
 
 	return Actor;
 }
+
+
+
+
+#undef LOCTEXT_NAMESPACE
