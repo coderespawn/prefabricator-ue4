@@ -6,7 +6,7 @@ namespace UnrealBuildTool.Rules
 	{
 		public ConstructionSystemEditor(ReadOnlyTargetRules Target) : base(Target)
         {
-            bFasterWithoutUnity = true;
+            bUseUnity = false;
             PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
             PublicIncludePaths.AddRange(
 				new string[] {
