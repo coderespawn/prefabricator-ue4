@@ -2,7 +2,9 @@
 	"plugin_modules": [
 		"PrefabricatorRuntime", 
 		"PrefabricatorEditor",
-		"PrefabricatorEditorPostInit"
+		"PrefabricatorEditorPostInit",
+		"ConstructionSystemEditor",
+		"ConstructionSystemRuntime"
 	],
 	"engine_version": "4.24"
 }

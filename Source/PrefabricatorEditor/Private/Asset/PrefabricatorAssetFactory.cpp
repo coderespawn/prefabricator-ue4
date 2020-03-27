@@ -1,4 +1,4 @@
-//$ Copyright 2015-19, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
+//$ Copyright 2015-20, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #include "Asset/PrefabricatorAssetFactory.h"
 
@@ -40,3 +40,4 @@ UObject* UPrefabricatorAssetCollectionFactory::FactoryCreateNew(UClass* Class, U
 	UPrefabricatorAssetCollection* NewAsset = NewObject<UPrefabricatorAssetCollection>(InParent, Class, Name, Flags | RF_Transactional);
 	return NewAsset;
 }
+

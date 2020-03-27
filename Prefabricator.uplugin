@@ -49,6 +49,30 @@
 				"Android", 
 				"IOS"
 			]
+		},
+		{
+			"Name" : "ConstructionSystemRuntime",
+			"Type" : "Runtime",
+			"LoadingPhase" : "PreDefault",
+			"WhitelistPlatforms" : [
+				"Win32", 
+				"Win64", 
+				"Mac", 
+				"Android", 
+				"IOS"
+			]
+		},
+		{
+			"Name" : "ConstructionSystemEditor",
+			"Type" : "Editor",
+			"LoadingPhase" : "Default",
+			"WhitelistPlatforms" : [
+				"Win32", 
+				"Win64", 
+				"Mac", 
+				"Android", 
+				"IOS"
+			]
 		}
 	],
 

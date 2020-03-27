@@ -1,4 +1,4 @@
-//$ Copyright 2015-19, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
+//$ Copyright 2015-20, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #pragma once
 #include "CoreMinimal.h"
@@ -29,9 +29,6 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, config, Category = "Settings")
 	bool bAllowDynamicUpdate = true;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, config, Category = "Settings", meta = (ConfigRestartRequired = true))
-	bool bShowAssetThumbnails = true;
 
 public:
 	UPrefabricatorSettings();

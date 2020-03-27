@@ -1,4 +1,4 @@
-//$ Copyright 2015-19, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
+//$ Copyright 2015-20, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #include "Prefab/PrefabActor.h"
 
@@ -6,6 +6,7 @@
 #include "Asset/PrefabricatorAssetUserData.h"
 #include "Prefab/PrefabComponent.h"
 #include "Prefab/PrefabTools.h"
+#include "Utils/PrefabricatorStats.h"
 
 #include "Components/BillboardComponent.h"
 #include "Engine/PointLight.h"
@@ -67,6 +68,7 @@ void APrefabActor::PostActorCreated()
 {
 	Super::PostActorCreated();
 
+	LoadPrefab();
 }
 
 #if WITH_EDITOR
@@ -103,7 +105,7 @@ FName APrefabActor::GetCustomIconName() const
 
 void APrefabActor::LoadPrefab()
 {
-	FPrefabTools::LoadStateFromPrefabAsset(this);
+	FPrefabTools::LoadStateFromPrefabAsset(this, FPrefabLoadSettings());
 }
 
 void APrefabActor::SavePrefab()
@@ -205,7 +207,10 @@ void FPrefabBuildSystemCommand_BuildPrefab::Execute(FPrefabBuildSystem& BuildSys
 		// Nested prefabs will be recursively build on the stack over multiple frames
 		LoadSettings.bSynchronousBuild = false;
 
-		FPrefabTools::LoadStateFromPrefabAsset(Prefab.Get(), LoadSettings);
+		{
+			SCOPE_CYCLE_COUNTER(STAT_Randomize_LoadPrefab);
+			FPrefabTools::LoadStateFromPrefabAsset(Prefab.Get(), LoadSettings);
+		}
 
 		// Push a build complete notification request. Since this is a stack, it will execute after all the children are processed below
 		FPrefabBuildSystemCommandPtr ChildBuildCommand = MakeShareable(new FPrefabBuildSystemCommand_NotifyBuildComplete(Prefab));
@@ -214,7 +219,10 @@ void FPrefabBuildSystemCommand_BuildPrefab::Execute(FPrefabBuildSystem& BuildSys
 
 	// Add the child prefabs to the stack
 	TArray<AActor*> ChildActors;
-	Prefab->GetAttachedActors(ChildActors);
+	{
+		SCOPE_CYCLE_COUNTER(STAT_Randomize_GetChildActor);
+		Prefab->GetAttachedActors(ChildActors);
+	}
 	for (AActor* ChildActor : ChildActors) {
 		if (APrefabActor* ChildPrefab = Cast<APrefabActor>(ChildActor)) {
 			FPrefabBuildSystemCommandPtr ChildBuildCommand = MakeShareable(new FPrefabBuildSystemCommand_BuildPrefab(ChildPrefab, bRandomizeNestedSeed, Random));
@@ -222,6 +230,32 @@ void FPrefabBuildSystemCommand_BuildPrefab::Execute(FPrefabBuildSystem& BuildSys
 		}
 	}
 }
+
+/////////////////////////////////////
+
+FPrefabBuildSystemCommand_BuildPrefabSync::FPrefabBuildSystemCommand_BuildPrefabSync(TWeakObjectPtr<APrefabActor> InPrefab, bool bInRandomizeNestedSeed, FRandomStream* InRandom)
+	: Prefab(InPrefab)
+	, bRandomizeNestedSeed(bInRandomizeNestedSeed)
+	, Random(InRandom) 
+{
+}
+
+void FPrefabBuildSystemCommand_BuildPrefabSync::Execute(FPrefabBuildSystem& BuildSystem)
+{
+	double StartTime = FPlatformTime::Seconds();
+	if (Prefab.IsValid()) {
+		Prefab->RandomizeSeed(*Random);
+
+		FPrefabLoadSettings LoadSettings;
+		LoadSettings.bRandomizeNestedSeed = true;
+		LoadSettings.Random = Random;
+		FPrefabTools::LoadStateFromPrefabAsset(Prefab.Get(), LoadSettings);
+	}
+	double EndTime = FPlatformTime::Seconds();
+	UE_LOG(LogTemp, Warning, TEXT("Exec Time: %fs"), (EndTime - StartTime));
+}
+
+/////////////////////////////////////
 
 FPrefabBuildSystemCommand_NotifyBuildComplete::FPrefabBuildSystemCommand_NotifyBuildComplete(TWeakObjectPtr<APrefabActor> InPrefab)
 	: Prefab(InPrefab)
@@ -235,7 +269,6 @@ void FPrefabBuildSystemCommand_NotifyBuildComplete::Execute(FPrefabBuildSystem& 
 		Prefab->HandleBuildComplete();
 	}
 }
-
 
 
 /////////////////////////////////////
@@ -262,3 +295,4 @@ void AReplicablePrefabActor::BeginPlay()
 
 	Super::BeginPlay();
 }
+

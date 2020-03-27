@@ -1,4 +1,4 @@
-//$ Copyright 2015-19, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
+//$ Copyright 2015-20, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #include "PrefabEditorStyle.h"
 
@@ -66,6 +66,7 @@ TSharedRef< class FSlateStyleSet > FPrefabEditorStyle::Create()
 	{
 		Style.Set("Prefabricator.ContextMenu.Icon", new IMAGE_PLUGIN_BRUSH("PrefabTool/Icons/Icon_Prefab_16", Icon16x16));
 		Style.Set("Prefabricator.CreatePrefab", new IMAGE_PLUGIN_BRUSH("PrefabTool/Icons/Icon_Prefab_48", Icon48x48));
+		Style.Set("Prefabricator.CreatePrefab.Small", new IMAGE_PLUGIN_BRUSH("PrefabTool/Icons/Icon_Prefab_16a", Icon16x16));
 
 		Style.Set("ClassIcon.PrefabActor", new IMAGE_PLUGIN_BRUSH("PrefabTool/Icons/Icon_Prefab_16", Icon16x16));
 		Style.Set("ClassIcon.PrefabRandomizerActor", new IMAGE_PLUGIN_BRUSH("PrefabTool/Icons/Icon_randomizer_16", Icon16x16));
