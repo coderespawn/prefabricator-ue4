@@ -1,4 +1,4 @@
-//$ Copyright 2015-19, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
+//$ Copyright 2015-20, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #include "Asset/PrefabricatorAsset.h"
 
@@ -6,6 +6,7 @@
 #include "PrefabricatorSettings.h"
 #include "Utils/PrefabricatorConstants.h"
 #include "Utils/PrefabricatorService.h"
+#include "Utils/PrefabricatorStats.h"
 
 #include "GameFramework/Actor.h"
 #include "Internationalization/Regex.h"
@@ -128,56 +129,61 @@ void UPrefabricatorEventListener::PostSpawn_Implementation(APrefabActor* Prefab)
 
 }
 
+namespace {
+	static const FString PrefabAssetInterfaceRefProperty = "PrefabAssetInterface";
+}
+
 void UPrefabricatorProperty::SaveReferencedAssetValues()
 {
 	AssetSoftReferenceMappings.Reset();
 
-	const FString SoftReferenceSearchPattern = "([A-Za-z0-9_]+)'(.*?)'";
-
-	const FRegexPattern Pattern(*SoftReferenceSearchPattern);
-	FRegexMatcher Matcher(Pattern, *ExportedValue);
-
-	while (Matcher.FindNext()) {
-		FString FullPath = Matcher.GetCaptureGroup(0);
-		FString ClassName = Matcher.GetCaptureGroup(1);
-		FString ObjectPath = Matcher.GetCaptureGroup(2);
-		if (ClassName == "PrefabricatorAssetUserData") {
-			continue;
-		}
-		bool bUseQuotes = false;
-		if (ObjectPath.Len() >= 2 && ObjectPath.StartsWith("\"") && ObjectPath.EndsWith("\"")) {
-			ObjectPath = ObjectPath.Mid(1, ObjectPath.Len() - 2);
-			bUseQuotes = true;
-		}
-
-		/*
-		int32 StartIdx = Matcher.GetMatchBeginning();
-		int32 EndIdx = Matcher.GetMatchEnding();
-		FString AssetPath = ExportedValue.Mid(StartIdx, EndIdx - StartIdx + 1);
-		if (AssetPath.StartsWith("PrefabricatorAssetUserData")) {		// TODO: Get this name from the static class
-			continue;
-		}
-		*/
-
-		FSoftObjectPath SoftPath(ObjectPath);
-
+	if (PropertyName == PrefabAssetInterfaceRefProperty) {
+		FSoftObjectPath SoftPath(ExportedValue);
 		FPrefabricatorPropertyAssetMapping Mapping;
 		Mapping.AssetReference = SoftPath;
-		//if (Mapping.AssetReference.IsValid()) 
-		{
-			//FString ObjectPathString;
-			//FPackageName::ParseExportTextPath(AssetPath, &Mapping.AssetClassName, &ObjectPathString);
-			Mapping.AssetClassName = ClassName;
-			Mapping.AssetObjectPath = *ObjectPath;
-			Mapping.bUseQuotes = bUseQuotes;
-			AssetSoftReferenceMappings.Add(Mapping);
-			UE_LOG(LogPrefabricatorAsset, Log, TEXT("######>>> Found Asset: [%s][%s] | %s"), *Mapping.AssetClassName, *Mapping.AssetObjectPath.ToString(), *Mapping.AssetReference.GetAssetPathName().ToString());
+		Mapping.AssetClassName = "";		// Not used, since it is handled differently during load
+		Mapping.AssetObjectPath = *ExportedValue;
+		Mapping.bUseQuotes = false;
+		AssetSoftReferenceMappings.Add(Mapping);
+		//UE_LOG(LogPrefabricatorAsset, Log, TEXT("######>>> Found Child Prefab Ref: %s"), *Mapping.AssetReference.GetAssetPathName().ToString());
+	}
+	else {
+		static const FString SoftReferenceSearchPattern = "([A-Za-z0-9_]+)'(.*?)'";
+
+		const FRegexPattern Pattern(*SoftReferenceSearchPattern);
+		FRegexMatcher Matcher(Pattern, *ExportedValue);
+
+		while (Matcher.FindNext()) {
+			FString FullPath = Matcher.GetCaptureGroup(0);
+			FString ClassName = Matcher.GetCaptureGroup(1);
+			FString ObjectPath = Matcher.GetCaptureGroup(2);
+			if (ClassName == "PrefabricatorAssetUserData") {
+				continue;
+			}
+			bool bUseQuotes = false;
+			if (ObjectPath.Len() >= 2 && ObjectPath.StartsWith("\"") && ObjectPath.EndsWith("\"")) {
+				ObjectPath = ObjectPath.Mid(1, ObjectPath.Len() - 2);
+				bUseQuotes = true;
+			}
+
+			FSoftObjectPath SoftPath(ObjectPath);
+
+			FPrefabricatorPropertyAssetMapping Mapping;
+			Mapping.AssetReference = SoftPath;
+			{
+				Mapping.AssetClassName = ClassName;
+				Mapping.AssetObjectPath = *ObjectPath;
+				Mapping.bUseQuotes = bUseQuotes;
+				AssetSoftReferenceMappings.Add(Mapping);
+				//UE_LOG(LogPrefabricatorAsset, Log, TEXT("######>>> Found Asset Ref: [%s][%s] | %s"), *Mapping.AssetClassName, *Mapping.AssetObjectPath.ToString(), *Mapping.AssetReference.GetAssetPathName().ToString());
+			}
 		}
 	}
 }
 
 void UPrefabricatorProperty::LoadReferencedAssetValues()
 {
+	SCOPE_CYCLE_COUNTER(STAT_LoadReferencedAssetValues);
 	bool bModified = false;
 	for (FPrefabricatorPropertyAssetMapping& Mapping : AssetSoftReferenceMappings) {
 		// Check if the name has changed
@@ -185,34 +191,49 @@ void UPrefabricatorProperty::LoadReferencedAssetValues()
 		//	continue;
 		//}
 
-		FName ReferencedPath = Mapping.AssetReference.GetAssetPathName();
-		if (ReferencedPath.ToString().IsEmpty()) {
-			continue;
-		}
+		FName ReferencedPath;
+		{
+			//SCOPE_CYCLE_COUNTER(STAT_LoadReferencedAssetValues_GetAssetPathName);
+			ReferencedPath = Mapping.AssetReference.GetAssetPathName();
+			if (ReferencedPath.ToString().IsEmpty()) {
+				continue;
+			}
 
-		if (ReferencedPath == Mapping.AssetObjectPath) {
-			// No change in the exported text path and the referenced path
-			continue;
+			if (ReferencedPath == Mapping.AssetObjectPath) {
+				// No change in the exported text path and the referenced path
+				continue;
+			}
 		}
 
 		// The object path has changed.  Update it and mark as modified
 		FString ReplaceFrom, ReplaceTo;
-		if (Mapping.bUseQuotes) {
-			ReplaceFrom = FString::Printf(TEXT("%s\'\"%s\"\'"), *Mapping.AssetClassName, *Mapping.AssetObjectPath.ToString());
-			ReplaceTo = FString::Printf(TEXT("%s\'\"%s\"\'"), *Mapping.AssetClassName, *ReferencedPath.ToString());
+		if (PropertyName == PrefabAssetInterfaceRefProperty) {
+			ReplaceFrom = Mapping.AssetObjectPath.ToString();
+			ReplaceTo = ReferencedPath.ToString();
 		}
 		else {
-			ReplaceFrom = FString::Printf(TEXT("%s\'%s\'"), *Mapping.AssetClassName, *Mapping.AssetObjectPath.ToString());
-			ReplaceTo = FString::Printf(TEXT("%s\'%s\'"), *Mapping.AssetClassName, *ReferencedPath.ToString());
+			SCOPE_CYCLE_COUNTER(STAT_LoadReferencedAssetValues_Replacements1);
+			if (Mapping.bUseQuotes) {
+				ReplaceFrom = FString::Printf(TEXT("%s\'\"%s\"\'"), *Mapping.AssetClassName, *Mapping.AssetObjectPath.ToString());
+				ReplaceTo = FString::Printf(TEXT("%s\'\"%s\"\'"), *Mapping.AssetClassName, *ReferencedPath.ToString());
+			}
+			else {
+				ReplaceFrom = FString::Printf(TEXT("%s\'%s\'"), *Mapping.AssetClassName, *Mapping.AssetObjectPath.ToString());
+				ReplaceTo = FString::Printf(TEXT("%s\'%s\'"), *Mapping.AssetClassName, *ReferencedPath.ToString());
+			}
 		}
 
-		ExportedValue = ExportedValue.Replace(*ReplaceFrom, *ReplaceTo);
+		{
+			SCOPE_CYCLE_COUNTER(STAT_LoadReferencedAssetValues_Replacements2);
+			ExportedValue = ExportedValue.Replace(*ReplaceFrom, *ReplaceTo);
+		}
 		Mapping.AssetObjectPath = ReferencedPath;
 
 		bModified = true;
 	}
 
 	if (bModified) {
+		SCOPE_CYCLE_COUNTER(STAT_LoadReferencedAssetValues_Modify);
 		Modify();
 	}
 }

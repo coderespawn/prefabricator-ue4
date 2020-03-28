@@ -1,4 +1,4 @@
-//$ Copyright 2015-19, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
+//$ Copyright 2015-20, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #pragma once
 #include "CoreMinimal.h"
@@ -76,6 +76,18 @@ private:
 	FRandomStream* Random = nullptr;
 };
 
+class PREFABRICATORRUNTIME_API FPrefabBuildSystemCommand_BuildPrefabSync : public FPrefabBuildSystemCommand {
+public:
+	FPrefabBuildSystemCommand_BuildPrefabSync(TWeakObjectPtr<APrefabActor> InPrefab, bool bInRandomizeNestedSeed, FRandomStream* InRandom);
+
+	virtual void Execute(FPrefabBuildSystem& BuildSystem) override;
+
+private:
+	TWeakObjectPtr<APrefabActor> Prefab;
+	bool bRandomizeNestedSeed = false;
+	FRandomStream* Random = nullptr;
+};
+
 class PREFABRICATORRUNTIME_API FPrefabBuildSystemCommand_NotifyBuildComplete : public FPrefabBuildSystemCommand {
 public:
 	FPrefabBuildSystemCommand_NotifyBuildComplete(TWeakObjectPtr<APrefabActor> InPrefab);
@@ -109,3 +121,4 @@ public:
 	virtual void BeginPlay() override;
 
 };
+
