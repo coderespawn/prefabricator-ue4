@@ -9,6 +9,7 @@
 #include "Prefab/Random/PrefabRandomizerActor.h"
 #include "PrefabricatorEditorModule.h"
 #include "PrefabricatorSettings.h"
+#include "Utils/Debug/PrefabDebugActor.h"
 #include "Utils/PrefabEditorTools.h"
 
 #include "ContentBrowserModule.h"
@@ -146,22 +147,6 @@ void FPrefabActorCustomization::CustomizeDetails(IDetailLayoutBuilder& DetailBui
 			.Text(LOCTEXT("PrefabCollectionCommand_RecreateCollection", "Reload Prefab"))
 			.OnClicked(FOnClicked::CreateStatic(&FPrefabActorCustomization::HandleLoadFromAsset, &DetailBuilder))
 		];
-
-	}
-
-
-	const UPrefabricatorSettings* PS = GetDefault<UPrefabricatorSettings>();
-	if (!PS->bShowAssetThumbnails)
-	{
-		// Add an option to save the viewport image as a thumbnail for the asset
-		IDetailCategoryBuilder& Category = DetailBuilder.EditCategory("Prefab Collection Actions", FText::GetEmpty(), ECategoryPriority::Important);
-		Category.AddCustomRow(LOCTEXT("PrefabThumb_Filter", "thumbnail thumb"))
-			.WholeRowContent()
-			[
-				SNew(SButton)
-				.Text(LOCTEXT("PrefabThumbCommand_SaveThumbnail", "Update Thumbnail"))
-			.OnClicked(FOnClicked::CreateStatic(&FPrefabActorCustomization::UpdateThumbFromViewport, &DetailBuilder))
-			];
 	}
 }
 
@@ -200,8 +185,7 @@ FReply FPrefabActorCustomization::HandleSaveToNewAsset(IDetailLayoutBuilder* Det
 			TArray<AActor*> Children;
 			PrefabActor->GetAttachedActors(Children);
 
-			if(Children.Num() > 0)
-			{
+			if(Children.Num() > 0) {
 				FPrefabTools::UnlinkAndDestroyPrefabActor(PrefabActor);
 				FPrefabTools::CreatePrefabFromActors(Children);
 			}
@@ -233,8 +217,7 @@ FReply FPrefabActorCustomization::RandomizePrefabCollection(IDetailLayoutBuilder
 			FPrefabLoadSettings LoadSettings;
 			LoadSettings.bRandomizeNestedSeed = true;
 			LoadSettings.Random = &Random;
-			FPrefabLoadStatePtr LoadState = MakeShareable(new FPrefabLoadState);
-			FPrefabTools::LoadStateFromPrefabAsset(PrefabActor, LoadSettings, LoadState);
+			FPrefabTools::LoadStateFromPrefabAsset(PrefabActor, LoadSettings);
 		}
 	}
 	return FReply::Handled();
@@ -247,23 +230,6 @@ FReply FPrefabActorCustomization::UnlinkPrefab(IDetailLayoutBuilder* DetailBuild
 	for (APrefabActor* PrefabActor : PrefabActors) {
 		if (PrefabActor) {
 			FPrefabTools::UnlinkAndDestroyPrefabActor(PrefabActor);
-		}
-	}
-	return FReply::Handled();
-}
-
-FReply FPrefabActorCustomization::UpdateThumbFromViewport(IDetailLayoutBuilder* DetailBuilder)
-{
-	if (GEditor) {
-		TArray<APrefabActor*> PrefabActors = GetDetailObject<APrefabActor>(DetailBuilder);
-		for (APrefabActor* PrefabActor : PrefabActors) {
-			if (PrefabActor) {
-				UPrefabricatorAsset* Asset = PrefabActor->GetPrefabAsset();
-				IContentBrowserSingleton& ContentBrowser = FModuleManager::LoadModuleChecked<FContentBrowserModule>("ContentBrowser").Get();
-				TArray<FAssetData> AssetList;
-				AssetList.Add(FAssetData(Asset));
-				ContentBrowser.CaptureThumbnailFromViewport(GEditor->GetActiveViewport(), AssetList);
-			}
 		}
 	}
 	return FReply::Handled();
@@ -299,6 +265,58 @@ FReply FPrefabRandomizerCustomization::HandleRandomize(IDetailLayoutBuilder* Det
 			}
 
 			PrefabRandomizer->Randomize(FMath::Rand());
+		}
+	}
+
+	return FReply::Handled();
+}
+
+///////////////////////////////// FPrefabRandomizerCustomization /////////////////////////////////
+
+void FPrefabDebugCustomization::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
+{
+	IDetailCategoryBuilder& Category = DetailBuilder.EditCategory("Prefab Debug", FText::GetEmpty(), ECategoryPriority::Important);
+	Category.AddCustomRow(LOCTEXT("PrefabDebugCommand_SaveFilter", "save debug prefab"))
+		.WholeRowContent()
+		[
+			SNew(SButton)
+			.Text(LOCTEXT("PrefabDebugCommand_Save", "Save Actor Data"))
+			.OnClicked(FOnClicked::CreateStatic(&FPrefabDebugCustomization::SaveDebugData, &DetailBuilder))
+		];
+
+	Category.AddCustomRow(LOCTEXT("PrefabDebugCommand_LoadFilter", "load debug prefab"))
+		.WholeRowContent()
+		[
+			SNew(SButton)
+			.Text(LOCTEXT("PrefabDebugCommand_lOAD", "Load Actor Data"))
+			.OnClicked(FOnClicked::CreateStatic(&FPrefabDebugCustomization::LoadDebugData, &DetailBuilder))
+		];
+
+}
+
+TSharedRef<IDetailCustomization> FPrefabDebugCustomization::MakeInstance()
+{
+	return MakeShareable(new FPrefabDebugCustomization);
+}
+
+FReply FPrefabDebugCustomization::SaveDebugData(IDetailLayoutBuilder* DetailBuilder)
+{
+	TArray<APrefabDebugActor*> DebugActors = GetDetailObject<APrefabDebugActor>(DetailBuilder);
+	for (APrefabDebugActor* DebugActor : DebugActors) {
+		if (DebugActor) {
+			DebugActor->SaveActorData();
+		}
+	}
+
+	return FReply::Handled();
+}
+
+FReply FPrefabDebugCustomization::LoadDebugData(IDetailLayoutBuilder* DetailBuilder)
+{
+	TArray<APrefabDebugActor*> DebugActors = GetDetailObject<APrefabDebugActor>(DetailBuilder);
+	for (APrefabDebugActor* DebugActor : DebugActors) {
+		if (DebugActor) {
+			DebugActor->LoadActorData();
 		}
 	}
 

@@ -7,13 +7,26 @@ DECLARE_STATS_GROUP(TEXT("Prefabricator"), STATGROUP_Prefabricator, STATCAT_Adva
 DECLARE_CYCLE_STAT(TEXT("Randomize - LoadPrefab"), STAT_Randomize_LoadPrefab, STATGROUP_Prefabricator);
 DECLARE_CYCLE_STAT(TEXT("Randomize - GetChildActor"), STAT_Randomize_GetChildActor, STATGROUP_Prefabricator);
 
-DECLARE_CYCLE_STAT(TEXT("LoadState - DeserializeFields [Actor]"), STAT_LoadStateFromPrefabAsset_DeserializeFieldsActor, STATGROUP_Prefabricator);
-DECLARE_CYCLE_STAT(TEXT("LoadState - Begin Transaction"), STAT_LoadStateFromPrefabAsset_BeginTransaction, STATGROUP_Prefabricator);
-DECLARE_CYCLE_STAT(TEXT("LoadState - End Transaction"), STAT_LoadStateFromPrefabAsset_EndTransaction, STATGROUP_Prefabricator);
+DECLARE_CYCLE_STAT(TEXT("LoadStateFromPrefabAsset [ALL]"), STAT_LoadStateFromPrefabAsset, STATGROUP_Prefabricator);
+DECLARE_CYCLE_STAT(TEXT("LoadStateFromPrefabAsset - Actor Loop"), STAT_LoadStateFromPrefabAsset_ActorLoop, STATGROUP_Prefabricator);
+DECLARE_CYCLE_STAT(TEXT("LoadStateFromPrefabAsset 1"), STAT_LoadStateFromPrefabAsset1, STATGROUP_Prefabricator);
+DECLARE_CYCLE_STAT(TEXT("LoadStateFromPrefabAsset 2"), STAT_LoadStateFromPrefabAsset2, STATGROUP_Prefabricator);
+DECLARE_CYCLE_STAT(TEXT("LoadStateFromPrefabAsset 3"), STAT_LoadStateFromPrefabAsset3, STATGROUP_Prefabricator);
+DECLARE_CYCLE_STAT(TEXT("LoadStateFromPrefabAsset 4"), STAT_LoadStateFromPrefabAsset4, STATGROUP_Prefabricator);
+DECLARE_CYCLE_STAT(TEXT("LoadStateFromPrefabAsset 5"), STAT_LoadStateFromPrefabAsset5, STATGROUP_Prefabricator);
 
-DECLARE_CYCLE_STAT(TEXT("LoadState - DesFields [Components]"), STAT_LoadStateFromPrefabAsset_DeserializeFieldsComponents, STATGROUP_Prefabricator);
-DECLARE_CYCLE_STAT(TEXT("LoadState - Unreg Comp"), STAT_LoadStateFromPrefabAsset_UnregisterComponent, STATGROUP_Prefabricator);
-DECLARE_CYCLE_STAT(TEXT("LoadState - Reg Comp"), STAT_LoadStateFromPrefabAsset_RegisterComponent, STATGROUP_Prefabricator);
+DECLARE_CYCLE_STAT(TEXT("ParentActors - [ALL]"), STAT_ParentActors, STATGROUP_Prefabricator);
+DECLARE_CYCLE_STAT(TEXT("ParentActors - 1"), STAT_ParentActors1, STATGROUP_Prefabricator);
+DECLARE_CYCLE_STAT(TEXT("ParentActors - 2"), STAT_ParentActors2, STATGROUP_Prefabricator);
+
+
+DECLARE_CYCLE_STAT(TEXT("LoadActorState [ALL]"), STAT_LoadActorState, STATGROUP_Prefabricator);
+DECLARE_CYCLE_STAT(TEXT("LoadActorState - Begin Transaction"), STAT_LoadActorState_BeginTransaction, STATGROUP_Prefabricator);
+DECLARE_CYCLE_STAT(TEXT("LoadActorState - End Transaction"), STAT_LoadActorState_EndTransaction, STATGROUP_Prefabricator);
+DECLARE_CYCLE_STAT(TEXT("LoadActorState - DeserializeFields [Actor]"), STAT_LoadActorState_DeserializeFieldsActor, STATGROUP_Prefabricator);
+DECLARE_CYCLE_STAT(TEXT("LoadActorState - DesFields [Components]"), STAT_LoadActorState_DeserializeFieldsComponents, STATGROUP_Prefabricator);
+DECLARE_CYCLE_STAT(TEXT("LoadActorState - Unreg Comp"), STAT_LoadActorState_UnregisterComponent, STATGROUP_Prefabricator);
+DECLARE_CYCLE_STAT(TEXT("LoadActorState - Reg Comp"), STAT_LoadActorState_RegisterComponent, STATGROUP_Prefabricator);
 
 DECLARE_CYCLE_STAT(TEXT("DeserializeFields - BuildMap"), STAT_DeserializeFields_BuildMap, STATGROUP_Prefabricator);
 DECLARE_CYCLE_STAT(TEXT("DeserializeFields - Iterate"), STAT_DeserializeFields_Iterate, STATGROUP_Prefabricator);

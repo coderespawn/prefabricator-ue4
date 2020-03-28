@@ -18,7 +18,6 @@ public:
 	static FReply HandleLoadFromAsset(IDetailLayoutBuilder* DetailBuilder);
 	static FReply RandomizePrefabCollection(IDetailLayoutBuilder* DetailBuilder);
 	static FReply UnlinkPrefab(IDetailLayoutBuilder* DetailBuilder);
-	static FReply UpdateThumbFromViewport(IDetailLayoutBuilder* DetailBuilder);
 };
 
 class PREFABRICATOREDITOR_API FPrefabRandomizerCustomization : public IDetailCustomization {
@@ -30,5 +29,18 @@ public:
 	static TSharedRef<IDetailCustomization> MakeInstance();
 
 	static FReply HandleRandomize(IDetailLayoutBuilder* DetailBuilder);
+};
+
+
+class PREFABRICATOREDITOR_API FPrefabDebugCustomization : public IDetailCustomization {
+public:
+	// IDetailCustomization interface
+	virtual void CustomizeDetails(IDetailLayoutBuilder& DetailBuilder) override;
+	// End of IDetailCustomization interface
+
+	static TSharedRef<IDetailCustomization> MakeInstance();
+
+	static FReply SaveDebugData(IDetailLayoutBuilder* DetailBuilder);
+	static FReply LoadDebugData(IDetailLayoutBuilder* DetailBuilder);
 };
 

@@ -72,7 +72,7 @@ void UPrefabComponent::PostEditChangeProperty(struct FPropertyChangedEvent& e)
 				// Update the property view so the new UI takes effect
 				TSharedPtr<IPrefabricatorService> Service = FPrefabricatorService::Get();
 				if (Service.IsValid()) {
-					Service->SetDetailsViewObject(PrefabActor);
+					Service->RefreshDetailsViewObject(PrefabActor);
 				}
 			}
 		}
