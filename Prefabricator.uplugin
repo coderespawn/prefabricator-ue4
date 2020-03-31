@@ -17,62 +17,27 @@
 		{
 			"Name" : "PrefabricatorRuntime",
 			"Type" : "Runtime",
-			"LoadingPhase" : "PreDefault",
-			"WhitelistPlatforms" : [
-				"Win32", 
-				"Win64", 
-				"Mac", 
-				"Android", 
-				"IOS"
-			]
+			"LoadingPhase" : "PreDefault"
 		},
 		{
 			"Name" : "PrefabricatorEditor",
 			"Type" : "Editor",
-			"LoadingPhase" : "Default",
-			"WhitelistPlatforms" : [
-				"Win32", 
-				"Win64", 
-				"Mac", 
-				"Android", 
-				"IOS"
-			]
+			"LoadingPhase" : "Default"
 		},
 		{
 			"Name" : "PrefabricatorEditorPostInit",
 			"Type" : "Editor",
-			"LoadingPhase" : "PostEngineInit",
-			"WhitelistPlatforms" : [
-				"Win32", 
-				"Win64", 
-				"Mac", 
-				"Android", 
-				"IOS"
-			]
+			"LoadingPhase" : "PostEngineInit"
 		},
 		{
 			"Name" : "ConstructionSystemRuntime",
 			"Type" : "Runtime",
-			"LoadingPhase" : "PreDefault",
-			"WhitelistPlatforms" : [
-				"Win32", 
-				"Win64", 
-				"Mac", 
-				"Android", 
-				"IOS"
-			]
+			"LoadingPhase" : "PreDefault"
 		},
 		{
 			"Name" : "ConstructionSystemEditor",
 			"Type" : "Editor",
-			"LoadingPhase" : "Default",
-			"WhitelistPlatforms" : [
-				"Win32", 
-				"Win64", 
-				"Mac", 
-				"Android", 
-				"IOS"
-			]
+			"LoadingPhase" : "Default"
 		}
 	],
 
