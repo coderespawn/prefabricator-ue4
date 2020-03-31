@@ -2,11 +2,12 @@
 
 #pragma once
 #include "CoreMinimal.h"
+#include "GameFramework/Actor.h"
 
-class AActor;
 class APrefabActor;
 class UPrefabricatorAsset;
 struct FPrefabricatorActorData;
+struct FRandomStream;
 
 struct PREFABRICATORRUNTIME_API FPrefabLoadSettings {
 	bool bUnregisterComponentsBeforeLoading = true;

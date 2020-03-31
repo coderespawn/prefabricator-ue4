@@ -2,6 +2,7 @@
 
 #pragma once
 #include "CoreMinimal.h"
+#include "GameFramework/Actor.h"
 #include "PrefabRandomizerActor.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FPrefabRandomizerCompleteBindableEvent);
