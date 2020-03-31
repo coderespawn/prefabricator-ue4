@@ -3,6 +3,7 @@
 #pragma once
 #include "CoreMinimal.h"
 #include "GameFramework/SaveGame.h"
+#include "Kismet/BlueprintFunctionLibrary.h"
 #include "ConstructionSystemSaveGame.generated.h"
 
 class UPrefabricatorAssetInterface;

@@ -12,6 +12,7 @@ class UConstructionSystemTool;
 class UMaterialInterface;
 class UConstructionSystemUIAsset;
 class UInputComponent;
+class UUserWidget;
 
 UENUM(BlueprintType)
 enum class EConstructionSystemToolType : uint8 {
