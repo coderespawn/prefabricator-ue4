@@ -18,6 +18,7 @@
 #include "Serialization/ObjectAndNameAsStringProxyArchive.h"
 #include "Serialization/ObjectReader.h"
 #include "Serialization/ObjectWriter.h"
+#include "UObject/NoExportTypes.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogPrefabTools, Log, All);
 
@@ -890,3 +891,4 @@ AActor* FPrefabInstanceTemplates::GetTemplate(const FGuid& InPrefabItemId, FGuid
 
 
 #undef LOCTEXT_NAMESPACE
+
