@@ -3,6 +3,7 @@
 #pragma once
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Engine/AssetUserData.h"
 #include "ConstructionSystemComponent.generated.h"
 
 class UPrefabricatorAssetInterface;
