@@ -126,13 +126,18 @@ namespace {
 			}
 		}
 
-		// Make sure we do not include any actors that belong to these prefabs
 		for (AActor* Actor : InActors) {
 			bool bValid = true;
+			// Make sure we do not include any actors that belong to these prefabs
 			if (APrefabActor* ParentPrefab = Cast<APrefabActor>(Actor->GetAttachParentActor())) {
 				if (PrefabActors.Contains(ParentPrefab)) {
 					bValid = false;
 				}
+			}
+
+			// Make sure the actor has a root component
+			if (!Actor->GetRootComponent()) {
+				bValid = false;
 			}
 
 			if (bValid) {
@@ -294,12 +299,12 @@ namespace {
 		return false;
 	}
 
-	bool HasDefaultValue(UObject* InContainer, const FString& InPropertyPath) {
+	bool HasDefaultValue(UObject* InContainer, UObject* InDiff, const FString& InPropertyPath) {
 		if (!InContainer) return false;
 
 		UClass* ObjClass = InContainer->GetClass();
 		if (!ObjClass) return false;
-		UObject* DefaultObject = ObjClass->GetDefaultObject();
+		UObject* DefaultObject = InDiff ? InDiff : ObjClass->GetDefaultObject();
 
 		FString PropertyValue, DefaultValue;
 		PropertyPathHelpers::GetPropertyValueAsString(InContainer, InPropertyPath, PropertyValue);
@@ -346,7 +351,7 @@ namespace {
 		}
 	}
 
-	void SerializeFields(UObject* ObjToSerialize, APrefabActor* PrefabActor, TArray<UPrefabricatorProperty*>& OutProperties) {
+	void SerializeFields(UObject* ObjToSerialize, UObject* ObjTemplate, APrefabActor* PrefabActor, TArray<UPrefabricatorProperty*>& OutProperties) {
 		if (!ObjToSerialize || !PrefabActor) {
 			return;
 		}
@@ -372,7 +377,7 @@ namespace {
 			bool bForceSerialize = FPrefabTools::ShouldForcePropertySerialization(Property->GetFName());
 
 			// Check if it has the default value
-			if (!bForceSerialize && HasDefaultValue(ObjToSerialize, Property->GetName())) {
+			if (!bForceSerialize && HasDefaultValue(ObjToSerialize, ObjTemplate, Property->GetName())) {
 				continue;
 			}
 
@@ -463,6 +468,19 @@ bool FPrefabTools::ShouldForcePropertySerialization(const FName& PropertyName)
 	return FieldsToForceSerialize.Contains(PropertyName);
 }
 
+namespace {
+	UActorComponent* FindBestComponentInCDO(AActor* CDO, UActorComponent* Component) {
+		if (!CDO || !Component) return nullptr;
+
+		for (UActorComponent* DefaultComponent : CDO->GetComponents()) {
+			if (DefaultComponent && DefaultComponent->GetFName() == Component->GetFName() && DefaultComponent->GetClass() == Component->GetClass()) {
+				return DefaultComponent;
+			}
+		}
+		return nullptr;
+	}
+}
+
 void FPrefabTools::SaveActorState(AActor* InActor, APrefabActor* PrefabActor, FPrefabricatorActorData& OutActorData)
 {
 	if (!InActor) return;
@@ -473,7 +491,8 @@ void FPrefabTools::SaveActorState(AActor* InActor, APrefabActor* PrefabActor, FP
 	FString ClassPath = InActor->GetClass()->GetPathName();
 	OutActorData.ClassPathRef = FSoftClassPath(ClassPath);
 	OutActorData.ClassPath = ClassPath;
-	SerializeFields(InActor, PrefabActor, OutActorData.Properties);
+	AActor* ActorCDO = Cast<AActor>(InActor->GetArchetype());
+	SerializeFields(InActor, ActorCDO, PrefabActor, OutActorData.Properties);
 
 #if WITH_EDITOR
 	OutActorData.ActorName = InActor->GetActorLabel();
@@ -492,7 +511,8 @@ void FPrefabTools::SaveActorState(AActor* InActor, APrefabActor* PrefabActor, FP
 		else {
 			ComponentData.RelativeTransform = FTransform::Identity;
 		}
-		SerializeFields(Component, PrefabActor, ComponentData.Properties);
+		UObject* ComponentTemplate = FindBestComponentInCDO(ActorCDO, Component);
+		SerializeFields(Component, ComponentTemplate, PrefabActor, ComponentData.Properties);
 	}
 
 	//DumpSerializedData(OutActorData);
