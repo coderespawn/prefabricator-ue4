@@ -760,6 +760,7 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 		UWorld* World = PrefabActor->GetWorld();
 		TMap<FGuid, AActor*> PrefabItemToActorMap;
 
+		bool bPrefabOutOfDate = PrefabActor->LastUpdateID != PrefabAsset->LastUpdateID;
 		for (FPrefabricatorActorData& ActorItemData : PrefabAsset->ActorData) {
 			// Handle backward compatibility
 			if (!ActorItemData.ClassPathRef.IsValid()) {
@@ -791,6 +792,7 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 				}
 			}
 
+
 			FTransform WorldTransform = ActorItemData.RelativeTransform * PrefabActor->GetTransform();
 			if (!ChildActor) {
 				// Create a new child actor.  Try to create it from an existing template actor that is already preset in the scene
@@ -802,7 +804,7 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 				ChildActor = Service->SpawnActor(ActorClass, WorldTransform, PrefabActor->GetLevel(), Template);
 
 				ParentActors(PrefabActor, ChildActor);
-				if (Template == nullptr) {
+				if (Template == nullptr || bPrefabOutOfDate) {
 					// We couldn't use a template,  so load the prefab properties in
 					LoadActorState(ChildActor, ActorItemData, InSettings);
 				}
@@ -816,6 +818,9 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 				// This actor was reused.  re-parent it
 				ChildActor->DetachFromActor(FDetachmentTransformRules(EDetachmentRule::KeepWorld, true));
 				ParentActors(PrefabActor, ChildActor);
+				if (bPrefabOutOfDate) {
+					LoadActorState(ChildActor, ActorItemData, InSettings);
+				}
 
 				// Update the world transform.   The reuse happens only on leaf actors (which don't have any further child actors)
 				if (ChildActor->GetRootComponent()) {
@@ -844,6 +849,8 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 				}
 			}
 		}
+
+		PrefabActor->LastUpdateID = PrefabAsset->LastUpdateID;
 
 		// Fix up the cross references
 		{

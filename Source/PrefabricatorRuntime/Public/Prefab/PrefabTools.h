@@ -27,7 +27,6 @@ struct PREFABRICATORRUNTIME_API FPrefabInstanceTemplateInfo {
 class PREFABRICATORRUNTIME_API FPrefabInstanceTemplates {
 public:
 	void RegisterTemplate(const FGuid& InPrefabItemId, FGuid InPrefabLastUpdateId, AActor* InActor);
-
 	AActor* GetTemplate(const FGuid& InPrefabItemId, FGuid InPrefabLastUpdateId);
 
 private:
