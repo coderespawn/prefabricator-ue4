@@ -54,7 +54,9 @@ class FPrefabricatorEditorModule : public IPrefabricatorEditorModule
 		FPropertyEditorModule& PropertyEditorModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>("PropertyEditor");
 		PropertyEditorModule.RegisterCustomClassLayout("PrefabActor", FOnGetDetailCustomizationInstance::CreateStatic(&FPrefabActorCustomization::MakeInstance));
 		PropertyEditorModule.RegisterCustomClassLayout("PrefabRandomizer", FOnGetDetailCustomizationInstance::CreateStatic(&FPrefabRandomizerCustomization::MakeInstance));
+		PropertyEditorModule.RegisterCustomClassLayout("PrefabricatorAsset", FOnGetDetailCustomizationInstance::CreateStatic(&FPrefabricatorAssetCustomization::MakeInstance));
 		PropertyEditorModule.RegisterCustomClassLayout("PrefabDebugActor", FOnGetDetailCustomizationInstance::CreateStatic(&FPrefabDebugCustomization::MakeInstance));
+		
 
 		// Register the asset brokers (used for asset to component mapping)
 		PrefabAssetBroker = MakeShareable(new FPrefabricatorAssetBroker);
