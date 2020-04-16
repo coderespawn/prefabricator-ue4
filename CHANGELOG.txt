@@ -1,7 +1,15 @@
 CHANGELOG: Prefabricator
 ========================
+Version 1.5.0
+-------------
+* New: Prefab serialization is more robust and should properly save all the properties, including the private C++ non-exposed properties
+* Fix: Actor references within a prefab are saved and restored correctly.  If there are two actors in a prefab A and B, and if A has a variable which references B,  instantiating this prefab will correctly hold the references to the newly spawned actor B
+* Fix: Fixed a bug where existing prefab instances were not reloading to the latest state when the prefab asset was updated
+* New: Exposed thumbnail rotation values in the prefab asset.  Double click a prefab to open its properties,  adjust the thumbnail rotation values and then recapture the thumbnail from the asset's context menu
+* Fix: Perform proper cleanup when the editor module unloads, removing the custom detail layout customizations on exit
+
 Version 1.4.0
------------------
+-------------
 * Fix: Massive improvements to runtime prefab spawning.   Spawn thousands of prefabs at runtime with minimal overhead
 * New: Procedural Platformer Level sample: Build a platformer level by assembling small building blocks and using those to build more complex nested prefabs, eventually building one nested layout prefab with thousands of valid playable layout randomizations.  [Video](https://www.youtube.com/watch?v=RZaYUf_H8fI)
 * New: Construction System - Enable your players to build their own worlds by assembling floors, walls, ramps corrdiors.    There's a game sample demonstrating this. [Video](https://www.youtube.com/watch?v=jM0IItlTxjg)
