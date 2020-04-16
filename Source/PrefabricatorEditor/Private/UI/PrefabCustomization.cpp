@@ -16,9 +16,12 @@
 #include "DetailCategoryBuilder.h"
 #include "DetailLayoutBuilder.h"
 #include "DetailWidgetRow.h"
+#include "EditorFramework/ThumbnailInfo.h"
 #include "EditorViewportClient.h"
 #include "IContentBrowserSingleton.h"
+#include "Misc/AssertionMacros.h"
 #include "Modules/ModuleManager.h"
+#include "ThumbnailRendering/SceneThumbnailInfo.h"
 #include "Widgets/Input/SButton.h"
 #include "Widgets/SBoxPanel.h"
 
@@ -269,6 +272,28 @@ FReply FPrefabRandomizerCustomization::HandleRandomize(IDetailLayoutBuilder* Det
 	}
 
 	return FReply::Handled();
+}
+
+///////////////////////////// FPrefabricatorAssetCustomization ///////////////////////////// 
+
+void FPrefabricatorAssetCustomization::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
+{
+	TArray<UPrefabricatorAsset*> Assets = GetDetailObject<UPrefabricatorAsset>(&DetailBuilder);
+	TArray<UObject*> ThumbList;
+	for (UPrefabricatorAsset* Asset : Assets) {
+		if (Asset->ThumbnailInfo) {
+			ThumbList.Add(Asset->ThumbnailInfo);
+		}
+	}
+	IDetailCategoryBuilder& Category = DetailBuilder.EditCategory("Thumbnail", FText::GetEmpty(), ECategoryPriority::Uncommon);
+	Category.AddExternalObjectProperty(ThumbList, GET_MEMBER_NAME_CHECKED(USceneThumbnailInfo, OrbitPitch));
+	Category.AddExternalObjectProperty(ThumbList, GET_MEMBER_NAME_CHECKED(USceneThumbnailInfo, OrbitYaw));
+	Category.AddExternalObjectProperty(ThumbList, GET_MEMBER_NAME_CHECKED(USceneThumbnailInfo, OrbitZoom));
+}
+
+TSharedRef<IDetailCustomization> FPrefabricatorAssetCustomization::MakeInstance()
+{
+	return MakeShareable(new FPrefabricatorAssetCustomization);
 }
 
 ///////////////////////////////// FPrefabRandomizerCustomization /////////////////////////////////

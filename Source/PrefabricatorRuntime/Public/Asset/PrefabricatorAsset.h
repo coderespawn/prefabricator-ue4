@@ -35,6 +35,12 @@ public:
 	UPROPERTY()
 	TArray<FPrefabricatorPropertyAssetMapping> AssetSoftReferenceMappings;
 
+	UPROPERTY()
+	bool bIsCrossReferencedActor = false;
+
+	UPROPERTY()
+	FGuid CrossReferencePrefabActorId;
+
 	void SaveReferencedAssetValues();
 	void LoadReferencedAssetValues();
 };
