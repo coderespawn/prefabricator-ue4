@@ -7,6 +7,7 @@
 class APrefabActor;
 class UPrefabricatorAsset;
 struct FPrefabricatorActorData;
+class UPrefabricatorProperty;
 struct FRandomStream;
 
 struct PREFABRICATORRUNTIME_API FPrefabLoadSettings {
@@ -44,6 +45,16 @@ private:
 	static FPrefabInstanceTemplates* Instance;
 };
 
+class FPrefabActorLookup {
+public:
+	void Register(const FString& InActorPath, const FGuid& InPrefabItemId);
+	void Register(AActor* InActor, const FGuid& InPrefabItemId);
+	bool GetPrefabItemId(const FString& InObjectPath, FGuid& OutCrossRefPrefabItem) const;
+
+private:
+	TMap<FString, FGuid> ActorPathToItemId;
+};
+
 class PREFABRICATORRUNTIME_API FPrefabTools {
 public:
 	static bool CanCreatePrefab();
@@ -53,6 +64,8 @@ public:
 
 	static void SaveStateToPrefabAsset(APrefabActor* PrefabActor);
 	static void LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPrefabLoadSettings& InSettings = FPrefabLoadSettings());
+
+	static void FixupCrossReferences(const TArray<UPrefabricatorProperty*>& PrefabProperties, UObject* ObjToWrite, TMap<FGuid, AActor*>& PrefabItemToActorMap);
 
 	static void UnlinkAndDestroyPrefabActor(APrefabActor* PrefabActor);
 	static void GetActorChildren(AActor* InParent, TArray<AActor*>& OutChildren);
@@ -71,7 +84,7 @@ public:
 	static void IterateChildrenRecursive(APrefabActor* Actor, TFunction<void(AActor*)> Visit);
 
 private:
-	static void SaveActorState(AActor* InActor, APrefabActor* PrefabActor, FPrefabricatorActorData& OutActorData);
+	static void SaveActorState(AActor* InActor, APrefabActor* PrefabActor, const FPrefabActorLookup& CrossReferences, FPrefabricatorActorData& OutActorData);
 	static void LoadActorState(AActor* InActor, const FPrefabricatorActorData& InActorData, const FPrefabLoadSettings& InSettings);
 
 };
