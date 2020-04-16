@@ -499,7 +499,8 @@ bool FPrefabTools::ShouldIgnorePropertySerialization(const FName& InPropertyName
 		"ClientAttachedChildren",
 		"bIsEditorPreviewActor",
 		"bIsEditorOnlyActor",
-		"UCSModifiedProperties"
+		"UCSModifiedProperties",
+		"BlueprintCreatedComponents"
 	};
 
 	return IgnoredFields.Contains(InPropertyName);
