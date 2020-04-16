@@ -16,14 +16,14 @@
 #include "DetailCategoryBuilder.h"
 #include "DetailLayoutBuilder.h"
 #include "DetailWidgetRow.h"
+#include "EditorFramework/ThumbnailInfo.h"
 #include "EditorViewportClient.h"
 #include "IContentBrowserSingleton.h"
+#include "Misc/AssertionMacros.h"
 #include "Modules/ModuleManager.h"
+#include "ThumbnailRendering/SceneThumbnailInfo.h"
 #include "Widgets/Input/SButton.h"
 #include "Widgets/SBoxPanel.h"
-#include "EditorFramework/ThumbnailInfo.h"
-#include "ThumbnailRendering/SceneThumbnailInfo.h"
-#include "Misc/AssertionMacros.h"
 
 #define LOCTEXT_NAMESPACE "PrefabActorCustomization" 
 
@@ -349,3 +349,4 @@ FReply FPrefabDebugCustomization::LoadDebugData(IDetailLayoutBuilder* DetailBuil
 }
 
 #undef LOCTEXT_NAMESPACE 
+
