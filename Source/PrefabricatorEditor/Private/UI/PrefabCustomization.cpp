@@ -285,7 +285,7 @@ void FPrefabricatorAssetCustomization::CustomizeDetails(IDetailLayoutBuilder& De
 			ThumbList.Add(Asset->ThumbnailInfo);
 		}
 	}
-	IDetailCategoryBuilder& Category = DetailBuilder.EditCategory("Thumbnail", FText::GetEmpty(), ECategoryPriority::Important);
+	IDetailCategoryBuilder& Category = DetailBuilder.EditCategory("Thumbnail", FText::GetEmpty(), ECategoryPriority::Uncommon);
 	Category.AddExternalObjectProperty(ThumbList, GET_MEMBER_NAME_CHECKED(USceneThumbnailInfo, OrbitPitch));
 	Category.AddExternalObjectProperty(ThumbList, GET_MEMBER_NAME_CHECKED(USceneThumbnailInfo, OrbitYaw));
 	Category.AddExternalObjectProperty(ThumbList, GET_MEMBER_NAME_CHECKED(USceneThumbnailInfo, OrbitZoom));
