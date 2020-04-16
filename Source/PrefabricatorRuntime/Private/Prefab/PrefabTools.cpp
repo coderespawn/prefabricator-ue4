@@ -366,7 +366,7 @@ namespace {
 		for (TFieldIterator<UProperty> PropertyIterator(ObjToSerialize->GetClass()); PropertyIterator; ++PropertyIterator) {
 			UProperty* Property = *PropertyIterator;
 			if (!Property) continue;
-			if (Property->HasAnyPropertyFlags(CPF_Transient) || !Property->HasAnyPropertyFlags(CPF_Edit | CPF_Interp)) {
+			if (Property->HasAnyPropertyFlags(CPF_Transient)) {
 				continue;
 			}
 
@@ -461,8 +461,7 @@ bool FPrefabTools::ShouldIgnorePropertySerialization(const FName& InPropertyName
 bool FPrefabTools::ShouldForcePropertySerialization(const FName& PropertyName)
 {
 	static const TSet<FName> FieldsToForceSerialize = {
-		"Mobility",
-		"bUseDefaultCollision"
+		"Mobility"
 	};
 
 	return FieldsToForceSerialize.Contains(PropertyName);
@@ -752,11 +751,11 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 
 				ChildActor = Service->SpawnActor(ActorClass, WorldTransform, PrefabActor->GetLevel(), Template);
 
-				ParentActors(PrefabActor, ChildActor);
 				if (Template == nullptr) {
 					// We couldn't use a template,  so load the prefab properties in
 					LoadActorState(ChildActor, ActorItemData, InSettings);
 				}
+				ParentActors(PrefabActor, ChildActor);
 
 				// Save this as a template for future reuse
 				if (LoadState && !Template && InSettings.bCanSaveToCachedTemplate) {
