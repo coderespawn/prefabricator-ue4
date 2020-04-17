@@ -760,7 +760,6 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 		UWorld* World = PrefabActor->GetWorld();
 		TMap<FGuid, AActor*> PrefabItemToActorMap;
 
-		bool bPrefabOutOfDate = PrefabActor->LastUpdateID != PrefabAsset->LastUpdateID;
 		for (FPrefabricatorActorData& ActorItemData : PrefabAsset->ActorData) {
 			// Handle backward compatibility
 			if (!ActorItemData.ClassPathRef.IsValid()) {
@@ -776,18 +775,22 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 
 			// Try to re-use an existing actor from this prefab
 			AActor* ChildActor = nullptr;
-			if (AActor** SearchResult = ActorByItemID.Find(ActorItemData.PrefabItemID)) {
-				ChildActor = *SearchResult;
-				if (ChildActor) {
-					FString ExistingClassName = ChildActor->GetClass()->GetPathName();
-					FString RequiredClassName = ActorItemData.ClassPathRef.GetAssetPathString();
-					if (ExistingClassName == RequiredClassName) {
-						// We can reuse this actor
-						ExistingActorPool.Remove(ChildActor);
-						ActorByItemID.Remove(ActorItemData.PrefabItemID);
-					}
-					else {
-						ChildActor = nullptr;
+			bool bPrefabOutOfDate = PrefabActor->LastUpdateID != PrefabAsset->LastUpdateID;
+			if (!bPrefabOutOfDate) {
+				// The prefab is not out of date. try to reuse an existing actor item
+				if (AActor** SearchResult = ActorByItemID.Find(ActorItemData.PrefabItemID)) {
+					ChildActor = *SearchResult;
+					if (ChildActor) {
+						FString ExistingClassName = ChildActor->GetClass()->GetPathName();
+						FString RequiredClassName = ActorItemData.ClassPathRef.GetAssetPathString();
+						if (ExistingClassName == RequiredClassName) {
+							// We can reuse this actor
+							ExistingActorPool.Remove(ChildActor);
+							ActorByItemID.Remove(ActorItemData.PrefabItemID);
+						}
+						else {
+							ChildActor = nullptr;
+						}
 					}
 				}
 			}
@@ -804,23 +807,21 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 				ChildActor = Service->SpawnActor(ActorClass, WorldTransform, PrefabActor->GetLevel(), Template);
 
 				ParentActors(PrefabActor, ChildActor);
+
 				if (Template == nullptr || bPrefabOutOfDate) {
 					// We couldn't use a template,  so load the prefab properties in
 					LoadActorState(ChildActor, ActorItemData, InSettings);
-				}
 
-				// Save this as a template for future reuse
-				if (LoadState && !Template && InSettings.bCanSaveToCachedTemplate) {
-					LoadState->RegisterTemplate(ActorItemData.PrefabItemID, PrefabAsset->LastUpdateID, ChildActor);
+					// Save this as a template for future reuse
+					if (LoadState && InSettings.bCanSaveToCachedTemplate) {
+						LoadState->RegisterTemplate(ActorItemData.PrefabItemID, PrefabAsset->LastUpdateID, ChildActor);
+					}
 				}
 			}
 			else {
 				// This actor was reused.  re-parent it
 				ChildActor->DetachFromActor(FDetachmentTransformRules(EDetachmentRule::KeepWorld, true));
 				ParentActors(PrefabActor, ChildActor);
-				if (bPrefabOutOfDate) {
-					LoadActorState(ChildActor, ActorItemData, InSettings);
-				}
 
 				// Update the world transform.   The reuse happens only on leaf actors (which don't have any further child actors)
 				if (ChildActor->GetRootComponent()) {
@@ -849,8 +850,6 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 				}
 			}
 		}
-
-		PrefabActor->LastUpdateID = PrefabAsset->LastUpdateID;
 
 		// Fix up the cross references
 		{
