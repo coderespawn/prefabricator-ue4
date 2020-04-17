@@ -1,5 +1,9 @@
 CHANGELOG: Prefabricator
 ========================
+Version 1.5.1
+-------------
+* Fix: Improved caching of prefabs
+
 Version 1.5.0
 -------------
 * New: Prefab serialization is more robust and should properly save all the properties, including the private C++ non-exposed properties
