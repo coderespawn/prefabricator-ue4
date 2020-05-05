@@ -51,10 +51,7 @@ class FPrefabricatorEditorModule : public IPrefabricatorEditorModule
 		PrefabricatorAssetCategoryBit = AssetTools.RegisterAdvancedAssetCategory(FName(TEXT("Prefabricator")), LOCTEXT("PrefabricatorAssetCategory", "Prefabricator"));
 
 		// Register the details customization
-		FPropertyEditorModule& PropertyEditorModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>("PropertyEditor");
-		PropertyEditorModule.RegisterCustomClassLayout("PrefabActor", FOnGetDetailCustomizationInstance::CreateStatic(&FPrefabActorCustomization::MakeInstance));
-		PropertyEditorModule.RegisterCustomClassLayout("PrefabRandomizer", FOnGetDetailCustomizationInstance::CreateStatic(&FPrefabRandomizerCustomization::MakeInstance));
-		PropertyEditorModule.RegisterCustomClassLayout("PrefabDebugActor", FOnGetDetailCustomizationInstance::CreateStatic(&FPrefabDebugCustomization::MakeInstance));
+		RegisterCustomClassLayouts();
 
 		// Register the asset brokers (used for asset to component mapping)
 		PrefabAssetBroker = MakeShareable(new FPrefabricatorAssetBroker);
@@ -64,14 +61,36 @@ class FPrefabricatorEditorModule : public IPrefabricatorEditorModule
 		FPrefabricatorService::Set(MakeShareable(new FPrefabricatorEditorService));
 	}
 
-	virtual void ShutdownModule() override {
+	template<typename TCustomization>
+	void RegisterCustomClassLayout(const FName& ClassName, FPropertyEditorModule& PropertyEditorModule) {
+		PropertyEditorModule.RegisterCustomClassLayout(ClassName, FOnGetDetailCustomizationInstance::CreateStatic(&TCustomization::MakeInstance));
+		RegisteredCustomClassLayouts.Add(ClassName);
+	}
 
+	void RegisterCustomClassLayouts() {
+		FPropertyEditorModule& PropertyEditorModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>("PropertyEditor");
+		RegisterCustomClassLayout<FPrefabActorCustomization>("PrefabActor", PropertyEditorModule);
+		RegisterCustomClassLayout<FPrefabRandomizerCustomization>("PrefabRandomizer", PropertyEditorModule);
+		RegisterCustomClassLayout<FPrefabricatorAssetCustomization>("PrefabricatorAsset", PropertyEditorModule);
+		RegisterCustomClassLayout<FPrefabDebugCustomization>("PrefabDebugActor", PropertyEditorModule);
+	}
+
+	void UnregisterCustomClassLayouts() {
+		FPropertyEditorModule& PropertyEditorModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>("PropertyEditor");
+		for (const FName& ClassName : RegisteredCustomClassLayouts) {
+			PropertyEditorModule.UnregisterCustomClassLayout(ClassName);
+		}
+		RegisteredCustomClassLayouts.Reset();
+	}
+
+	virtual void ShutdownModule() override {
 		// Unregister the prefabricator asset broker
 		if (PrefabAssetBroker.IsValid()) {
 			FComponentAssetBrokerage::UnregisterBroker(PrefabAssetBroker);
 			PrefabAssetBroker = nullptr;
 		}
 
+		UnregisterCustomClassLayouts();
 
 		// Unregister all the asset types that we registered
 		if (FModuleManager::Get().IsModuleLoaded("AssetTools"))
@@ -126,6 +145,7 @@ private:
 	FMapChangeHook MapChangeHook;
 	TSharedPtr<IComponentAssetBroker> PrefabAssetBroker;
 	TArray< TSharedPtr<IAssetTypeActions> > CreatedAssetTypeActions;
+	TSet<FName> RegisteredCustomClassLayouts;
 	EAssetTypeCategories::Type PrefabricatorAssetCategoryBit;
 };
 

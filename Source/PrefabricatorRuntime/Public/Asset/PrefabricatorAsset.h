@@ -35,6 +35,12 @@ public:
 	UPROPERTY()
 	TArray<FPrefabricatorPropertyAssetMapping> AssetSoftReferenceMappings;
 
+	UPROPERTY()
+	bool bIsCrossReferencedActor = false;
+
+	UPROPERTY()
+	FGuid CrossReferencePrefabActorId;
+
 	void SaveReferencedAssetValues();
 	void LoadReferencedAssetValues();
 };
@@ -112,6 +118,7 @@ public:
 enum class EPrefabricatorAssetVersion {
 	InitialVersion = 0,
 	AddedSoftReference,
+	AddedSoftReference_PrefabFix,
 
 	//----------- Versions should be placed above this line -----------------
 	LastVersionPlusOne,
