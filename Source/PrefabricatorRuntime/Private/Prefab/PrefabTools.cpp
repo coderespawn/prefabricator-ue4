@@ -300,7 +300,7 @@ void FPrefabTools::SaveStateToPrefabAsset(APrefabActor* PrefabActor)
 }
 
 namespace {
-	bool GetPropertyData(const UProperty* Property, UObject* Obj, UObject* ObjTemplate, FString& OutPropertyData) {
+	bool GetPropertyData(const FProperty* Property, UObject* Obj, UObject * ObjTemplate, FString& OutPropertyData) {
 		if (!Obj || !Property) return false;
 		
 		UObject* DefaultObject = ObjTemplate;
@@ -341,8 +341,9 @@ namespace {
 		return PropertyValue == DefaultValue;
 	}
 
-	bool ShouldSkipSerialization(const UProperty* Property, UObject* ObjToSerialize, APrefabActor* PrefabActor) {
-		if (const UObjectProperty* ObjProperty = Cast<const UObjectProperty>(Property)) {
+	bool ShouldSkipSerialization(const FProperty* Property, UObject* ObjToSerialize, APrefabActor* PrefabActor) {
+		if (Property->StaticClassCastFlags() == CASTCLASS_FObjectProperty) {
+			const FObjectProperty* ObjProperty = (const FObjectProperty*)Property;
 			UObject* PropertyObjectValue = ObjProperty->GetObjectPropertyValue_InContainer(ObjToSerialize);
 			if (ContainsOuterParent(PropertyObjectValue, ObjToSerialize) ||
 				ContainsOuterParent(PropertyObjectValue, PrefabActor)) {
@@ -362,7 +363,7 @@ namespace {
 			FString PropertyName = PrefabProperty->PropertyName;
 			if (PropertyName == "AssetUserData") continue;		// Skip this as assignment is very slow and is not needed
 
-			UProperty* Property = InObjToDeserialize->GetClass()->FindPropertyByName(*PropertyName);
+			FProperty* Property = InObjToDeserialize->GetClass()->FindPropertyByName(*PropertyName);
 			if (Property) {
 				{
 					SCOPE_CYCLE_COUNTER(STAT_DeserializeFields_Iterate_LoadValue);
@@ -388,9 +389,9 @@ namespace {
 			return;
 		}
 
-		TSet<const UProperty*> PropertiesToSerialize;
-		for (TFieldIterator<UProperty> PropertyIterator(ObjToSerialize->GetClass()); PropertyIterator; ++PropertyIterator) {
-			UProperty* Property = *PropertyIterator;
+		TSet<const FProperty*> PropertiesToSerialize;
+		for (TFieldIterator<FProperty> PropertyIterator(ObjToSerialize->GetClass()); PropertyIterator; ++PropertyIterator) {
+			FProperty* Property = *PropertyIterator;
 			if (!Property) continue;
 			if (Property->HasAnyPropertyFlags(CPF_Transient)) {
 				continue;
@@ -410,7 +411,7 @@ namespace {
 			PropertiesToSerialize.Add(Property);
 		}
 
-		for (const UProperty* Property : PropertiesToSerialize) {
+		for (const FProperty* Property : PropertiesToSerialize) {
 			if (!Property) continue;
 			if (FPrefabTools::ShouldIgnorePropertySerialization(Property->GetFName())) {
 				continue;
@@ -429,8 +430,10 @@ namespace {
 
 			// Check for cross actor references
 			bool bFoundCrossReference = false;
-			if (const UObjectProperty* ObjectProperty = Cast<UObjectProperty>(Property)) {
-				UObject* PropertyObjectValue = ObjectProperty->GetObjectPropertyValue_InContainer(ObjToSerialize);
+
+			if (Property->StaticClassCastFlags() == CASTCLASS_FObjectProperty) {
+				const FObjectProperty* ObjProperty = (const FObjectProperty*)Property;
+				UObject* PropertyObjectValue = ObjProperty->GetObjectPropertyValue_InContainer(ObjToSerialize);
 				if (PropertyObjectValue) {
 					FString ObjectPath = PropertyObjectValue->GetPathName();
 					FGuid CrossRefPrefabItem;
@@ -897,9 +900,11 @@ void FPrefabTools::FixupCrossReferences(const TArray<UPrefabricatorProperty*>& P
 	for (UPrefabricatorProperty* PrefabProperty : PrefabProperties) {
 		if (!PrefabProperty || !PrefabProperty->bIsCrossReferencedActor) continue;
 
-		UProperty* Property = ObjToWrite->GetClass()->FindPropertyByName(*PrefabProperty->PropertyName);
-		UObjectProperty* ObjectProperty = Cast<UObjectProperty>(Property);
-		if (!ObjectProperty) continue;
+		FProperty* Property = ObjToWrite->GetClass()->FindPropertyByName(*PrefabProperty->PropertyName);
+
+		if (Property->StaticClassCastFlags() != CASTCLASS_FObjectProperty) continue;
+
+		const FObjectProperty* ObjectProperty = (const FObjectProperty*)Property;
 
 		AActor** SearchResult = PrefabItemToActorMap.Find(PrefabProperty->CrossReferencePrefabActorId);
 		if (!SearchResult) continue;
