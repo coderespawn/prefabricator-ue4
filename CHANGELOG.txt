@@ -1,5 +1,10 @@
 CHANGELOG: Prefabricator
 ========================
+Version 1.5.2
+-------------
+* New: Added engine 4.25 support
+
+
 Version 1.5.1
 -------------
 * Fix: Improved caching of prefabs

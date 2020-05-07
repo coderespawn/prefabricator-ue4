@@ -7,17 +7,45 @@
 #include "Prefab/PrefabActor.h"
 #include "Prefab/PrefabActor.h"
 #include "Prefab/PrefabComponent.h"
+#include "PrefabricatorSettings.h"
 
 #include "AssetData.h"
+#include "AssetToolsModule.h"
+#include "ContentBrowserModule.h"
 #include "EditorViewportClient.h"
 #include "Engine/Canvas.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "EngineModule.h"
 #include "EngineUtils.h"
 #include "Framework/Notifications/NotificationManager.h"
+#include "IContentBrowserSingleton.h"
 #include "Kismet/KismetRenderingLibrary.h"
 #include "LegacyScreenPercentageDriver.h"
+#include "Modules/ModuleManager.h"
 #include "ObjectTools.h"
+#include "ThumbnailRendering/SceneThumbnailInfo.h"
+
+namespace {
+	template<typename T>
+	static T* CreateAssetOnContentBrowser(const FString& InAssetName, bool bSyncBrowserToAsset)
+	{
+		IContentBrowserSingleton& ContentBrowserSingleton = FModuleManager::LoadModuleChecked<FContentBrowserModule>("ContentBrowser").Get();
+		TArray<FString> SelectedFolders;
+		ContentBrowserSingleton.GetSelectedPathViewFolders(SelectedFolders);
+		FString AssetFolder = SelectedFolders.Num() > 0 ? SelectedFolders[0] : "/Game";
+		FString AssetPath = AssetFolder + "/" + InAssetName;
+
+		FString PackageName, AssetName;
+		IAssetTools& AssetTools = FModuleManager::Get().LoadModuleChecked<FAssetToolsModule>("AssetTools").Get();
+		AssetTools.CreateUniqueAssetName(*AssetPath, TEXT(""), PackageName, AssetName);
+		T* AssetObject = Cast<T>(AssetTools.CreateAsset(AssetName, AssetFolder, T::StaticClass(), nullptr));
+		if (AssetObject && bSyncBrowserToAsset) {
+			ContentBrowserSingleton.SyncBrowserToAssets(TArray<UObject*>({ AssetObject }));
+		}
+
+		return AssetObject;
+	}
+}
 
 void FPrefabEditorTools::ReloadPrefabsInLevel(UWorld* World, UPrefabricatorAsset* InAsset)
 {
@@ -213,5 +241,33 @@ void FPrefabEditorTools::AssignPrefabAssetThumbnail(UPrefabricatorAssetInterface
 	}
 	ThumbTexture->PlatformData->Mips[0].BulkData.Unlock();
 	*/
+}
+
+UThumbnailInfo* FPrefabEditorTools::CreateDefaultThumbInfo(UPrefabricatorAsset* InAsset)
+{
+	// Thumb info doesn't exist. Create one
+	USceneThumbnailInfo* SceneThumbnailInfo = NewObject<USceneThumbnailInfo>(InAsset, NAME_None, RF_Transactional);
+	if (SceneThumbnailInfo) {
+		// Grab the default values from the project settings
+		const UPrefabricatorSettings* Settings = GetDefault<UPrefabricatorSettings>();
+		if (Settings) {
+			SceneThumbnailInfo->OrbitPitch = Settings->DefaultThumbnailPitch;
+			SceneThumbnailInfo->OrbitYaw = Settings->DefaultThumbnailYaw;
+			SceneThumbnailInfo->OrbitZoom = Settings->DefaultThumbnailZoom;
+		}
+	}
+	return SceneThumbnailInfo;
+}
+
+UPrefabricatorAsset* FPrefabEditorTools::CreatePrefabAsset()
+{
+	UPrefabricatorAsset* PrefabAsset = CreateAssetOnContentBrowser<UPrefabricatorAsset>("Prefab", true);
+	PrefabAsset->ThumbnailInfo = FPrefabEditorTools::CreateDefaultThumbInfo(PrefabAsset);
+	return PrefabAsset;
+}
+
+UPrefabricatorAssetCollection* FPrefabEditorTools::CreatePrefabCollectionAsset()
+{
+	return CreateAssetOnContentBrowser<UPrefabricatorAssetCollection>("PrefabCollection", true);
 }
 
