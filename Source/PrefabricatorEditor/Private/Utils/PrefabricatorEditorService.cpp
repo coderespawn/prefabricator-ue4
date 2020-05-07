@@ -91,7 +91,7 @@ int FPrefabricatorEditorService::GetNumSelectedActors()
 
 UPrefabricatorAsset* FPrefabricatorEditorService::CreatePrefabAsset()
 {
-	return FPrefabEditorTools::CreateAssetOnContentBrowser<UPrefabricatorAsset>("Prefab", true);
+	return FPrefabEditorTools::CreatePrefabAsset();
 }
 
 FVector FPrefabricatorEditorService::SnapToGrid(const FVector& InLocation)

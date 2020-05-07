@@ -11,7 +11,6 @@
 #include "AssetToolsModule.h"
 #include "ContentBrowserModule.h"
 #include "Framework/MultiBox/MultiBoxBuilder.h"
-#include "ThumbnailRendering/SceneThumbnailInfo.h"
 
 #define LOCTEXT_NAMESPACE "AssetTypeActions"
 
@@ -43,14 +42,12 @@ class UThumbnailInfo* FPrefabricatorAssetTypeActions::GetThumbnailInfo(UObject* 
 {
 	UPrefabricatorAsset* PrefabAsset = CastChecked<UPrefabricatorAsset>(Asset);
 
-	UThumbnailInfo* ThumbnailInfo = PrefabAsset->ThumbnailInfo;
-	if (ThumbnailInfo == NULL)
+	if (!PrefabAsset->ThumbnailInfo)
 	{
-		ThumbnailInfo = NewObject<USceneThumbnailInfo>(PrefabAsset, NAME_None, RF_Transactional);
-		PrefabAsset->ThumbnailInfo = ThumbnailInfo;
+		PrefabAsset->ThumbnailInfo = FPrefabEditorTools::CreateDefaultThumbInfo(PrefabAsset);
 	}
 
-	return ThumbnailInfo;
+	return PrefabAsset->ThumbnailInfo;
 }
 
 uint32 FPrefabricatorAssetTypeActions::GetCategories()
@@ -81,7 +78,7 @@ void FPrefabricatorAssetTypeActions::ExecuteCreatePrefabCollection(TArray<TWeakO
 		}
 	}
 
-	UPrefabricatorAssetCollection* Collection = FPrefabEditorTools::CreateAssetOnContentBrowser<UPrefabricatorAssetCollection>("PrefabCollection", true);
+	UPrefabricatorAssetCollection* Collection = FPrefabEditorTools::CreatePrefabCollectionAsset();
 	for (UPrefabricatorAsset* PrefabAsset : PrefabAssets) {
 		FPrefabricatorAssetCollectionItem Item;
 		Item.PrefabAsset = PrefabAsset;

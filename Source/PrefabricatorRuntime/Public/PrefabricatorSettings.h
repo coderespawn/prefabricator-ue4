@@ -24,11 +24,24 @@ class PREFABRICATORRUNTIME_API UPrefabricatorSettings : public UDeveloperSetting
 public:
 
 	/* Position pivot on extreme corner (bottom, left up), instead of center. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, config, Category = "Settings")
+	UPROPERTY(config, EditAnywhere, Category = "General Settings")
 	EPrefabricatorPivotPosition PivotPosition;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, config, Category = "Settings")
+	/** Whenever a prefab is saved, update all the other similar prefabs in the scene to reflect this new change */
+	UPROPERTY(config, EditAnywhere, Category = "General Settings")
 	bool bAllowDynamicUpdate = true;
+
+	/** Use this angle while saving the prefab asset */
+	UPROPERTY(config, EditAnywhere, Category = "Thumbnail")
+	float DefaultThumbnailPitch = -11.25;
+
+	/** Use this angle while saving the prefab asset */
+	UPROPERTY(config, EditAnywhere, Category = "Thumbnail")
+	float DefaultThumbnailYaw = -157.5;
+
+	/** Use this zoom value while saving the prefab asset */
+	UPROPERTY(config, EditAnywhere, Category = "Thumbnail")
+	float DefaultThumbnailZoom = 0;
 
 public:
 	UPrefabricatorSettings();

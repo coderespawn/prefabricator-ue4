@@ -2,14 +2,12 @@
 
 #pragma once
 #include "CoreMinimal.h"
-#include "AssetToolsModule.h"
-#include "ContentBrowserModule.h"
-#include "IAssetTools.h"
-#include "IContentBrowserSingleton.h"
 #include "Widgets/Notifications/SNotificationList.h"
 
 class UPrefabricatorAsset;
 class UPrefabricatorAssetInterface;
+class UPrefabricatorAssetCollection;
+class UThumbnailInfo;
 
 class PREFABRICATOREDITOR_API FPrefabEditorTools {
 public:
@@ -23,25 +21,9 @@ public:
 	static void AssignPrefabAssetThumbnail(UPrefabricatorAssetInterface* InAsset, const TArray<FColor>& InBitmap, int32 Width, int32 Height);
 	static void AssignPrefabAssetThumbnail(UPrefabricatorAssetInterface* InAsset, UTexture2D* ThumbTexture);
 
-	template<typename T>
-	static T* CreateAssetOnContentBrowser(const FString& InAssetName, bool bSyncBrowserToAsset)
-	{
-		IContentBrowserSingleton& ContentBrowserSingleton = FModuleManager::LoadModuleChecked<FContentBrowserModule>("ContentBrowser").Get();
-		TArray<FString> SelectedFolders;
-		ContentBrowserSingleton.GetSelectedPathViewFolders(SelectedFolders);
-		FString AssetFolder = SelectedFolders.Num() > 0 ? SelectedFolders[0] : "/Game";
-		FString AssetPath = AssetFolder + "/" + InAssetName;
-
-		FString PackageName, AssetName;
-		IAssetTools& AssetTools = FModuleManager::Get().LoadModuleChecked<FAssetToolsModule>("AssetTools").Get();
-		AssetTools.CreateUniqueAssetName(*AssetPath, TEXT(""), PackageName, AssetName);
-		T* AssetObject = Cast<T>(AssetTools.CreateAsset(AssetName, AssetFolder, T::StaticClass(), nullptr));
-		if (AssetObject && bSyncBrowserToAsset) {
-			ContentBrowserSingleton.SyncBrowserToAssets(TArray<UObject*>({ AssetObject }));
-		}
-
-		return AssetObject;
-	}
+	static UThumbnailInfo* CreateDefaultThumbInfo(UPrefabricatorAsset* InAsset);
+	static UPrefabricatorAsset* CreatePrefabAsset();
+	static UPrefabricatorAssetCollection* CreatePrefabCollectionAsset();
 
 };
 
