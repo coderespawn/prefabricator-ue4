@@ -300,7 +300,7 @@ void FPrefabTools::SaveStateToPrefabAsset(APrefabActor* PrefabActor)
 }
 
 namespace {
-	bool GetPropertyData(const FProperty* Property, UObject* Obj, UObject * ObjTemplate, FString& OutPropertyData) {
+	bool GetPropertyData(const UProperty* Property, UObject* Obj, UObject * ObjTemplate, FString& OutPropertyData) {
 		if (!Obj || !Property) return false;
 		
 		UObject* DefaultObject = ObjTemplate;
@@ -341,9 +341,8 @@ namespace {
 		return PropertyValue == DefaultValue;
 	}
 
-	bool ShouldSkipSerialization(const FProperty* Property, UObject* ObjToSerialize, APrefabActor* PrefabActor) {
-		if (Property->StaticClassCastFlags() == CASTCLASS_FObjectProperty) {
-			const FObjectProperty* ObjProperty = (const FObjectProperty*)Property;
+	bool ShouldSkipSerialization(const UProperty* Property, UObject* ObjToSerialize, APrefabActor* PrefabActor) {
+		if (const UObjectProperty* ObjProperty = Cast<const UObjectProperty>(Property)) {
 			UObject* PropertyObjectValue = ObjProperty->GetObjectPropertyValue_InContainer(ObjToSerialize);
 			if (ContainsOuterParent(PropertyObjectValue, ObjToSerialize) ||
 				ContainsOuterParent(PropertyObjectValue, PrefabActor)) {
@@ -363,7 +362,7 @@ namespace {
 			FString PropertyName = PrefabProperty->PropertyName;
 			if (PropertyName == "AssetUserData") continue;		// Skip this as assignment is very slow and is not needed
 
-			FProperty* Property = InObjToDeserialize->GetClass()->FindPropertyByName(*PropertyName);
+			UProperty* Property = InObjToDeserialize->GetClass()->FindPropertyByName(*PropertyName);
 			if (Property) {
 				// do not overwrite properties that have a default sub object or an archetype object
 				if (FObjectProperty* ObjProperty = CastField<FObjectProperty>(Property)) {
@@ -397,9 +396,9 @@ namespace {
 			return;
 		}
 
-		TSet<const FProperty*> PropertiesToSerialize;
-		for (TFieldIterator<FProperty> PropertyIterator(ObjToSerialize->GetClass()); PropertyIterator; ++PropertyIterator) {
-			FProperty* Property = *PropertyIterator;
+		TSet<const UProperty*> PropertiesToSerialize;
+		for (TFieldIterator<UProperty> PropertyIterator(ObjToSerialize->GetClass()); PropertyIterator; ++PropertyIterator) {
+			UProperty* Property = *PropertyIterator;
 			if (!Property) continue;
 			if (Property->HasAnyPropertyFlags(CPF_Transient)) {
 				continue;
@@ -419,7 +418,7 @@ namespace {
 			PropertiesToSerialize.Add(Property);
 		}
 
-		for (const FProperty* Property : PropertiesToSerialize) {
+		for (const UProperty* Property : PropertiesToSerialize) {
 			if (!Property) continue;
 			if (FPrefabTools::ShouldIgnorePropertySerialization(Property->GetFName())) {
 				continue;
