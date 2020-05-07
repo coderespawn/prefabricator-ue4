@@ -342,8 +342,7 @@ namespace {
 	}
 
 	bool ShouldSkipSerialization(const FProperty* Property, UObject* ObjToSerialize, APrefabActor* PrefabActor) {
-		if (Property->StaticClassCastFlags() == CASTCLASS_FObjectProperty) {
-			const FObjectProperty* ObjProperty = (const FObjectProperty*)Property;
+		if (const FObjectProperty* ObjProperty = CastField<FObjectProperty>(Property)) {
 			UObject* PropertyObjectValue = ObjProperty->GetObjectPropertyValue_InContainer(ObjToSerialize);
 			if (ContainsOuterParent(PropertyObjectValue, ObjToSerialize) ||
 				ContainsOuterParent(PropertyObjectValue, PrefabActor)) {
@@ -408,6 +407,14 @@ namespace {
 				continue;
 			}
 
+			if (const FObjectProperty* ObjProperty = CastField<FObjectProperty>(Property)) {
+				UObject* PropertyObjectValue = ObjProperty->GetObjectPropertyValue_InContainer(ObjToSerialize);
+				if (PropertyObjectValue && PropertyObjectValue->HasAnyFlags(RF_DefaultSubObject | RF_ArchetypeObject)) {
+					continue;
+				}
+			}
+
+
 			PropertiesToSerialize.Add(Property);
 		}
 
@@ -431,10 +438,13 @@ namespace {
 			// Check for cross actor references
 			bool bFoundCrossReference = false;
 
-			if (Property->StaticClassCastFlags() == CASTCLASS_FObjectProperty) {
-				const FObjectProperty* ObjProperty = (const FObjectProperty*)Property;
+			if (const FObjectProperty* ObjProperty = CastField<FObjectProperty>(Property)) {
 				UObject* PropertyObjectValue = ObjProperty->GetObjectPropertyValue_InContainer(ObjToSerialize);
 				if (PropertyObjectValue) {
+					if (PropertyObjectValue->HasAnyFlags(RF_DefaultSubObject | RF_ArchetypeObject)) {
+						continue;
+					}
+
 					FString ObjectPath = PropertyObjectValue->GetPathName();
 					FGuid CrossRefPrefabItem;
 					if (CrossReferences.GetPrefabItemId(ObjectPath, CrossRefPrefabItem)) {
@@ -636,14 +646,14 @@ void FPrefabTools::LoadActorState(AActor* InActor, const FPrefabricatorActorData
 		}
 	}
 
+	InActor->PostLoad();
+	InActor->ReregisterAllComponents();
+
 #if WITH_EDITOR
 	if (InActorData.ActorName.Len() > 0) {
 		InActor->SetActorLabel(InActorData.ActorName);
 	}
 #endif // WITH_EDITOR
-
-	InActor->PostLoad();
-	InActor->ReregisterAllComponents();
 
 	if (Service.IsValid()) {
 		SCOPE_CYCLE_COUNTER(STAT_LoadActorState_EndTransaction);
@@ -902,9 +912,8 @@ void FPrefabTools::FixupCrossReferences(const TArray<UPrefabricatorProperty*>& P
 
 		FProperty* Property = ObjToWrite->GetClass()->FindPropertyByName(*PrefabProperty->PropertyName);
 
-		if (Property->StaticClassCastFlags() != CASTCLASS_FObjectProperty) continue;
-
-		const FObjectProperty* ObjectProperty = (const FObjectProperty*)Property;
+		const FObjectProperty* ObjectProperty = CastField<FObjectProperty>(Property);
+		if (!ObjectProperty) continue;
 
 		AActor** SearchResult = PrefabItemToActorMap.Find(PrefabProperty->CrossReferencePrefabActorId);
 		if (!SearchResult) continue;
