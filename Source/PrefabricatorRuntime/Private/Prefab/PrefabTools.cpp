@@ -407,6 +407,13 @@ namespace {
 				continue;
 			}
 
+			if (const UObjectProperty* ObjProperty = Cast<UObjectProperty>(Property)) {
+				UObject* PropertyObjectValue = ObjProperty->GetObjectPropertyValue_InContainer(ObjToSerialize);
+				if (PropertyObjectValue && PropertyObjectValue->HasAnyFlags(RF_DefaultSubObject | RF_ArchetypeObject)) {
+					continue;
+				}
+			}
+
 			PropertiesToSerialize.Add(Property);
 		}
 
@@ -433,6 +440,10 @@ namespace {
 			if (const UObjectProperty* ObjProperty = Cast<UObjectProperty>(Property)) {
 				UObject* PropertyObjectValue = ObjProperty->GetObjectPropertyValue_InContainer(ObjToSerialize);
 				if (PropertyObjectValue) {
+					if (PropertyObjectValue->HasAnyFlags(RF_DefaultSubObject | RF_ArchetypeObject)) {
+						continue;
+					}
+
 					FString ObjectPath = PropertyObjectValue->GetPathName();
 					FGuid CrossRefPrefabItem;
 					if (CrossReferences.GetPrefabItemId(ObjectPath, CrossRefPrefabItem)) {
