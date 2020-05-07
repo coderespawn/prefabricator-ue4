@@ -364,6 +364,14 @@ namespace {
 
 			FProperty* Property = InObjToDeserialize->GetClass()->FindPropertyByName(*PropertyName);
 			if (Property) {
+				// do not overwrite properties that have a default sub object or an archetype object
+				if (FObjectProperty* ObjProperty = CastField<FObjectProperty>(Property)) {
+					UObject* PropertyObjectValue = ObjProperty->GetObjectPropertyValue_InContainer(InObjToDeserialize);
+					if (PropertyObjectValue && PropertyObjectValue->HasAnyFlags(RF_DefaultSubObject | RF_ArchetypeObject)) {
+						continue;
+					}
+				}
+
 				{
 					SCOPE_CYCLE_COUNTER(STAT_DeserializeFields_Iterate_LoadValue);
 					PrefabProperty->LoadReferencedAssetValues();
