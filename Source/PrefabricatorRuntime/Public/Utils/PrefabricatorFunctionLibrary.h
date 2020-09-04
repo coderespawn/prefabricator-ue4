@@ -23,5 +23,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Prefabricator")
 	static void GetAllAttachedActors(AActor* Prefab, TArray<AActor*>& AttachedActors);
 
+	UFUNCTION(BlueprintCallable, Category = "Prefabricator")
+	static void SetPrefabAsset(APrefabActor* PrefabActor, UPrefabricatorAssetInterface* Prefab, bool bReloadPrefab);
 };
 
