@@ -11,10 +11,10 @@
 
 #include "Engine/Selection.h"
 #include "EngineUtils.h"
+#include "PrefabricatorSettings.h"
 #include "GameFramework/Actor.h"
 #include "HAL/UnrealMemory.h"
 #include "PropertyPathHelpers.h"
-#include "Serialization/MemoryReader.h"
 #include "Serialization/ObjectAndNameAsStringProxyArchive.h"
 #include "Serialization/ObjectReader.h"
 #include "Serialization/ObjectWriter.h"
@@ -700,10 +700,19 @@ void FPrefabTools::GetActorChildren(AActor* InParent, TArray<AActor*>& OutChildr
 }
 
 namespace {
-	void GetPrefabBoundsRecursive(AActor* InActor, FBox& OutBounds, bool bNonColliding) {
+	void GetPrefabBoundsRecursive(AActor* InActor, FBox& OutBounds, bool bNonColliding, const TSet<UClass*>& IgnoreActorClasses) {
 		if (InActor && InActor->IsLevelBoundsRelevant()) {
-			if (!InActor->IsA<APrefabActor>()) {
-				FBox ActorBounds = InActor->GetComponentsBoundingBox(bNonColliding);
+			const bool bIgnoreBounds = InActor->IsA<APrefabActor>() || IgnoreActorClasses.Contains(InActor->GetClass()); 
+			if (!bIgnoreBounds) {
+				FBox ActorBounds(ForceInit);
+				InActor->ForEachComponent<UPrimitiveComponent>(false, [&ActorBounds, &bNonColliding, &IgnoreActorClasses](const UPrimitiveComponent* InPrimComp) {
+					if (!IgnoreActorClasses.Contains(InPrimComp->GetClass())) {
+						if (InPrimComp->IsRegistered() && (bNonColliding || InPrimComp->IsCollisionEnabled())) {
+							ActorBounds += InPrimComp->Bounds.GetBox();
+                        }
+					}
+                });
+				
 				if (ActorBounds.GetExtent() == FVector::ZeroVector) {
 					ActorBounds = FBox({ InActor->GetActorLocation() });
 				}
@@ -713,7 +722,7 @@ namespace {
 			TArray<AActor*> AttachedActors;
 			InActor->GetAttachedActors(AttachedActors);
 			for (AActor* AttachedActor : AttachedActors) {
-				GetPrefabBoundsRecursive(AttachedActor, OutBounds, bNonColliding);
+				GetPrefabBoundsRecursive(AttachedActor, OutBounds, bNonColliding, IgnoreActorClasses);
 			}
 		}
 	}
@@ -733,8 +742,9 @@ namespace {
 
 FBox FPrefabTools::GetPrefabBounds(AActor* PrefabActor, bool bNonColliding)
 {
+	const UPrefabricatorSettings* Settings = GetDefault<UPrefabricatorSettings>();
 	FBox Result(EForceInit::ForceInit);
-	GetPrefabBoundsRecursive(PrefabActor, Result, bNonColliding);
+	GetPrefabBoundsRecursive(PrefabActor, Result, bNonColliding, Settings->IgnoreBoundingBoxForObjects);
 	return Result;
 }
 

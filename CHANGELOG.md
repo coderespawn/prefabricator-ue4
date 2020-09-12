@@ -1,5 +1,10 @@
 CHANGELOG: Prefabricator
 ========================
+Version 1.5.3
+-------------
+* New: Added a blueprint function to set the prefab asset on a prefab actor
+* New: Added a plugin setting to ignore bounds for specified actors. Modify this from Edit > Project Settings > Prefabricator
+
 Version 1.5.2
 -------------
 * New: Added engine 4.25 support
