@@ -2,11 +2,15 @@
 
 #include "PrefabricatorSettings.h"
 
+#include "Components/DrawFrustumComponent.h"
+
 
 UPrefabricatorSettings::UPrefabricatorSettings()
 {
 	//Do not change default behavior.
 	PivotPosition = EPrefabricatorPivotPosition::Center;
+
+	IgnoreBoundingBoxForObjects.Add(UDrawFrustumComponent::StaticClass());
 }
 
 /** Gets the settings container name for the settings, either Project or Editor */
