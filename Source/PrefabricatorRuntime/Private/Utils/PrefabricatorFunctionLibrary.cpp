@@ -55,3 +55,14 @@ void UPrefabricatorBlueprintLibrary::GetAllAttachedActors(AActor* Prefab, TArray
 	}
 }
 
+void UPrefabricatorBlueprintLibrary::SetPrefabAsset(APrefabActor* PrefabActor, UPrefabricatorAssetInterface* Prefab, bool bReloadPrefab)
+{
+	if (PrefabActor && PrefabActor->PrefabComponent) {
+		PrefabActor->PrefabComponent->PrefabAssetInterface = Prefab;
+
+		if (bReloadPrefab) {
+			PrefabActor->LoadPrefab();
+		}
+	}
+}
+

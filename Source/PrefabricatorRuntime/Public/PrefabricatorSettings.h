@@ -31,6 +31,10 @@ public:
 	UPROPERTY(config, EditAnywhere, Category = "General Settings")
 	bool bAllowDynamicUpdate = true;
 
+	/** Whenever a prefab is saved, update all the other similar prefabs in the scene to reflect this new change */
+	UPROPERTY(config, EditAnywhere, Category = "General Settings", Meta=(ConfigRestartRequired=true))
+	TSet<UClass*> IgnoreBoundingBoxForObjects;
+	
 	/** Use this angle while saving the prefab asset */
 	UPROPERTY(config, EditAnywhere, Category = "Thumbnail")
 	float DefaultThumbnailPitch = -11.25;
