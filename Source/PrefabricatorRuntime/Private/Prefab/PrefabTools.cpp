@@ -705,13 +705,15 @@ namespace {
 			const bool bIgnoreBounds = InActor->IsA<APrefabActor>() || IgnoreActorClasses.Contains(InActor->GetClass()); 
 			if (!bIgnoreBounds) {
 				FBox ActorBounds(ForceInit);
-				InActor->ForEachComponent<UPrimitiveComponent>(false, [&ActorBounds, &bNonColliding, &IgnoreActorClasses](const UPrimitiveComponent* InPrimComp) {
-					if (!IgnoreActorClasses.Contains(InPrimComp->GetClass())) {
-						if (InPrimComp->IsRegistered() && (bNonColliding || InPrimComp->IsCollisionEnabled())) {
-							ActorBounds += InPrimComp->Bounds.GetBox();
-                        }
+				for (const UActorComponent* ActorComponent : InActor->GetComponents()) {
+					if (const UPrimitiveComponent* InPrimComp = Cast<UPrimitiveComponent>(ActorComponent)) {
+						if (!IgnoreActorClasses.Contains(InPrimComp->GetClass())) {
+							if (InPrimComp->IsRegistered() && (bNonColliding || InPrimComp->IsCollisionEnabled())) {
+								ActorBounds += InPrimComp->Bounds.GetBox();
+							}
+						}
 					}
-                });
+				}
 				
 				if (ActorBounds.GetExtent() == FVector::ZeroVector) {
 					ActorBounds = FBox({ InActor->GetActorLocation() });
