@@ -1,5 +1,11 @@
 CHANGELOG: Prefabricator
 ========================
+Version 1.6.0
+-------------
+* New: Prefab randomizer has an actor filter list. This allows you to selectively randomize prefabs in a level. If left empty, every prefab in the level is randomized
+* New: Updated the docs to demonstrate the new Prefab Randomizer's actor filter feature
+* IMPORTANT: Changed the default value of Prefab Randomizer's RandomizeOnBeginPlay to false.   You'll need to manually set this flag to true in the editor if you need this functionality
+
 Version 1.5.3
 -------------
 * New: Added a blueprint function to set the prefab asset on a prefab actor
