@@ -21,6 +21,9 @@ public:
 	static void RandomizePrefab(APrefabActor* PrefabActor, const FRandomStream& InRandom);
 
 	UFUNCTION(BlueprintCallable, Category = "Prefabricator")
+	static void UnlinkPrefab(APrefabActor* PrefabActor);
+
+	UFUNCTION(BlueprintCallable, Category = "Prefabricator")
 	static void GetAllAttachedActors(AActor* Prefab, TArray<AActor*>& AttachedActors);
 
 	UFUNCTION(BlueprintCallable, Category = "Prefabricator")
