@@ -43,6 +43,10 @@ void UPrefabricatorBlueprintLibrary::RandomizePrefab(APrefabActor* PrefabActor, 
 	FPrefabTools::LoadStateFromPrefabAsset(PrefabActor, LoadSettings);
 }
 
+void UPrefabricatorBlueprintLibrary::UnlinkPrefab(APrefabActor* PrefabActor) {
+	FPrefabTools::UnlinkAndDestroyPrefabActor(PrefabActor);
+}
+
 void UPrefabricatorBlueprintLibrary::GetAllAttachedActors(AActor* Prefab, TArray<AActor*>& AttachedActors)
 {
 	if (!Prefab) return;

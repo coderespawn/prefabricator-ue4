@@ -3,6 +3,8 @@
 #pragma once
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Prefab/PrefabActor.h"
+
 #include "PrefabRandomizerActor.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FPrefabRandomizerCompleteBindableEvent);
@@ -26,7 +28,7 @@ public:
 
 public:
 	UPROPERTY(EditAnywhere, Category = "Prefabricator")
-	bool bRandomizeOnBeginPlay = true;
+	bool bRandomizeOnBeginPlay = false;
 
 	UPROPERTY(EditAnywhere, Category = "Prefabricator")
 	int32 SeedOffset = 0;
@@ -39,6 +41,10 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Prefabricator")
 	bool bFastSyncBuild = false;
+
+	/** If left empty, everything in the level will be randomized.  If set, only the actors in the list will be randomized. */
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Prefabricator")
+	TArray<APrefabActor*> ActorsToRandomize;
 
 private:
 	TSharedPtr<class FPrefabBuildSystem> BuildSystem;
