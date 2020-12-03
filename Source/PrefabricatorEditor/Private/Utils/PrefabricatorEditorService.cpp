@@ -142,7 +142,7 @@ void FPrefabricatorEditorService::RefreshDetailsViewObject(UObject* InObject)
 
 AActor* FPrefabricatorEditorService::SpawnActor(TSubclassOf<AActor> InActorClass, const FTransform& InTransform, ULevel* InLevel, AActor* InTemplate)
 {
-	if (GEditor && !InTemplate) {
+	if (InLevel && GEditor && !InTemplate) {
 		UActorFactory* ActorFactory = GEditor->FindActorFactoryByClassForActorClass(UActorFactoryBoxVolume::StaticClass(), InActorClass);
 		if (ActorFactory) {
 			FAssetData AssetData(InActorClass);
