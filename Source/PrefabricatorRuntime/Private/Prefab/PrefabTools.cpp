@@ -6,12 +6,12 @@
 #include "Asset/PrefabricatorAssetUserData.h"
 #include "Prefab/PrefabActor.h"
 #include "Prefab/PrefabComponent.h"
+#include "PrefabricatorSettings.h"
 #include "Utils/PrefabricatorService.h"
 #include "Utils/PrefabricatorStats.h"
 
 #include "Engine/Selection.h"
 #include "EngineUtils.h"
-#include "PrefabricatorSettings.h"
 #include "GameFramework/Actor.h"
 #include "HAL/UnrealMemory.h"
 #include "PropertyPathHelpers.h"

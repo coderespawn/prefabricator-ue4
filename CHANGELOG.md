@@ -1,5 +1,9 @@
 CHANGELOG: Prefabricator
 ========================
+Version 1.6.1
+-------------
+* New: Added 4.26 engine support
+
 Version 1.6.0
 -------------
 * New: Prefab randomizer has an actor filter list. This allows you to selectively randomize prefabs in a level. If left empty, every prefab in the level is randomized

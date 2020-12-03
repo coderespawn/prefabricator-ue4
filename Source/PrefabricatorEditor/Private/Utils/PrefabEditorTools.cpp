@@ -9,7 +9,7 @@
 #include "Prefab/PrefabComponent.h"
 #include "PrefabricatorSettings.h"
 
-#include "AssetData.h"
+#include "AssetRegistry/AssetData.h"
 #include "AssetToolsModule.h"
 #include "ContentBrowserModule.h"
 #include "EditorViewportClient.h"

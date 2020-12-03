@@ -4,7 +4,6 @@
 
 #include "Components/DrawFrustumComponent.h"
 
-
 UPrefabricatorSettings::UPrefabricatorSettings()
 {
 	//Do not change default behavior.

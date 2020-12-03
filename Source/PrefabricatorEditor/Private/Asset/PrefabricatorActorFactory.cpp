@@ -7,7 +7,7 @@
 #include "Prefab/PrefabComponent.h"
 #include "Prefab/PrefabTools.h"
 
-#include "AssetData.h"
+#include "AssetRegistry/AssetData.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogPrefabricatorActorFactory, Log, All);
 
