@@ -1,4 +1,4 @@
-//$ Copyright 2015-20, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
+//$ Copyright 2015-21, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #pragma once
 #include "CoreMinimal.h"
@@ -28,5 +28,8 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Prefabricator")
 	static void SetPrefabAsset(APrefabActor* PrefabActor, UPrefabricatorAssetInterface* Prefab, bool bReloadPrefab);
+
+	UFUNCTION(BlueprintCallable, Category = "Prefabricator")
+	static APrefabActor* FindTopMostPrefabActor(AActor* InActor);
 };
 

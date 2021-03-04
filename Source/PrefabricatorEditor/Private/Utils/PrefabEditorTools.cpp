@@ -1,10 +1,9 @@
-//$ Copyright 2015-20, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
+//$ Copyright 2015-21, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #include "Utils/PrefabEditorTools.h"
 
 #include "Asset/PrefabricatorAsset.h"
 #include "Asset/Thumbnail/PrefabricatorAssetThumbnailScene.h"
-#include "Prefab/PrefabActor.h"
 #include "Prefab/PrefabActor.h"
 #include "Prefab/PrefabComponent.h"
 #include "PrefabricatorSettings.h"

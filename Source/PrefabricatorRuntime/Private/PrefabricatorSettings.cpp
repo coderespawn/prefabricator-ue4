@@ -1,9 +1,8 @@
-//$ Copyright 2015-20, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
+//$ Copyright 2015-21, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #include "PrefabricatorSettings.h"
 
 #include "Components/DrawFrustumComponent.h"
-
 
 UPrefabricatorSettings::UPrefabricatorSettings()
 {

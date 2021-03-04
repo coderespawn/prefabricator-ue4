@@ -1,4 +1,4 @@
-//$ Copyright 2015-20, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
+//$ Copyright 2015-21, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #include "PrefabricatorEditorModule.h"
 
@@ -8,7 +8,6 @@
 #include "Prefab/PrefabTools.h"
 #include "PrefabEditorCommands.h"
 #include "PrefabEditorStyle.h"
-#include "PrefabricatorSettings.h"
 #include "UI/EditorUIExtender.h"
 #include "UI/PrefabCustomization.h"
 #include "Utils/MapChangeHook.h"
@@ -17,12 +16,9 @@
 
 #include "AssetRegistryModule.h"
 #include "AssetToolsModule.h"
-#include "Editor/UnrealEdEngine.h"
 #include "IAssetTools.h"
 #include "LevelEditor.h"
 #include "PropertyEditorModule.h"
-#include "ThumbnailRendering/ThumbnailManager.h"
-#include "UnrealEdGlobals.h"
 
 #define LOCTEXT_NAMESPACE "PrefabricatorEditorModule" 
 
