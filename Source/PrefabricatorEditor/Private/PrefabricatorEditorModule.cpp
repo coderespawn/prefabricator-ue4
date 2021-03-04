@@ -1,4 +1,4 @@
-//$ Copyright 2015-20, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
+//$ Copyright 2015-21, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #include "PrefabricatorEditorModule.h"
 
@@ -15,7 +15,7 @@
 #include "Utils/PrefabricatorEditorService.h"
 #include "Utils/SelectionHook.h"
 
-#include "AssetRegistryModule.h"
+#include "AssetRegistry/AssetRegistryModule.h"
 #include "AssetToolsModule.h"
 #include "Editor/UnrealEdEngine.h"
 #include "IAssetTools.h"

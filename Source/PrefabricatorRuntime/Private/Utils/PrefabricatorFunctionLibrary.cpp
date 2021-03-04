@@ -1,4 +1,4 @@
-//$ Copyright 2015-20, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
+//$ Copyright 2015-21, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #include "Utils/PrefabricatorFunctionLibrary.h"
 
@@ -68,5 +68,15 @@ void UPrefabricatorBlueprintLibrary::SetPrefabAsset(APrefabActor* PrefabActor, U
 			PrefabActor->LoadPrefab();
 		}
 	}
+}
+
+APrefabActor* UPrefabricatorBlueprintLibrary::FindTopMostPrefabActor(AActor* InActor) {
+	AActor* CurrentActor = InActor;
+	APrefabActor* TopmostPrefab = nullptr;
+	while (APrefabActor* PrefabActor = Cast<APrefabActor>(CurrentActor->GetAttachParentActor())) {
+		TopmostPrefab = PrefabActor;
+		CurrentActor = PrefabActor;
+	}
+	return TopmostPrefab;
 }
 
