@@ -1,5 +1,10 @@
 CHANGELOG: Prefabricator
 ========================
+Version 1.6.2
+-------------
+* Fix: Improved the way prefabs were being searched in a streamed in level
+* Fix: Added a blueprint function to find the prefab actor that a given actor belongs to (FindTopMostPrefabActor)
+
 Version 1.6.1
 -------------
 * New: Added 4.26 engine support
