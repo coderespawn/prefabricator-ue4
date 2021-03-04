@@ -15,7 +15,7 @@
 #include "Utils/PrefabricatorEditorService.h"
 #include "Utils/SelectionHook.h"
 
-#include "AssetRegistry/AssetRegistryModule.h"
+#include "AssetRegistryModule.h"
 #include "AssetToolsModule.h"
 #include "Editor/UnrealEdEngine.h"
 #include "IAssetTools.h"

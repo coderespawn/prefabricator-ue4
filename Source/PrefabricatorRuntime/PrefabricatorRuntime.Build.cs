@@ -20,7 +20,6 @@ namespace UnrealBuildTool.Rules
 					"CoreUObject",
 				    "Engine",
                     "PropertyPath",
-                    "DeveloperSettings",
 					// ... add other public dependencies that you statically link with here ...
 				}
 				);
