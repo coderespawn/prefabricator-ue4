@@ -70,3 +70,13 @@ void UPrefabricatorBlueprintLibrary::SetPrefabAsset(APrefabActor* PrefabActor, U
 	}
 }
 
+APrefabActor* UPrefabricatorBlueprintLibrary::FindTopMostPrefabActor(AActor* InActor) {
+	AActor* CurrentActor = InActor;
+	APrefabActor* TopmostPrefab = nullptr;
+	while (APrefabActor* PrefabActor = Cast<APrefabActor>(CurrentActor->GetAttachParentActor())) {
+		TopmostPrefab = PrefabActor;
+		CurrentActor = PrefabActor;
+	}
+	return TopmostPrefab;
+}
+

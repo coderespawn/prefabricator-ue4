@@ -28,5 +28,8 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Prefabricator")
 	static void SetPrefabAsset(APrefabActor* PrefabActor, UPrefabricatorAssetInterface* Prefab, bool bReloadPrefab);
+
+	UFUNCTION(BlueprintCallable, Category = "Prefabricator")
+	static APrefabActor* FindTopMostPrefabActor(AActor* InActor);
 };
 
