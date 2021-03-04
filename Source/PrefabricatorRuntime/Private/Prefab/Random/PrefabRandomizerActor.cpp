@@ -1,4 +1,4 @@
-//$ Copyright 2015-20, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
+//$ Copyright 2015-21, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #include "Prefab/Random/PrefabRandomizerActor.h"
 
@@ -67,11 +67,12 @@ void APrefabRandomizer::BeginPlay()
 namespace {
 	template<typename T>
 	void GetActorsInLevel(ULevel* Level, TArray<T*>& OutResult) {
-		for (TActorIterator<T> It(Level->GetWorld()); It; ++It) {
-			T* Actor = *It;
-			if (Actor->GetLevel() == Level) {
-				OutResult.Add(Actor);
-			}
+		if (Level) {
+			for (AActor* Actor : Level->Actors) {
+				if (T* CastActor = Cast<T>(Actor)) {
+					OutResult.Add(CastActor);
+				}
+			} 
 		}
 	}
 
