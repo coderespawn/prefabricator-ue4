@@ -1,4 +1,4 @@
-//$ Copyright 2015-20, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
+//$ Copyright 2015-21, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #include "Prefab/Random/PrefabRandomizerActor.h"
 
@@ -67,11 +67,12 @@ void APrefabRandomizer::BeginPlay()
 namespace {
 	template<typename T>
 	void GetActorsInLevel(ULevel* Level, TArray<T*>& OutResult) {
-		for (TActorIterator<T> It(Level->GetWorld()); It; ++It) {
-			T* Actor = *It;
-			if (Actor->GetLevel() == Level) {
-				OutResult.Add(Actor);
-			}
+		if (Level) {
+			for (AActor* Actor : Level->Actors) {
+				if (T* CastActor = Cast<T>(Actor)) {
+					OutResult.Add(CastActor);
+				}
+			} 
 		}
 	}
 
@@ -90,15 +91,23 @@ void APrefabRandomizer::Randomize(int32 InSeed)
 {
 	Random.Initialize(InSeed);
 
-	// Grab all the actors in the level
+	const bool bRandomizeEverythingInLevel = (ActorsToRandomize.Num() == 0); 
+	TArray<APrefabActor*> TargetActors;
 	ULevel* CurrentLevel = GetLevel();
-	TArray<APrefabActor*> AllPrefabsInLevel;
-	GetActorsInLevel(CurrentLevel, AllPrefabsInLevel);
+	if (bRandomizeEverythingInLevel) {
+		// Grab all the actors in the level
+		GetActorsInLevel(CurrentLevel, TargetActors);
+	}
+	else {
+		TargetActors = ActorsToRandomize;
+	}
 
+	if (TargetActors.Num() == 0) return;
+	
 	// Build only the top level prefabs
-	TArray<APrefabActor*> TopLevelPrefabs = AllPrefabsInLevel.FilterByPredicate([](APrefabActor* InPrefab) -> bool {
+	TArray<APrefabActor*> TopLevelPrefabs = TargetActors.FilterByPredicate([](APrefabActor* InPrefab) -> bool {
 		AActor* Parent = InPrefab->GetAttachParentActor();
-		bool bChildOfAnotherPrefab = Parent && Parent->IsA<APrefabActor>();
+		const bool bChildOfAnotherPrefab = Parent && Parent->IsA<APrefabActor>();
 		return !bChildOfAnotherPrefab;
 	});
 
@@ -110,8 +119,25 @@ void APrefabRandomizer::Randomize(int32 InSeed)
 	GetActorsInLevel(CurrentLevel, SeedLinkersInLevel);
 	for (APrefabSeedLinker* SeedLinker : SeedLinkersInLevel) {
 		SanitizeArray(SeedLinker->LinkedActors);
-		if (SeedLinker->LinkedActors.Num() > 1) {
-			int32 LinkedSeeds = SeedLinker->LinkedActors[0]->Seed;
+
+		// If we are randomizing only selected actors, check if the seed linker links to one of them
+		bool bValidSeedLinker;
+		if (!bRandomizeEverythingInLevel) {
+			bValidSeedLinker = false;
+			for (TWeakObjectPtr<APrefabActor> LinkedActor : SeedLinker->LinkedActors) {
+				if (!LinkedActor.IsValid()) continue;
+				if (TargetActors.Contains(LinkedActor)) {
+					bValidSeedLinker = true;
+					break;
+				}
+			}
+		}
+		else {
+			bValidSeedLinker = true;
+		}
+		
+		if (bValidSeedLinker && SeedLinker->LinkedActors.Num() > 1) {
+			const int32 LinkedSeeds = SeedLinker->LinkedActors[0]->Seed;
 			for (int i = 1; i < SeedLinker->LinkedActors.Num(); i++) {
 				SeedLinker->LinkedActors[i]->Seed = LinkedSeeds;
 			}

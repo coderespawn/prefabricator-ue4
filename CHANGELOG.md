@@ -1,5 +1,30 @@
 CHANGELOG: Prefabricator
 ========================
+Version 1.6.2
+-------------
+* Fix: Improved the way prefabs were being searched in a streamed in level
+* Fix: Added a blueprint function to find the prefab actor that a given actor belongs to (FindTopMostPrefabActor)
+
+Version 1.6.1
+-------------
+* New: Added 4.26 engine support
+
+Version 1.6.0
+-------------
+* New: Prefab randomizer has an actor filter list. This allows you to selectively randomize prefabs in a level. If left empty, every prefab in the level is randomized
+* New: Updated the docs to demonstrate the new Prefab Randomizer's actor filter feature
+* IMPORTANT: Changed the default value of Prefab Randomizer's RandomizeOnBeginPlay to false.   You'll need to manually set this flag to true in the editor if you need this functionality
+
+Version 1.5.3
+-------------
+* New: Added a blueprint function to set the prefab asset on a prefab actor
+* New: Added a plugin setting to ignore bounds for specified actors. Modify this from Edit > Project Settings > Prefabricator
+
+Version 1.5.2
+-------------
+* New: Added engine 4.25 support
+* New: Project settings has default thumbnail settings which will be used while saving the prefab asset
+
 Version 1.5.1
 -------------
 * Fix: Improved caching of prefabs

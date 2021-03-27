@@ -1,4 +1,4 @@
-//$ Copyright 2015-20, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
+//$ Copyright 2015-21, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #include "Utils/PrefabricatorFunctionLibrary.h"
 
@@ -43,6 +43,10 @@ void UPrefabricatorBlueprintLibrary::RandomizePrefab(APrefabActor* PrefabActor, 
 	FPrefabTools::LoadStateFromPrefabAsset(PrefabActor, LoadSettings);
 }
 
+void UPrefabricatorBlueprintLibrary::UnlinkPrefab(APrefabActor* PrefabActor) {
+	FPrefabTools::UnlinkAndDestroyPrefabActor(PrefabActor);
+}
+
 void UPrefabricatorBlueprintLibrary::GetAllAttachedActors(AActor* Prefab, TArray<AActor*>& AttachedActors)
 {
 	if (!Prefab) return;
@@ -53,5 +57,26 @@ void UPrefabricatorBlueprintLibrary::GetAllAttachedActors(AActor* Prefab, TArray
 		AttachedActors.Add(ChildActor);
 		GetAllAttachedActors(ChildActor, AttachedActors);
 	}
+}
+
+void UPrefabricatorBlueprintLibrary::SetPrefabAsset(APrefabActor* PrefabActor, UPrefabricatorAssetInterface* Prefab, bool bReloadPrefab)
+{
+	if (PrefabActor && PrefabActor->PrefabComponent) {
+		PrefabActor->PrefabComponent->PrefabAssetInterface = Prefab;
+
+		if (bReloadPrefab) {
+			PrefabActor->LoadPrefab();
+		}
+	}
+}
+
+APrefabActor* UPrefabricatorBlueprintLibrary::FindTopMostPrefabActor(AActor* InActor) {
+	AActor* CurrentActor = InActor;
+	APrefabActor* TopmostPrefab = nullptr;
+	while (APrefabActor* PrefabActor = Cast<APrefabActor>(CurrentActor->GetAttachParentActor())) {
+		TopmostPrefab = PrefabActor;
+		CurrentActor = PrefabActor;
+	}
+	return TopmostPrefab;
 }
 

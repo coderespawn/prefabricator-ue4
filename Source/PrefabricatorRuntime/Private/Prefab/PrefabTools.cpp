@@ -1,4 +1,4 @@
-//$ Copyright 2015-20, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
+//$ Copyright 2015-21, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #include "Prefab/PrefabTools.h"
 
@@ -6,6 +6,7 @@
 #include "Asset/PrefabricatorAssetUserData.h"
 #include "Prefab/PrefabActor.h"
 #include "Prefab/PrefabComponent.h"
+#include "PrefabricatorSettings.h"
 #include "Utils/PrefabricatorService.h"
 #include "Utils/PrefabricatorStats.h"
 
@@ -14,7 +15,6 @@
 #include "GameFramework/Actor.h"
 #include "HAL/UnrealMemory.h"
 #include "PropertyPathHelpers.h"
-#include "Serialization/MemoryReader.h"
 #include "Serialization/ObjectAndNameAsStringProxyArchive.h"
 #include "Serialization/ObjectReader.h"
 #include "Serialization/ObjectWriter.h"
@@ -300,7 +300,7 @@ void FPrefabTools::SaveStateToPrefabAsset(APrefabActor* PrefabActor)
 }
 
 namespace {
-	bool GetPropertyData(const UProperty* Property, UObject* Obj, UObject* ObjTemplate, FString& OutPropertyData) {
+	bool GetPropertyData(const FProperty* Property, UObject* Obj, UObject * ObjTemplate, FString& OutPropertyData) {
 		if (!Obj || !Property) return false;
 		
 		UObject* DefaultObject = ObjTemplate;
@@ -341,8 +341,8 @@ namespace {
 		return PropertyValue == DefaultValue;
 	}
 
-	bool ShouldSkipSerialization(const UProperty* Property, UObject* ObjToSerialize, APrefabActor* PrefabActor) {
-		if (const UObjectProperty* ObjProperty = Cast<const UObjectProperty>(Property)) {
+	bool ShouldSkipSerialization(const FProperty* Property, UObject* ObjToSerialize, APrefabActor* PrefabActor) {
+		if (const FObjectProperty* ObjProperty = CastField<FObjectProperty>(Property)) {
 			UObject* PropertyObjectValue = ObjProperty->GetObjectPropertyValue_InContainer(ObjToSerialize);
 			if (ContainsOuterParent(PropertyObjectValue, ObjToSerialize) ||
 				ContainsOuterParent(PropertyObjectValue, PrefabActor)) {
@@ -362,8 +362,16 @@ namespace {
 			FString PropertyName = PrefabProperty->PropertyName;
 			if (PropertyName == "AssetUserData") continue;		// Skip this as assignment is very slow and is not needed
 
-			UProperty* Property = InObjToDeserialize->GetClass()->FindPropertyByName(*PropertyName);
+			FProperty* Property = InObjToDeserialize->GetClass()->FindPropertyByName(*PropertyName);
 			if (Property) {
+				// do not overwrite properties that have a default sub object or an archetype object
+				if (FObjectProperty* ObjProperty = CastField<FObjectProperty>(Property)) {
+					UObject* PropertyObjectValue = ObjProperty->GetObjectPropertyValue_InContainer(InObjToDeserialize);
+					if (PropertyObjectValue && PropertyObjectValue->HasAnyFlags(RF_DefaultSubObject | RF_ArchetypeObject)) {
+						continue;
+					}
+				}
+
 				{
 					SCOPE_CYCLE_COUNTER(STAT_DeserializeFields_Iterate_LoadValue);
 					PrefabProperty->LoadReferencedAssetValues();
@@ -388,9 +396,9 @@ namespace {
 			return;
 		}
 
-		TSet<const UProperty*> PropertiesToSerialize;
-		for (TFieldIterator<UProperty> PropertyIterator(ObjToSerialize->GetClass()); PropertyIterator; ++PropertyIterator) {
-			UProperty* Property = *PropertyIterator;
+		TSet<const FProperty*> PropertiesToSerialize;
+		for (TFieldIterator<FProperty> PropertyIterator(ObjToSerialize->GetClass()); PropertyIterator; ++PropertyIterator) {
+			FProperty* Property = *PropertyIterator;
 			if (!Property) continue;
 			if (Property->HasAnyPropertyFlags(CPF_Transient)) {
 				continue;
@@ -407,10 +415,18 @@ namespace {
 				continue;
 			}
 
+			if (const FObjectProperty* ObjProperty = CastField<FObjectProperty>(Property)) {
+				UObject* PropertyObjectValue = ObjProperty->GetObjectPropertyValue_InContainer(ObjToSerialize);
+				if (PropertyObjectValue && PropertyObjectValue->HasAnyFlags(RF_DefaultSubObject | RF_ArchetypeObject)) {
+					continue;
+				}
+			}
+
+
 			PropertiesToSerialize.Add(Property);
 		}
 
-		for (const UProperty* Property : PropertiesToSerialize) {
+		for (const FProperty* Property : PropertiesToSerialize) {
 			if (!Property) continue;
 			if (FPrefabTools::ShouldIgnorePropertySerialization(Property->GetFName())) {
 				continue;
@@ -429,9 +445,14 @@ namespace {
 
 			// Check for cross actor references
 			bool bFoundCrossReference = false;
-			if (const UObjectProperty* ObjectProperty = Cast<UObjectProperty>(Property)) {
-				UObject* PropertyObjectValue = ObjectProperty->GetObjectPropertyValue_InContainer(ObjToSerialize);
+
+			if (const FObjectProperty* ObjProperty = CastField<FObjectProperty>(Property)) {
+				UObject* PropertyObjectValue = ObjProperty->GetObjectPropertyValue_InContainer(ObjToSerialize);
 				if (PropertyObjectValue) {
+					if (PropertyObjectValue->HasAnyFlags(RF_DefaultSubObject | RF_ArchetypeObject)) {
+						continue;
+					}
+
 					FString ObjectPath = PropertyObjectValue->GetPathName();
 					FGuid CrossRefPrefabItem;
 					if (CrossReferences.GetPrefabItemId(ObjectPath, CrossRefPrefabItem)) {
@@ -633,14 +654,14 @@ void FPrefabTools::LoadActorState(AActor* InActor, const FPrefabricatorActorData
 		}
 	}
 
+	InActor->PostLoad();
+	InActor->ReregisterAllComponents();
+
 #if WITH_EDITOR
 	if (InActorData.ActorName.Len() > 0) {
 		InActor->SetActorLabel(InActorData.ActorName);
 	}
 #endif // WITH_EDITOR
-
-	InActor->PostLoad();
-	InActor->ReregisterAllComponents();
 
 	if (Service.IsValid()) {
 		SCOPE_CYCLE_COUNTER(STAT_LoadActorState_EndTransaction);
@@ -680,10 +701,21 @@ void FPrefabTools::GetActorChildren(AActor* InParent, TArray<AActor*>& OutChildr
 }
 
 namespace {
-	void GetPrefabBoundsRecursive(AActor* InActor, FBox& OutBounds, bool bNonColliding) {
+	void GetPrefabBoundsRecursive(AActor* InActor, FBox& OutBounds, bool bNonColliding, const TSet<UClass*>& IgnoreActorClasses) {
 		if (InActor && InActor->IsLevelBoundsRelevant()) {
-			if (!InActor->IsA<APrefabActor>()) {
-				FBox ActorBounds = InActor->GetComponentsBoundingBox(bNonColliding);
+			const bool bIgnoreBounds = InActor->IsA<APrefabActor>() || IgnoreActorClasses.Contains(InActor->GetClass()); 
+			if (!bIgnoreBounds) {
+				FBox ActorBounds(ForceInit);
+				for (const UActorComponent* ActorComponent : InActor->GetComponents()) {
+					if (const UPrimitiveComponent* InPrimComp = Cast<UPrimitiveComponent>(ActorComponent)) {
+						if (!IgnoreActorClasses.Contains(InPrimComp->GetClass())) {
+							if (InPrimComp->IsRegistered() && (bNonColliding || InPrimComp->IsCollisionEnabled())) {
+								ActorBounds += InPrimComp->Bounds.GetBox();
+							}
+						}
+					}
+				}
+				
 				if (ActorBounds.GetExtent() == FVector::ZeroVector) {
 					ActorBounds = FBox({ InActor->GetActorLocation() });
 				}
@@ -693,7 +725,7 @@ namespace {
 			TArray<AActor*> AttachedActors;
 			InActor->GetAttachedActors(AttachedActors);
 			for (AActor* AttachedActor : AttachedActors) {
-				GetPrefabBoundsRecursive(AttachedActor, OutBounds, bNonColliding);
+				GetPrefabBoundsRecursive(AttachedActor, OutBounds, bNonColliding, IgnoreActorClasses);
 			}
 		}
 	}
@@ -713,8 +745,9 @@ namespace {
 
 FBox FPrefabTools::GetPrefabBounds(AActor* PrefabActor, bool bNonColliding)
 {
+	const UPrefabricatorSettings* Settings = GetDefault<UPrefabricatorSettings>();
 	FBox Result(EForceInit::ForceInit);
-	GetPrefabBoundsRecursive(PrefabActor, Result, bNonColliding);
+	GetPrefabBoundsRecursive(PrefabActor, Result, bNonColliding, Settings->IgnoreBoundingBoxForObjects);
 	return Result;
 }
 
@@ -897,8 +930,9 @@ void FPrefabTools::FixupCrossReferences(const TArray<UPrefabricatorProperty*>& P
 	for (UPrefabricatorProperty* PrefabProperty : PrefabProperties) {
 		if (!PrefabProperty || !PrefabProperty->bIsCrossReferencedActor) continue;
 
-		UProperty* Property = ObjToWrite->GetClass()->FindPropertyByName(*PrefabProperty->PropertyName);
-		UObjectProperty* ObjectProperty = Cast<UObjectProperty>(Property);
+		FProperty* Property = ObjToWrite->GetClass()->FindPropertyByName(*PrefabProperty->PropertyName);
+
+		const FObjectProperty* ObjectProperty = CastField<FObjectProperty>(Property);
 		if (!ObjectProperty) continue;
 
 		AActor** SearchResult = PrefabItemToActorMap.Find(PrefabProperty->CrossReferencePrefabActorId);

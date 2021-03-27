@@ -1,4 +1,4 @@
-//$ Copyright 2015-20, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
+//$ Copyright 2015-21, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #include "Utils/PrefabricatorEditorService.h"
 
@@ -91,7 +91,7 @@ int FPrefabricatorEditorService::GetNumSelectedActors()
 
 UPrefabricatorAsset* FPrefabricatorEditorService::CreatePrefabAsset()
 {
-	return FPrefabEditorTools::CreateAssetOnContentBrowser<UPrefabricatorAsset>("Prefab", true);
+	return FPrefabEditorTools::CreatePrefabAsset();
 }
 
 FVector FPrefabricatorEditorService::SnapToGrid(const FVector& InLocation)
@@ -142,7 +142,7 @@ void FPrefabricatorEditorService::RefreshDetailsViewObject(UObject* InObject)
 
 AActor* FPrefabricatorEditorService::SpawnActor(TSubclassOf<AActor> InActorClass, const FTransform& InTransform, ULevel* InLevel, AActor* InTemplate)
 {
-	if (GEditor && !InTemplate) {
+	if (InLevel && GEditor && !InTemplate) {
 		UActorFactory* ActorFactory = GEditor->FindActorFactoryByClassForActorClass(UActorFactoryBoxVolume::StaticClass(), InActorClass);
 		if (ActorFactory) {
 			FAssetData AssetData(InActorClass);
