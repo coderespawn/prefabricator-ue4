@@ -38,8 +38,9 @@ public:
 	UPROPERTY()
 	bool bIsCrossReferencedActor = false;
 
+	// JB: The cross-references per index in array.
 	UPROPERTY()
-	FGuid CrossReferencePrefabActorId;
+	TMap<int32, FGuid> CrossReferencePrefabActorIdMap;
 
 	void SaveReferencedAssetValues();
 	void LoadReferencedAssetValues();
