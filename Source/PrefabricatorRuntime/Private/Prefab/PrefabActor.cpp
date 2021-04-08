@@ -213,20 +213,20 @@ void FPrefabBuildSystemCommand_BuildPrefab::Execute(FPrefabBuildSystem& BuildSys
 		}
 
 		// Push a build complete notification request. Since this is a stack, it will execute after all the children are processed below
-		FPrefabBuildSystemCommandPtr ChildBuildCommand = MakeShareable(new FPrefabBuildSystemCommand_NotifyBuildComplete(Prefab));
-		BuildSystem.PushCommand(ChildBuildCommand);
-	}
-
-	// Add the child prefabs to the stack
-	TArray<AActor*> ChildActors;
-	{
-		SCOPE_CYCLE_COUNTER(STAT_Randomize_GetChildActor);
-		Prefab->GetAttachedActors(ChildActors);
-	}
-	for (AActor* ChildActor : ChildActors) {
-		if (APrefabActor* ChildPrefab = Cast<APrefabActor>(ChildActor)) {
-			FPrefabBuildSystemCommandPtr ChildBuildCommand = MakeShareable(new FPrefabBuildSystemCommand_BuildPrefab(ChildPrefab, bRandomizeNestedSeed, Random));
-			BuildSystem.PushCommand(ChildBuildCommand);
+		const FPrefabBuildSystemCommandPtr CmdBuildComplete = MakeShareable(new FPrefabBuildSystemCommand_NotifyBuildComplete(Prefab));
+		BuildSystem.PushCommand(CmdBuildComplete);
+		
+		// Add the child prefabs to the stack
+		TArray<AActor*> ChildActors;
+		{
+			SCOPE_CYCLE_COUNTER(STAT_Randomize_GetChildActor);
+			Prefab->GetAttachedActors(ChildActors);
+		}
+		for (AActor* ChildActor : ChildActors) {
+			if (APrefabActor* ChildPrefab = Cast<APrefabActor>(ChildActor)) {
+				const FPrefabBuildSystemCommandPtr CmdBuildPrefab = MakeShareable(new FPrefabBuildSystemCommand_BuildPrefab(ChildPrefab, bRandomizeNestedSeed, Random));
+				BuildSystem.PushCommand(CmdBuildPrefab);
+			}
 		}
 	}
 }
