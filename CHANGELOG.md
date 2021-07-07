@@ -1,5 +1,9 @@
 CHANGELOG: Prefabricator
 ========================
+Version 1.7.0-ea1
+-----------------
+* New: Support for UE5
+
 Version 1.6.2
 -------------
 * Fix: Improved the way prefabs were being searched in a streamed in level
