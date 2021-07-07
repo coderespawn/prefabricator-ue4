@@ -22,6 +22,8 @@
 #include "Framework/Notifications/NotificationManager.h"
 #include "Framework/SlateDelegates.h"
 #include "LevelEditor.h"
+#include "ToolMenuEntry.h"
+#include "ToolMenus.h"
 #include "Widgets/Notifications/SNotificationList.h"
 #include "Widgets/SNullWidget.h"
 
@@ -246,15 +248,17 @@ void FEditorUIExtender::Extend()
 	MenuExtenders.Add(FLevelEditorModule::FLevelViewportMenuExtender_SelectedActors::CreateStatic(&Local::OnExtendLevelEditorActorContextMenu));
 	LevelViewportExtenderHandle = MenuExtenders.Last().GetHandle();
 
-	LevelToolbarExtender = MakeShareable(new FExtender);
-	LevelToolbarExtender->AddToolBarExtension(
-		"Settings",
-		EExtensionHook::After,
-		FPrefabricatorCommands::Get().LevelMenuActionList,
-		FToolBarExtensionDelegate::CreateStatic(&Local::ExtendLevelToolbar)
-	);
-
-	LevelEditorModule.GetToolBarExtensibilityManager().Get()->AddExtender(LevelToolbarExtender);
+	UToolMenu* AssetsToolBar = UToolMenus::Get()->ExtendMenu("LevelEditor.LevelEditorToolBar.AssetsToolBar");
+	if (AssetsToolBar) {
+		FToolMenuSection& Section = AssetsToolBar->AddSection("Prefabricator");
+		const FToolMenuEntry LaunchPadEntry = FToolMenuEntry::InitComboButton("Prefabricator",
+																				FUIAction(),
+																				FOnGetContent::CreateStatic(&Local::HandleShowToolbarPrefabMenu),
+																				LOCTEXT("PrefabricatorToolbarButtonText", "Prefabricator"),
+																				LOCTEXT("DAToolbarButtonTooltip", "Prefabricator Menu"),
+																				FSlateIcon(FPrefabEditorStyle::GetStyleSetName(), TEXT("Prefabricator.CreatePrefab")));
+		Section.AddEntry(LaunchPadEntry);
+	}
 	
 	
 }

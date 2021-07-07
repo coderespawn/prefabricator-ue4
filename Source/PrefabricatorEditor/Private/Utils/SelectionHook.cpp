@@ -101,8 +101,8 @@ void FPrefabricatorSelectionHook::OnObjectSelected(UObject* Object)
 
 	if (CustomSelection) {
 		bSelectionGuard = true;
-		GEditor->SelectActor(RequestedActor, false, true);
 		GEditor->SelectActor(CustomSelection, true, true);
+		GEditor->SelectActor(RequestedActor, false, true);
 		bSelectionGuard = false;
 
 		LastSelectedObject = CustomSelection;
