@@ -11,7 +11,7 @@ class PREFABRICATOREDITOR_API UPrefabricatorActorFactory : public UActorFactory 
 
 	// UActorFactory interface
 	virtual UObject* GetAssetFromActorInstance(AActor* ActorInstance);
-	virtual AActor* SpawnActor(UObject* Asset, ULevel* InLevel, const FTransform& Transform, EObjectFlags InObjectFlags, const FName Name);
+	virtual AActor* SpawnActor(UObject* InAsset, ULevel* InLevel, const FTransform& InTransform, const FActorSpawnParameters& InSpawnParams);
 	virtual void PostSpawnActor(UObject* Asset, AActor* NewActor);
 	virtual void PostCreateBlueprint(UObject* Asset, AActor* CDO);
 	virtual bool CanCreateActorFrom(const FAssetData& AssetData, FText& OutErrorMsg);
