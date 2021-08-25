@@ -5,6 +5,8 @@
 #include "Engine/EngineTypes.h"
 #include "PrefabricatorAsset.generated.h"
 
+class APrefabActor;
+
 USTRUCT()
 struct PREFABRICATORRUNTIME_API FPrefabricatorPropertyAssetMapping {
 	GENERATED_BODY()
