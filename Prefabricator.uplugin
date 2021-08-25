@@ -6,7 +6,7 @@
 	"CreatedBy" : "Code Respawn",
 	"CreatedByURL" : "http://prefabricator.dev",
 	"DocsURL": "http://docs.prefabricator.dev",
-	"EngineVersion" : "4.26.0",
+	"EngineVersion" : "4.27.0",
 	"Description" : "Create Prefabs in Unreal Engine",
 	"Category" : "Prefab",
 	"EnabledByDefault" : true,
