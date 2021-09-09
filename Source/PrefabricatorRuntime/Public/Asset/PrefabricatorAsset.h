@@ -103,7 +103,7 @@ public:
 	virtual void PostSpawn_Implementation(APrefabActor* Prefab);
 };
 
-UCLASS(Blueprintable)
+UCLASS(Abstract, BlueprintType, Blueprintable)
 class PREFABRICATORRUNTIME_API UPrefabricatorAssetInterface : public UObject {
 	GENERATED_BODY()
 public:
