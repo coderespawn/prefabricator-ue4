@@ -23,6 +23,25 @@ void FPrefabricatorSelectionHook::Release()
 	USelection::SelectNoneEvent.Remove(CallbackHandle_SelectNone);
 }
 
+void FPrefabricatorSelectionHook::Tick(float DeltaTime) {
+	bSelectionGuard = true;
+	FPrefabricatorSelectionRequest Request;
+	while (SelectionRequests.Dequeue(Request)) {
+		if (Request.Actor.IsValid()) {
+			GEditor->SelectActor(Request.Actor.Get(), Request.bSelected, true);
+		}
+	}
+	bSelectionGuard = false;
+}
+
+bool FPrefabricatorSelectionHook::IsTickable() const {
+	return true;
+}
+
+TStatId FPrefabricatorSelectionHook::GetStatId() const {
+	return TStatId();
+}
+
 namespace {
 	bool IsInHierarchy(AActor* InActor, AActor* InPossibleParent) {
 		if (!InActor || !InPossibleParent) {
@@ -100,11 +119,8 @@ void FPrefabricatorSelectionHook::OnObjectSelected(UObject* Object)
 	}
 
 	if (CustomSelection) {
-		bSelectionGuard = true;
-		GEditor->SelectActor(RequestedActor, false, true);
-		GEditor->SelectActor(CustomSelection, true, true);
-		bSelectionGuard = false;
-
+		SelectionRequests.Enqueue({RequestedActor, false});
+		SelectionRequests.Enqueue({CustomSelection, true});
 		LastSelectedObject = CustomSelection;
 	}
 	else {
