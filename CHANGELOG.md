@@ -1,5 +1,12 @@
 CHANGELOG: Prefabricator
 ========================
+Version 1.7.0
+-------------
+* New: Added Engine 4.27 support
+* New: Added Engine 5.0EA support
+* Fix: Fixed a null pointer issue while building nested prefabs
+* Fix: Prefab nested selection works correctly on UE5
+
 Version 1.6.2
 -------------
 * Fix: Improved the way prefabs were being searched in a streamed in level
