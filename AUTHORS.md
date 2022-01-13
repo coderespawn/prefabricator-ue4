@@ -8,5 +8,5 @@ Prefabricator Authors
 
 Project Page: https://github.com/coderespawn/prefabricator-ue4
 
-Website: https://prefabricator.io
+Website: https://prefabricator.dev
 
