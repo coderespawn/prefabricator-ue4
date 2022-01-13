@@ -22,17 +22,27 @@
 #include "ScopedTransaction.h"
 #include "ThumbnailRendering/SceneThumbnailInfo.h"
 
+DEFINE_LOG_CATEGORY_STATIC(LogPrefabEditorService, Log, All);
+
 void FPrefabricatorEditorService::ParentActors(AActor* ParentActor, AActor* ChildActor)
 {
-	/*
-	if (GEditor) {
-		GEditor->ParentActors(ParentActor, ChildActor, NAME_None);
+	if (!ChildActor || !ParentActor) {
+		UE_LOG(LogPrefabEditorService, Error, TEXT("FPrefabricatorEditorService::ParentActors - Invalid input"))
+		return;
 	}
-	*/
-
 	USceneComponent* ChildRoot = ChildActor->GetRootComponent();
 	USceneComponent* ParentRoot = ParentActor->GetDefaultAttachComponent();
 
+	if (!ChildRoot) {
+		UE_LOG(LogPrefabEditorService, Error, TEXT("FPrefabricatorEditorService::ParentActors - Invalid child root"))
+		return;
+	}
+	
+	if (!ParentRoot) {
+		UE_LOG(LogPrefabEditorService, Error, TEXT("FPrefabricatorEditorService::ParentActors - Invalid parent root"))
+		return;
+	}
+	
 	check(ChildRoot);	// CanParentActors() call should ensure this
 	check(ParentRoot);	// CanParentActors() call should ensure this
 
