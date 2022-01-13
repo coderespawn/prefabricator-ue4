@@ -1,5 +1,11 @@
 CHANGELOG: Prefabricator
 ========================
+Version 1.7.1
+-------------
+* Fix: Crash fix while parenting a stale actor in the editor
+* Fix: Crash fix while creating a prefab in an unsupported folder in the content browser, like C++ classes folder (cj-coalition)
+* Fix: All documentation urls point to the new prefabricator.dev domain
+
 Version 1.7.0
 -------------
 * New: Added Engine 4.27 support
