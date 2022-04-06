@@ -1,12 +1,16 @@
 CHANGELOG: Prefabricator
 ========================
-Version 1.7.0-ea2
------------------
+Version 1.8.0
+-------------
+* New: Support for Unreal Engine 5.0
+
+Version 1.7.1
+-------------
 * Critical Fix: UE5 version was incorrectly selecting the inner actors when the prefab was selected.  This caused usability issues while moving / duplicating prefabs
 
-Version 1.7.0-ea1
------------------
-* New: Support for UE5
+Version 1.7.0
+-------------
+* New: Support for UE5-Preview
 
 Version 1.6.2
 -------------
