@@ -19,6 +19,7 @@
 #include "EngineModule.h"
 #include "EngineUtils.h"
 #include "Framework/Notifications/NotificationManager.h"
+#include "IContentBrowserDataModule.h"
 #include "IContentBrowserSingleton.h"
 #include "Kismet/KismetRenderingLibrary.h"
 #include "LegacyScreenPercentageDriver.h"
@@ -33,8 +34,14 @@ namespace {
 		IContentBrowserSingleton& ContentBrowserSingleton = FModuleManager::LoadModuleChecked<FContentBrowserModule>("ContentBrowser").Get();
 		TArray<FString> SelectedFolders;
 		ContentBrowserSingleton.GetSelectedPathViewFolders(SelectedFolders);
-		FString AssetFolder = SelectedFolders.Num() > 0 ? SelectedFolders[0] : "/Game";
-		FString AssetPath = AssetFolder + "/" + InAssetName;
+		const FString VirtualAssetFolder = SelectedFolders.Num() > 0 ? SelectedFolders[0] : "/All/Game";
+		
+		FString AssetFolder;
+		const EContentBrowserPathType PathType = IContentBrowserDataModule::Get().GetSubsystem()->TryConvertVirtualPath(VirtualAssetFolder, AssetFolder);
+		if (PathType != EContentBrowserPathType::Internal) {
+			AssetFolder = "/Game";
+		}
+		const FString AssetPath = AssetFolder + "/" + InAssetName;
 
 		FString PackageName, AssetName;
 		IAssetTools& AssetTools = FModuleManager::Get().LoadModuleChecked<FAssetToolsModule>("AssetTools").Get();
