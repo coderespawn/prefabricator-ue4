@@ -1,5 +1,9 @@
 CHANGELOG: Prefabricator
 ========================
+Version 1.8.1
+-------------
+* CRITICAL FIX: Fixed a crash issue while creating a Prefab from the menu [@LucenDev] 
+
 Version 1.8.0
 -------------
 * New: Support for Unreal Engine 5.0
