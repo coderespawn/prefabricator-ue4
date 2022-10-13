@@ -23,6 +23,7 @@ namespace UnrealBuildTool.Rules
                 new string[] {
                 "Settings",
                 "AssetTools",
+		"ToolMenus"
             }
             );
 
