@@ -122,7 +122,7 @@ class FPrefabricatorEditorModule : public IPrefabricatorEditorModule
 	virtual void UpgradePrefabAssets() override {
 		FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
 		TArray<FAssetData> AssetDataList;
-		AssetRegistryModule.Get().GetAssetsByClass(FName("PrefabricatorAsset"), AssetDataList);
+		AssetRegistryModule.Get().GetAssetsByClass(UPrefabricatorAsset::StaticClass()->GetClassPathName(), AssetDataList);
 		for (const FAssetData& AssetData : AssetDataList) {
 			UPrefabricatorAsset* PrefabAsset = Cast<UPrefabricatorAsset>(AssetData.GetAsset());
 			if (PrefabAsset) {

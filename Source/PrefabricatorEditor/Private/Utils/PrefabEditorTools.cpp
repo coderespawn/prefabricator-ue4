@@ -141,13 +141,11 @@ void FPrefabEditorTools::CapturePrefabAssetThumbnail(UPrefabricatorAsset* InAsse
 		Canvas->Canvas->Flush_GameThread(true);
 
 		ENQUEUE_RENDER_COMMAND(UpdateThumbnailRTCommand)(
-			[RTTResource](FRHICommandListImmediate& RHICmdList)
-			{
-				// Copy (resolve) the rendered thumbnail from the render target to its texture
-				RHICmdList.CopyToResolveTarget(
-					RTTResource->GetRenderTargetTexture(),		// Source texture
-					RTTResource->TextureRHI,					// Dest texture
-					FResolveParams() );									// Resolve parameters
+			[RTTResource](FRHICommandListImmediate& RHICmdList) {
+				TransitionAndCopyTexture(RHICmdList,
+					RTTResource->GetRenderTargetTexture(), // Source texture
+					RTTResource->TextureRHI, // Dest texture
+					{});
 			});
 
 		

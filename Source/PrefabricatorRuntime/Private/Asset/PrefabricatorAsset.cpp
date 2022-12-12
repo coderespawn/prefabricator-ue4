@@ -194,7 +194,7 @@ void UPrefabricatorProperty::LoadReferencedAssetValues()
 		FName ReferencedPath;
 		{
 			//SCOPE_CYCLE_COUNTER(STAT_LoadReferencedAssetValues_GetAssetPathName);
-			ReferencedPath = Mapping.AssetReference.GetAssetPathName();
+			ReferencedPath = *Mapping.AssetReference.GetAssetPath().ToString();
 			if (ReferencedPath.ToString().IsEmpty()) {
 				continue;
 			}
