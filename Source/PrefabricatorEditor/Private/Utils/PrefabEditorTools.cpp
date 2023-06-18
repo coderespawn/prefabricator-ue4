@@ -1,4 +1,4 @@
-//$ Copyright 2015-21, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
+//$ Copyright 2015-22, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #include "Utils/PrefabEditorTools.h"
 
@@ -15,9 +15,11 @@
 #include "EditorViewportClient.h"
 #include "Engine/Canvas.h"
 #include "Engine/TextureRenderTarget2D.h"
+#include "Engine/World.h"
 #include "EngineModule.h"
 #include "EngineUtils.h"
 #include "Framework/Notifications/NotificationManager.h"
+#include "IContentBrowserDataModule.h"
 #include "IContentBrowserSingleton.h"
 #include "Kismet/KismetRenderingLibrary.h"
 #include "LegacyScreenPercentageDriver.h"
@@ -32,8 +34,14 @@ namespace {
 		IContentBrowserSingleton& ContentBrowserSingleton = FModuleManager::LoadModuleChecked<FContentBrowserModule>("ContentBrowser").Get();
 		TArray<FString> SelectedFolders;
 		ContentBrowserSingleton.GetSelectedPathViewFolders(SelectedFolders);
-		FString AssetFolder = SelectedFolders.Num() > 0 ? SelectedFolders[0] : "/Game";
-		FString AssetPath = AssetFolder + "/" + InAssetName;
+		const FString VirtualAssetFolder = SelectedFolders.Num() > 0 ? SelectedFolders[0] : "/All/Game";
+		
+		FString AssetFolder;
+		const EContentBrowserPathType PathType = IContentBrowserDataModule::Get().GetSubsystem()->TryConvertVirtualPath(VirtualAssetFolder, AssetFolder);
+		if (PathType != EContentBrowserPathType::Internal) {
+			AssetFolder = "/Game";
+		}
+		const FString AssetPath = AssetFolder + "/" + InAssetName;
 
 		FString PackageName, AssetName;
 		IAssetTools& AssetTools = FModuleManager::Get().LoadModuleChecked<FAssetToolsModule>("AssetTools").Get();
@@ -110,13 +118,15 @@ void FPrefabEditorTools::CapturePrefabAssetThumbnail(UPrefabricatorAsset* InAsse
 		FTextureRenderTargetResource* RTTResource = RTT->GameThread_GetRenderTargetResource();
 
 		FSceneViewFamilyContext ViewFamily(FSceneViewFamily::ConstructionValues(RTTResource, ThumbnailScene.GetScene(), FEngineShowFlags(ESFIM_Game))
-			.SetWorldTimes(FApp::GetCurrentTime() - GStartTime, FApp::GetDeltaTime(), FApp::GetCurrentTime() - GStartTime));
+			//.SetTime(FGameTime(FApp::GetCurrentTime() - GStartTime, FApp::GetDeltaTime(), FApp::GetCurrentTime() - GStartTime, 0))
+			);
 
 		ViewFamily.EngineShowFlags.DisableAdvancedFeatures();
 		ViewFamily.EngineShowFlags.MotionBlur = 0;
 		ViewFamily.EngineShowFlags.LOD = 0;
 
-		ThumbnailScene.GetView(&ViewFamily, 0, 0, ThumbSize, ThumbSize);
+		FSceneView* SceneView = ThumbnailScene.CreateView(&ViewFamily, 0, 0, ThumbSize, ThumbSize);
+		
 
 		ViewFamily.EngineShowFlags.ScreenPercentage = false;
 		ViewFamily.SetScreenPercentageInterface(new FLegacyScreenPercentageDriver(
@@ -131,13 +141,11 @@ void FPrefabEditorTools::CapturePrefabAssetThumbnail(UPrefabricatorAsset* InAsse
 		Canvas->Canvas->Flush_GameThread(true);
 
 		ENQUEUE_RENDER_COMMAND(UpdateThumbnailRTCommand)(
-			[RTTResource](FRHICommandListImmediate& RHICmdList)
-			{
-				// Copy (resolve) the rendered thumbnail from the render target to its texture
-				RHICmdList.CopyToResolveTarget(
-					RTTResource->GetRenderTargetTexture(),		// Source texture
-					RTTResource->TextureRHI,					// Dest texture
-					FResolveParams() );									// Resolve parameters
+			[RTTResource](FRHICommandListImmediate& RHICmdList) {
+				TransitionAndCopyTexture(RHICmdList,
+					RTTResource->GetRenderTargetTexture(), // Source texture
+					RTTResource->TextureRHI, // Dest texture
+					{});
 			});
 
 		
@@ -209,7 +217,7 @@ void FPrefabEditorTools::AssignPrefabAssetThumbnail(UPrefabricatorAssetInterface
 	int32 TexWidth = ThumbTexture->GetSizeX();
 	int32 TexHeight = ThumbTexture->GetSizeY();
 	Bitmap.AddUninitialized(TexWidth * TexHeight);
-	const FColor* FormatedImageData = static_cast<const FColor*>(ThumbTexture->PlatformData->Mips[0].BulkData.LockReadOnly());
+	const FColor* FormatedImageData = static_cast<const FColor*>(ThumbTexture->GetPlatformData()->Mips[0].BulkData.LockReadOnly());
 	if (FormatedImageData) {
 		for (int32 X = 0; X < TexWidth; X++) {
 			for (int32 Y = 0; Y < TexHeight; Y++) {
@@ -221,7 +229,7 @@ void FPrefabEditorTools::AssignPrefabAssetThumbnail(UPrefabricatorAssetInterface
 			}
 		}
 	}
-	ThumbTexture->PlatformData->Mips[0].BulkData.Unlock();
+	ThumbTexture->GetPlatformData()->Mips[0].BulkData.Unlock();
 	AssignPrefabAssetThumbnail(InAsset, Bitmap, TexWidth, TexHeight);
 
 	/*

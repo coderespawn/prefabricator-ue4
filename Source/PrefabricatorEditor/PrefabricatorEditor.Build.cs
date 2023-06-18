@@ -39,7 +39,8 @@ namespace UnrealBuildTool.Rules
                     "Kismet",
                     "PlacementMode",
                     "EditorWidgets",
-                    "RHI"
+                    "RHI",
+                    "ToolMenus"
                 }
 				);
 
@@ -55,6 +56,7 @@ namespace UnrealBuildTool.Rules
                     "LevelEditor",
 				    "EditorStyle",
 				    "ContentBrowser",
+				    "ContentBrowserData",
                     "Projects",
                     "PrefabricatorRuntime",
 					// ... add private dependencies that you statically link with here ...

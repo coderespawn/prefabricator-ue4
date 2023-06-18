@@ -1,4 +1,4 @@
-//$ Copyright 2015-21, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
+//$ Copyright 2015-22, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #include "Asset/PrefabricatorActorFactory.h"
 
@@ -27,11 +27,9 @@ UObject* UPrefabricatorActorFactory::GetAssetFromActorInstance(AActor* ActorInst
 	return nullptr;
 }
 
-AActor* UPrefabricatorActorFactory::SpawnActor(UObject* InAsset, ULevel* InLevel, const FTransform& InTransform, const FActorSpawnParameters& InSpawnParams)
-{
+AActor* UPrefabricatorActorFactory::SpawnActor(UObject* InAsset, ULevel* InLevel, const FTransform& InTransform, const FActorSpawnParameters& InSpawnParams) {
 	AActor* Actor = UActorFactory::SpawnActor(InAsset, InLevel, InTransform, InSpawnParams);
-	APrefabActor* PrefabActor = Cast<APrefabActor>(Actor);
-	if (PrefabActor) {
+	if (const APrefabActor* PrefabActor = Cast<APrefabActor>(Actor)) {
 		PrefabActor->PrefabComponent->PrefabAssetInterface = Cast<UPrefabricatorAssetInterface>(InAsset);
 	}
 	return Actor;

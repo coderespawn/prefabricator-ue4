@@ -1,4 +1,4 @@
-//$ Copyright 2015-21, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
+//$ Copyright 2015-22, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #include "Asset/PrefabricatorAsset.h"
 
@@ -194,7 +194,7 @@ void UPrefabricatorProperty::LoadReferencedAssetValues()
 		FName ReferencedPath;
 		{
 			//SCOPE_CYCLE_COUNTER(STAT_LoadReferencedAssetValues_GetAssetPathName);
-			ReferencedPath = Mapping.AssetReference.GetAssetPathName();
+			ReferencedPath = *Mapping.AssetReference.GetAssetPath().ToString();
 			if (ReferencedPath.ToString().IsEmpty()) {
 				continue;
 			}

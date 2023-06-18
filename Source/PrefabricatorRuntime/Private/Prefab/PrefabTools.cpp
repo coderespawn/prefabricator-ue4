@@ -1,4 +1,4 @@
-//$ Copyright 2015-21, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
+//$ Copyright 2015-22, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #include "Prefab/PrefabTools.h"
 
@@ -310,7 +310,7 @@ namespace {
 			DefaultObject = ObjClass->GetDefaultObject();
 		}
 
-		Property->ExportTextItem(OutPropertyData, Property->ContainerPtrToValuePtr<void>(Obj), Property->ContainerPtrToValuePtr<void>(DefaultObject), Obj, PPF_Copy);
+		Property->ExportTextItem_Direct(OutPropertyData, Property->ContainerPtrToValuePtr<void>(Obj), Property->ContainerPtrToValuePtr<void>(DefaultObject), Obj, PPF_Copy);
 		return true;
 	}
 
@@ -646,6 +646,7 @@ void FPrefabTools::LoadActorState(AActor* InActor, const FPrefabricatorActorData
 							}
 						}
 						if (bRecreatePhysicsState) {
+							Primitive->InitializeComponent();
 							Primitive->RecreatePhysicsState();
 						}
 					}

@@ -1,7 +1,25 @@
 CHANGELOG: Prefabricator
 ========================
+
+Version 1.10.0
+-------------
+* New: Unreal Engine 5.2 support
+
+Version 1.9.0
+-------------
+* New: Unreal Engine 5.1 support
+
+Version 1.8.1
+-------------
+* CRITICAL FIX: Fixed a crash issue while creating a Prefab from the menu [@LucenDev] 
+
+Version 1.8.0
+-------------
+* New: Support for Unreal Engine 5.0
+
 Version 1.7.1
 -------------
+* Critical Fix: UE5 version was incorrectly selecting the inner actors when the prefab was selected.  This caused usability issues while moving / duplicating prefabs
 * Fix: Crash fix while parenting a stale actor in the editor
 * Fix: Crash fix while creating a prefab in an unsupported folder in the content browser, like C++ classes folder (cj-coalition)
 * Fix: All documentation urls point to the new prefabricator.dev domain

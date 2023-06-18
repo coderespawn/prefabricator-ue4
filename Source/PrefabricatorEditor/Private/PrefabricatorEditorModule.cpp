@@ -1,4 +1,4 @@
-//$ Copyright 2015-21, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
+//$ Copyright 2015-22, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #include "PrefabricatorEditorModule.h"
 
@@ -122,7 +122,7 @@ class FPrefabricatorEditorModule : public IPrefabricatorEditorModule
 	virtual void UpgradePrefabAssets() override {
 		FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
 		TArray<FAssetData> AssetDataList;
-		AssetRegistryModule.Get().GetAssetsByClass(FName("PrefabricatorAsset"), AssetDataList);
+		AssetRegistryModule.Get().GetAssetsByClass(UPrefabricatorAsset::StaticClass()->GetClassPathName(), AssetDataList);
 		for (const FAssetData& AssetData : AssetDataList) {
 			UPrefabricatorAsset* PrefabAsset = Cast<UPrefabricatorAsset>(AssetData.GetAsset());
 			if (PrefabAsset) {
