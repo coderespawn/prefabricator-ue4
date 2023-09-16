@@ -270,7 +270,9 @@ UThumbnailInfo* FPrefabEditorTools::CreateDefaultThumbInfo(UPrefabricatorAsset* 
 UPrefabricatorAsset* FPrefabEditorTools::CreatePrefabAsset()
 {
 	UPrefabricatorAsset* PrefabAsset = CreateAssetOnContentBrowser<UPrefabricatorAsset>("Prefab", true);
-	PrefabAsset->ThumbnailInfo = FPrefabEditorTools::CreateDefaultThumbInfo(PrefabAsset);
+	if (PrefabAsset) {
+		PrefabAsset->ThumbnailInfo = FPrefabEditorTools::CreateDefaultThumbInfo(PrefabAsset);
+	}
 	return PrefabAsset;
 }
 

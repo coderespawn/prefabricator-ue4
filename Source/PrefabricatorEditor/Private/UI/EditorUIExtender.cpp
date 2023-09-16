@@ -31,8 +31,8 @@
 
 namespace PrefabURLs {
 	// TODO: move me to a configuration file
-	static const FString URL_UserGuide	= "https://docs.prefabricator.io";
-	static const FString URL_Website	= "https://prefabricator.io";
+	static const FString URL_UserGuide	= "https://docs.prefabricator.dev";
+	static const FString URL_Website	= "https://prefabricator.dev";
 	static const FString URL_Discord	= "https://discord.gg/dRewTSU";
 	static const FString URL_DevForum	= "https://forums.unrealengine.com/search?q=prefabricator&searchJSON=%7B%22keywords%22%3A%22prefabricator%22%7D";
 

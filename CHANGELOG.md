@@ -1,5 +1,6 @@
 CHANGELOG: Prefabricator
 ========================
+
 Version 1.10.0
 -------------
 * New: Unreal Engine 5.2 support
@@ -19,10 +20,16 @@ Version 1.8.0
 Version 1.7.1
 -------------
 * Critical Fix: UE5 version was incorrectly selecting the inner actors when the prefab was selected.  This caused usability issues while moving / duplicating prefabs
+* Fix: Crash fix while parenting a stale actor in the editor
+* Fix: Crash fix while creating a prefab in an unsupported folder in the content browser, like C++ classes folder (cj-coalition)
+* Fix: All documentation urls point to the new prefabricator.dev domain
 
 Version 1.7.0
 -------------
-* New: Support for UE5-Preview
+* New: Added Engine 4.27 support
+* New: Added Engine 5.0EA support
+* Fix: Fixed a null pointer issue while building nested prefabs
+* Fix: Prefab nested selection works correctly on UE5
 
 Version 1.6.2
 -------------

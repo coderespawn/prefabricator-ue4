@@ -6,6 +6,8 @@
 #include "GameFramework/Actor.h"
 #include "PrefabActor.generated.h"
 
+class UPrefabricatorAsset;
+
 UCLASS(Blueprintable, ConversionRoot, ComponentWrapperClass)
 class PREFABRICATORRUNTIME_API APrefabActor : public AActor {
 	GENERATED_UCLASS_BODY()

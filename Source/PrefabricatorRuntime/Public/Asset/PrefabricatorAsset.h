@@ -5,6 +5,8 @@
 #include "Engine/EngineTypes.h"
 #include "PrefabricatorAsset.generated.h"
 
+class APrefabActor;
+
 USTRUCT()
 struct PREFABRICATORRUNTIME_API FPrefabricatorPropertyAssetMapping {
 	GENERATED_BODY()
@@ -101,7 +103,7 @@ public:
 	virtual void PostSpawn_Implementation(APrefabActor* Prefab);
 };
 
-UCLASS(Blueprintable)
+UCLASS(Abstract, BlueprintType, Blueprintable)
 class PREFABRICATORRUNTIME_API UPrefabricatorAssetInterface : public UObject {
 	GENERATED_BODY()
 public:
