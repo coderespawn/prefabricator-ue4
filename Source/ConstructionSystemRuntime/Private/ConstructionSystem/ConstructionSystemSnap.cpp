@@ -1,10 +1,10 @@
-//$ Copyright 2015-22, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
+//$ Copyright 2015-23, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #include "ConstructionSystem/ConstructionSystemSnap.h"
 
-#include "Components/ArrowComponent.h"
 #include "Components/SphereComponent.h"
 #include "PrimitiveSceneProxy.h"
+#include "SceneManagement.h"
 
 ///////////////////////////// UPrefabricatorBoxSnapComponent ///////////////////////////// 
 UPrefabricatorConstructionSnapComponent::UPrefabricatorConstructionSnapComponent(const FObjectInitializer& ObjectInitializer)

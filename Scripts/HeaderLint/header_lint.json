@@ -1,0 +1,6 @@
+{
+	"enabled": true,
+	"whitelist_includes": [
+		"EngineModule.h"
+	]
+}

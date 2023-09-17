@@ -1,4 +1,4 @@
-//$ Copyright 2015-22, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
+//$ Copyright 2015-23, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #include "Prefab/PrefabActor.h"
 
@@ -8,8 +8,7 @@
 #include "Prefab/PrefabTools.h"
 #include "Utils/PrefabricatorStats.h"
 
-#include "Components/BillboardComponent.h"
-#include "Engine/PointLight.h"
+#include "UObject/Package.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogPrefabActor, Log, All);
 
