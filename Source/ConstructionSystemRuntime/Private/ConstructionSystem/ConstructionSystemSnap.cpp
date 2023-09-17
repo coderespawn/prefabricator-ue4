@@ -2,9 +2,9 @@
 
 #include "ConstructionSystem/ConstructionSystemSnap.h"
 
-#include "Components/ArrowComponent.h"
 #include "Components/SphereComponent.h"
 #include "PrimitiveSceneProxy.h"
+#include "SceneManagement.h"
 
 ///////////////////////////// UPrefabricatorBoxSnapComponent ///////////////////////////// 
 UPrefabricatorConstructionSnapComponent::UPrefabricatorConstructionSnapComponent(const FObjectInitializer& ObjectInitializer)

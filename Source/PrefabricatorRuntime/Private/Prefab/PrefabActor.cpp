@@ -8,8 +8,7 @@
 #include "Prefab/PrefabTools.h"
 #include "Utils/PrefabricatorStats.h"
 
-#include "Components/BillboardComponent.h"
-#include "Engine/PointLight.h"
+#include "UObject/Package.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogPrefabActor, Log, All);
 
