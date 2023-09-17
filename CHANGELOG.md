@@ -1,6 +1,10 @@
 CHANGELOG: Prefabricator
 ========================
 
+Version 1.11.0
+-------------
+* New: Unreal Engine 5.3 support
+
 Version 1.10.0
 -------------
 * New: Unreal Engine 5.2 support
