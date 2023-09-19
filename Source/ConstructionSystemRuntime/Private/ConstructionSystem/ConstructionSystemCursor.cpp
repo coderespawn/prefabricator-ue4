@@ -7,9 +7,9 @@
 #include "Prefab/PrefabActor.h"
 #include "Prefab/PrefabComponent.h"
 #include "Prefab/PrefabTools.h"
-#include "Utils/PrefabricatorFunctionLibrary.h"
 
 #include "Components/PrimitiveComponent.h"
+#include "Engine/World.h"
 
 void UConstructionSystemCursor::RecreateCursor(UWorld* InWorld, UPrefabricatorAssetInterface* InCursorPrefab)
 {
