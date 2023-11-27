@@ -543,8 +543,7 @@ namespace {
 			}
 
 			// Save as usual even if cross reference was found
-			// This is is to supprot fields present in a struct which have nothing to do with
-			// object reference
+			// This is is to support fields present in a struct which have nothing to do with objects
 			GetPropertyData(Property, ObjToSerialize, ObjTemplate, PrefabProperty->ExportedValue);
 			PrefabProperty->SaveReferencedAssetValues();			
 
