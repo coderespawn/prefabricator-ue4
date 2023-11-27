@@ -40,7 +40,6 @@ public:
 	UPROPERTY()
 	bool bIsCrossReferencedActor = false;
 
-	// JB: The cross-references per index in array.
 	UPROPERTY()
 	TMap<int32, FGuid> CrossReferencePrefabActorIdMap;
 
