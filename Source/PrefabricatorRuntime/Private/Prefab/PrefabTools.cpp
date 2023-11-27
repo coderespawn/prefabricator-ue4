@@ -358,7 +358,9 @@ namespace {
 		if (!InObjToDeserialize) return;
 
 		for (UPrefabricatorProperty* PrefabProperty : InProperties) {
-			if (!PrefabProperty || PrefabProperty->bIsCrossReferencedActor) continue;
+			// If its a struct property, still let us use the value found in PrefabProperty->ExportedValue
+			// as a starting point, only the object reference will be fixed-up.
+			if (!PrefabProperty || (PrefabProperty->bIsCrossReferencedActor && !PrefabProperty->bContainsStructProperty)) continue;
 			FString PropertyName = PrefabProperty->PropertyName;
 			if (PropertyName == "AssetUserData") continue;		// Skip this as assignment is very slow and is not needed
 
@@ -386,7 +388,14 @@ namespace {
 	}
 
 	// SerializeObjectProperty method to reuse the code.
-	bool SerializeObjectProperty(const FObjectPropertyBase* ObjProperty, const void* PropertyValueAddress, int32 Index, UPrefabricatorProperty* PrefabProperty, const FPrefabActorLookup& CrossReferences)
+	bool SerializePreProcessForReference_ObjectHelper(
+		UObject* ObjPtr
+		, const FObjectPropertyBase* ObjProperty
+		, const void* PropertyValueAddress
+		, int32 Index
+		, UPrefabricatorProperty* PrefabProperty
+		, const FPrefabActorLookup& CrossReferences
+	)
 	{
 		UObject* PropertyObjectValue = ObjProperty->GetObjectPropertyValue(PropertyValueAddress);
 		if (PropertyObjectValue == nullptr || PropertyObjectValue->HasAnyFlags(RF_DefaultSubObject | RF_ArchetypeObject)) {
@@ -397,74 +406,97 @@ namespace {
 		FGuid CrossRefPrefabItem;
 		if (CrossReferences.GetPrefabItemId(ObjectPath, CrossRefPrefabItem)) {
 			PrefabProperty->bIsCrossReferencedActor = true;
-			PrefabProperty->CrossReferencePrefabActorIdMap.Add(Index, CrossRefPrefabItem);
-			return true;
+			// Obtain property path relative to object provided
+			FString NestedPropertyName = ObjProperty->GetPathName(ObjPtr);
+			auto NestedPropertyData = PrefabProperty->NestedPropertyData.Find(NestedPropertyName);
+			if(!NestedPropertyData)
+			{
+				NestedPropertyData = &PrefabProperty->NestedPropertyData.Add(NestedPropertyName, FPrefabricatorNestedPropertyData());
+			}
+
+			if (ensure(NestedPropertyData))
+			{
+				NestedPropertyData->CrossReferencePrefabActorIdMap.Add(Index, CrossRefPrefabItem);
+				return true;
+			}
 		}
 		return false;
 	}
 
-	bool SerializeStructField(
-		void* Ptr
+	void SerializePreProcessForReference_StructHelper(
+		UObject* ObjPtr
+		, void* ContainerPtr
 		, const FPrefabActorLookup& CrossReferences
 		, UPrefabricatorProperty* PrefabProperty
 		, const FStructProperty* StructProperty);
 
-	bool SerializeArrayField(
-		void* Ptr
+	void SerializePreProcessForReference_ArrayHelper(
+		UObject* ObjPtr
+		, void* ContainerPtr
 		, const FPrefabActorLookup& CrossReferences
 		, UPrefabricatorProperty* PrefabProperty
 		, const FArrayProperty* ArrayProperty)
-	{
-		bool bFoundCrossReference = false;
-		// TODO: Array of arrays
-		if (const FObjectPropertyBase* ObjProperty = CastField<FObjectPropertyBase>(ArrayProperty->Inner))
-		{
-			FScriptArrayHelper_InContainer Helper(ArrayProperty, Ptr);
-			for (int32 Index = 0; Index < Helper.Num(); Index++)
-			{
-				bFoundCrossReference |= SerializeObjectProperty(ObjProperty, Helper.GetRawPtr(Index), Index, PrefabProperty, CrossReferences);
-			}
-		}
-		else if (const FStructProperty* StructProperty = CastField<FStructProperty>(ArrayProperty->Inner))
-		{
-			FScriptArrayHelper_InContainer Helper(ArrayProperty, Ptr);
-			for (int32 Index = 0; Index < Helper.Num(); Index++)
-			{
-				bFoundCrossReference |= SerializeStructField(Helper.GetRawPtr(Index), CrossReferences, PrefabProperty, StructProperty);
-			}
-		}
+	{		
+		const FObjectPropertyBase* ObjProperty = CastField<FObjectPropertyBase>(ArrayProperty->Inner);
+		const FStructProperty* StructProperty = CastField<FStructProperty>(ArrayProperty->Inner);
 
-		return bFoundCrossReference;
+		if (ObjProperty || StructProperty)
+		{
+			FString NestedPropertyName = ArrayProperty->GetPathName(ObjPtr);
+			FScriptArrayHelper_InContainer Helper(ArrayProperty, ContainerPtr);
+			FPrefabricatorNestedPropertyData* NestedPropertyData = PrefabProperty->NestedPropertyData.Find(NestedPropertyName);
+			if (!NestedPropertyData)
+			{
+				NestedPropertyData = &PrefabProperty->NestedPropertyData.Add(NestedPropertyName, FPrefabricatorNestedPropertyData());
+			}
+
+			NestedPropertyData->ArrayLength = Helper.Num();
+
+			// TODO: Array of arrays
+			if (ObjProperty)
+			{
+				for (int32 Index = 0; Index < Helper.Num(); Index++)
+				{
+					SerializePreProcessForReference_ObjectHelper(ObjPtr, ObjProperty, Helper.GetRawPtr(Index), Index, PrefabProperty, CrossReferences);
+				}
+			}
+			else if (StructProperty)
+			{
+				for (int32 Index = 0; Index < Helper.Num(); Index++)
+				{
+					SerializePreProcessForReference_StructHelper(ObjPtr, Helper.GetRawPtr(Index), CrossReferences, PrefabProperty, StructProperty);
+				}
+			}
+		}
 	}
 
-	bool SerializeStructField(
-		void* Ptr
+	void SerializePreProcessForReference_StructHelper(
+		UObject* ObjPtr
+		, void* ContainerPtr
 		, const FPrefabActorLookup& CrossReferences
 		, UPrefabricatorProperty* PrefabProperty
 		, const FStructProperty* StructProperty
 		)
 	{
-		bool bFoundCrossReference = false;
+		PrefabProperty->bContainsStructProperty = true;
 		for (TFieldIterator<FProperty> It(StructProperty->Struct); It; ++It) {
 			FProperty* InnerProperty = *It;
 
 			if (const FStructProperty* StructProperty = CastField<FStructProperty>(InnerProperty)) {
-				void* PropPtr = StructProperty->ContainerPtrToValuePtr<void>(Ptr, 0);
-				bFoundCrossReference |= SerializeStructField(PropPtr, CrossReferences, PrefabProperty, StructProperty);
+				void* PropPtr = StructProperty->ContainerPtrToValuePtr<void>(ContainerPtr, 0);
+				SerializePreProcessForReference_StructHelper(ObjPtr, PropPtr, CrossReferences, PrefabProperty, StructProperty);
 			}
-			// JB: Added support for TArrays (TODO: Adds support for sets and maps).
+			// Support for TArrays (TODO: Adds support for sets and maps).
 			else if (const FArrayProperty* ArrayProperty = CastField<FArrayProperty>(InnerProperty))
 			{
-				bFoundCrossReference |= SerializeArrayField(Ptr, CrossReferences, PrefabProperty, ArrayProperty);
+				SerializePreProcessForReference_ArrayHelper(ObjPtr, ContainerPtr, CrossReferences, PrefabProperty, ArrayProperty);
 			}
-			// JB: Changed from FObjectProperty to FObjectPropertyBase to support also soft references.
+			// FObjectPropertyBase instead of FObjectProperty to also support soft references.
 			else if (const FObjectPropertyBase* ObjProperty = CastField<FObjectPropertyBase>(InnerProperty)) {
-				void* PropPtr = ObjProperty->ContainerPtrToValuePtr<void>(Ptr, 0);
-				bFoundCrossReference |= SerializeObjectProperty(ObjProperty, PropPtr, 0, PrefabProperty, CrossReferences);
+				void* PropPtr = ObjProperty->ContainerPtrToValuePtr<void>(ContainerPtr, 0);
+				SerializePreProcessForReference_ObjectHelper(ObjPtr, ObjProperty, PropPtr, 0, PrefabProperty, CrossReferences);
 			}
 		}
-
-		return bFoundCrossReference;
 	}
 
 	void SerializeFields(UObject* ObjToSerialize, UObject* ObjTemplate, APrefabActor* PrefabActor, const FPrefabActorLookup& CrossReferences, TArray<UPrefabricatorProperty*>& OutProperties) {
@@ -524,28 +556,29 @@ namespace {
 
 			PrefabProperty = NewObject<UPrefabricatorProperty>(PrefabAsset);
 			PrefabProperty->PropertyName = PropertyName;
-
-			// Check for cross actor references
-			bool bFoundCrossReference = false;
+			
 			// Support for USTRUCT
 			if (const FStructProperty* StructProperty = CastField<FStructProperty>(Property)) {
 				void* StructPtr = StructProperty->ContainerPtrToValuePtr<void>(ObjToSerialize, 0);
-				bFoundCrossReference |= SerializeStructField(StructPtr, CrossReferences, PrefabProperty, StructProperty);
+				SerializePreProcessForReference_StructHelper(ObjToSerialize, StructPtr, CrossReferences, PrefabProperty, StructProperty);
 			}
 			// Support for TArrays (TODO: Adds support for sets and maps).
 			else if (const FArrayProperty* ArrayProperty = CastField<FArrayProperty>(Property))
 			{
-				bFoundCrossReference |= SerializeArrayField(ObjToSerialize, CrossReferences, PrefabProperty, ArrayProperty);
+				SerializePreProcessForReference_ArrayHelper(ObjToSerialize, ObjToSerialize, CrossReferences, PrefabProperty, ArrayProperty);
 			}
 			// FObjectPropertyBase instead of FObjectProperty to also support soft references.
 			else if (const FObjectPropertyBase* ObjProperty = CastField<FObjectPropertyBase>(Property)) {
-				bFoundCrossReference = SerializeObjectProperty(ObjProperty, ObjProperty->ContainerPtrToValuePtr<void>(ObjToSerialize), 0, PrefabProperty, CrossReferences);
+				SerializePreProcessForReference_ObjectHelper(ObjToSerialize, ObjProperty, ObjProperty->ContainerPtrToValuePtr<void>(ObjToSerialize), 0, PrefabProperty, CrossReferences);
 			}
 
 			// Save as usual even if cross reference was found
 			// This is is to support fields present in a struct which have nothing to do with objects
-			GetPropertyData(Property, ObjToSerialize, ObjTemplate, PrefabProperty->ExportedValue);
-			PrefabProperty->SaveReferencedAssetValues();			
+			if (!PrefabProperty->bIsCrossReferencedActor || PrefabProperty->bContainsStructProperty)
+			{
+				GetPropertyData(Property, ObjToSerialize, ObjTemplate, PrefabProperty->ExportedValue);
+				PrefabProperty->SaveReferencedAssetValues();
+			}
 
 			OutProperties.Add(PrefabProperty);
 		}
@@ -1007,14 +1040,19 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 namespace
 {
 	void FixupCrossReferences_Helper(
-		UPrefabricatorProperty* PrefabProperty
+		UObject* ObjPtr
+		, UPrefabricatorProperty* PrefabProperty
 		, const FObjectPropertyBase* ObjectProperty
 		, void* PropertyValueAddress
 		, int32 Index
 		, TMap<FGuid, AActor*>& PrefabItemToActorMap
 	)
 	{
-		FGuid* Guid = PrefabProperty->CrossReferencePrefabActorIdMap.Find(Index);
+		FString NestedPropertyName = ObjectProperty->GetPathName(ObjPtr);
+		auto NestedPropertyData = PrefabProperty->NestedPropertyData.Find(NestedPropertyName);
+		if (!NestedPropertyData) return;
+
+		FGuid* Guid = NestedPropertyData->CrossReferencePrefabActorIdMap.Find(Index);
 		if (!Guid) return;
 		AActor** SearchResult = PrefabItemToActorMap.Find(*Guid);
 		if (!SearchResult) return;
@@ -1029,15 +1067,16 @@ namespace
 	}
 
 	void FixupCrossReferences_StructHelper(
-		void* StructPtr
+		UObject* ObjPtr
+		, void* ContainerPtr
 		, UPrefabricatorProperty* PrefabProperty
 		, const FStructProperty* StructProperty
-		, int32 Index
 		, TMap<FGuid, AActor*>& PrefabItemToActorMap
 	);
 
 	void FixupCrossReferences_ArrayHelper(
-		void* Ptr
+		UObject* ObjPtr
+		, void* ContainerPtr
 		, UPrefabricatorProperty* PrefabProperty
 		, const FArrayProperty* ArrayProperty
 		, TMap<FGuid, AActor*>& PrefabItemToActorMap
@@ -1045,37 +1084,46 @@ namespace
 	{
 		if (const FObjectPropertyBase* ObjectProperty = CastField<FObjectPropertyBase>(ArrayProperty->Inner))
 		{
-			FScriptArrayHelper_InContainer Helper(ArrayProperty, Ptr);
+			FString NestedPropertyName = ArrayProperty->GetPathName(ObjPtr);
+			FScriptArrayHelper_InContainer Helper(ArrayProperty, ContainerPtr);
+			auto NestedPropertyData = PrefabProperty->NestedPropertyData.Find(NestedPropertyName);
+			if (!NestedPropertyData)
+				return;
 			// The array may have different length by default.
-			if (Helper.Num() < PrefabProperty->CrossReferencePrefabActorIdMap.Num())
+			if (Helper.Num() < NestedPropertyData->ArrayLength)
 			{
-				Helper.AddValues(PrefabProperty->CrossReferencePrefabActorIdMap.Num() - Helper.Num());
+				Helper.AddValues(NestedPropertyData->ArrayLength - Helper.Num());
 			}
 			for (int32 Index = 0; Index < Helper.Num(); Index++)
 			{
-				FixupCrossReferences_Helper(PrefabProperty, ObjectProperty, Helper.GetRawPtr(Index), Index, PrefabItemToActorMap);
+				FixupCrossReferences_Helper(ObjPtr, PrefabProperty, ObjectProperty, Helper.GetRawPtr(Index), Index, PrefabItemToActorMap);
 			}
 		}
 		else if (const FStructProperty* StructProperty = CastField<FStructProperty>(ArrayProperty->Inner))
 		{
-			FScriptArrayHelper_InContainer Helper(ArrayProperty, Ptr);
+			FString NestedPropertyName = ArrayProperty->GetPathName(ObjPtr);
+			FScriptArrayHelper_InContainer Helper(ArrayProperty, ContainerPtr);
+			auto NestedPropertyData = PrefabProperty->NestedPropertyData.Find(NestedPropertyName);
+			if (!NestedPropertyData)
+				return;
+
 			// The array may have different length by default.
-			if (Helper.Num() < PrefabProperty->CrossReferencePrefabActorIdMap.Num())
+			if (Helper.Num() < NestedPropertyData->ArrayLength)
 			{
-				Helper.AddValues(PrefabProperty->CrossReferencePrefabActorIdMap.Num() - Helper.Num());
+				Helper.AddValues(NestedPropertyData->ArrayLength - Helper.Num());
 			}
 			for (int32 Index = 0; Index < Helper.Num(); Index++)
 			{
-				FixupCrossReferences_StructHelper(Helper.GetRawPtr(Index), PrefabProperty, StructProperty, Index, PrefabItemToActorMap);
+				FixupCrossReferences_StructHelper(ObjPtr, Helper.GetRawPtr(Index), PrefabProperty, StructProperty, PrefabItemToActorMap);
 			}
 		}
 	}
 
 	void FixupCrossReferences_StructHelper(
-		void* StructPtr
+		UObject* ObjPtr
+		, void* ContainerPtr
 		, UPrefabricatorProperty* PrefabProperty
 		, const FStructProperty* StructProperty
-		, int32 Index
 		, TMap<FGuid, AActor*>& PrefabItemToActorMap
 	)
 	{
@@ -1083,19 +1131,19 @@ namespace
 			FProperty* InnerProperty = *It;
 
 			if (const FStructProperty* StructProperty = CastField<FStructProperty>(InnerProperty)) {
-				void* PropPtr = StructProperty->ContainerPtrToValuePtr<void>(StructPtr, 0);
-				FixupCrossReferences_StructHelper(PropPtr, PrefabProperty, StructProperty, Index, PrefabItemToActorMap);
+				void* PropPtr = StructProperty->ContainerPtrToValuePtr<void>(ContainerPtr, 0);
+				FixupCrossReferences_StructHelper(ObjPtr, PropPtr, PrefabProperty, StructProperty, PrefabItemToActorMap);
 			}
 			// Support for TArrays (TODO: Adds support for sets and maps).
 			else if (const FArrayProperty* ArrayProperty = CastField<FArrayProperty>(InnerProperty))
 			{
-				FixupCrossReferences_ArrayHelper(StructPtr, PrefabProperty, ArrayProperty, PrefabItemToActorMap);
+				FixupCrossReferences_ArrayHelper(ObjPtr, ContainerPtr, PrefabProperty, ArrayProperty, PrefabItemToActorMap);
 			}
 			// Changed from FObjectProperty to FObjectPropertyBase to support also soft references.
 			else if (const FObjectPropertyBase* ObjProperty = CastField<FObjectPropertyBase>(InnerProperty)) 
 			{
-				void* PropPtr = ObjProperty->ContainerPtrToValuePtr<void>(StructPtr, 0);
-				FixupCrossReferences_Helper(PrefabProperty, ObjProperty, PropPtr, 0, PrefabItemToActorMap);
+				void* PropPtr = ObjProperty->ContainerPtrToValuePtr<void>(ContainerPtr, 0);
+				FixupCrossReferences_Helper(ObjPtr, PrefabProperty, ObjProperty, PropPtr, 0, PrefabItemToActorMap);
 			}
 		}
 	}
@@ -1112,15 +1160,15 @@ void FPrefabTools::FixupCrossReferences(const TArray<UPrefabricatorProperty*>& P
 		if (const FStructProperty* StructProperty = CastField<FStructProperty>(Property))
 		{
 			void* StructPtr = StructProperty->ContainerPtrToValuePtr<void>(ObjToWrite, 0);
-			FixupCrossReferences_StructHelper(StructPtr, PrefabProperty, StructProperty, 0, PrefabItemToActorMap);
+			FixupCrossReferences_StructHelper(ObjToWrite, StructPtr, PrefabProperty, StructProperty, PrefabItemToActorMap);
 		}
 		else if (const FArrayProperty* ArrayProperty = CastField<FArrayProperty>(Property))
 		{
-			FixupCrossReferences_ArrayHelper(ObjToWrite, PrefabProperty, ArrayProperty, PrefabItemToActorMap);
+			FixupCrossReferences_ArrayHelper(ObjToWrite, ObjToWrite, PrefabProperty, ArrayProperty, PrefabItemToActorMap);
 		}
 		// FObjectProperty instead of FObjectPropertyBase to support also soft references
 		else if (const FObjectPropertyBase* ObjectProperty = CastField<FObjectPropertyBase>(Property)) {
-			FixupCrossReferences_Helper(PrefabProperty, ObjectProperty, ObjectProperty->ContainerPtrToValuePtr<void>(ObjToWrite), 0, PrefabItemToActorMap);
+			FixupCrossReferences_Helper(ObjToWrite, PrefabProperty, ObjectProperty, ObjectProperty->ContainerPtrToValuePtr<void>(ObjToWrite), 0, PrefabItemToActorMap);
 		}
 		// Note: there cannot be more than array, structs, and straight up object deemed as cross ref
 		// Nothing to do here
