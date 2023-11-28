@@ -3,6 +3,7 @@
 #pragma once
 #include "CoreMinimal.h"
 #include "Engine/EngineTypes.h"
+
 #include "PrefabricatorAsset.generated.h"
 
 class APrefabActor;
@@ -35,7 +36,7 @@ struct PREFABRICATORRUNTIME_API FPrefabricatorNestedPropertyData
 	int32 ArrayLength = -1;
 
 	UPROPERTY()
-	TMap<int32, FGuid> CrossReferencePrefabActorIdMap;
+	FGuid CrossReferencePrefabActorId;
 };
 
 UCLASS()
