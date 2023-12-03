@@ -661,6 +661,12 @@ void FPrefabTools::LoadActorState(AActor* InActor, const FPrefabricatorActorData
 #if WITH_EDITOR
 	if (InActorData.ActorName.Len() > 0) {
 		InActor->SetActorLabel(InActorData.ActorName);
+		// I have found that setting the actor label at the wrong time will result in the label matching underlying data
+		// but update not being sent. The result is that outdated labels appear in the outliner. Force label update notification to fix this. 
+		InActor->Modify();
+		FPropertyChangedEvent PropertyEvent(FindFProperty<FProperty>(AActor::StaticClass(), "ActorLabel"));
+		InActor->PostEditChangeProperty(PropertyEvent);
+		FCoreDelegates::OnActorLabelChanged.Broadcast(InActor);
 	}
 #endif // WITH_EDITOR
 
