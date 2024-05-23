@@ -1,4 +1,4 @@
-//$ Copyright 2015-23, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
+//$ Copyright 2015-24, Code Respawn Technologies Pvt Ltd - All Rights Reserved $//
 
 #include "ConstructionSystem/Tools/ConstructionSystemBuildTool.h"
 
@@ -12,6 +12,7 @@
 
 #include "CollisionQueryParams.h"
 #include "DrawDebugHelpers.h"
+#include "Engine/OverlapResult.h"
 #include "Engine/World.h"
 #include "GameFramework/Pawn.h"
 #include "GameFramework/PlayerController.h"
