@@ -528,8 +528,6 @@ bool FConstructionSystemCollision::WallBoxCollision(const FVector& InWallExtent,
 		|| WallWallCollision(InWallExtent, InWallTransform, ExtentYZ, YZP)
 		|| WallWallCollision(InWallExtent, InWallTransform, ExtentZX, ZXN)
 		|| WallWallCollision(InWallExtent, InWallTransform, ExtentZX, ZXP);
-
-	return false;
 }
 
 bool FConstructionSystemCollision::WallWallCollision(const FVector& ExtentA, const FTransform& TransformA, const FVector& ExtentB, const FTransform& TransformB)
