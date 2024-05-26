@@ -3,6 +3,7 @@
 #include "Utils/PrefabricatorService.h"
 
 #include "Engine/EngineTypes.h"
+#include "Engine/Level.h"
 #include "Engine/World.h"
 
 /////////////////////////// FPrefabricatorService /////////////////////////// 

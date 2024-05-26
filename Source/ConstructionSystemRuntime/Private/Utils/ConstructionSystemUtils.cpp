@@ -11,6 +11,7 @@
 #include "Utils/PrefabricatorFunctionLibrary.h"
 
 #include "Engine/CollisionProfile.h"
+#include "Engine/World.h"
 
 ECollisionChannel FConstructionSystemUtils::FindPrefabSnapChannel()
 {
