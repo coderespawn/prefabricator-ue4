@@ -1,8 +1,8 @@
 {
 	"FileVersion" : 3,
 	"FriendlyName" : "Prefabricator",
-	"Version" : 28,
-	"VersionName" : "1.11.0",
+	"Version" : 29,
+	"VersionName" : "1.12.0",
 	"CreatedBy" : "Code Respawn",
 	"CreatedByURL" : "http://prefabricator.dev",
 	"DocsURL": "http://docs.prefabricator.dev",
