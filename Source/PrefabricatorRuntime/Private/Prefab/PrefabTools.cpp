@@ -838,7 +838,7 @@ void FPrefabTools::LoadStateFromPrefabAsset(APrefabActor* PrefabActor, const FPr
 
 				ParentActors(PrefabActor, ChildActor);
 
-				if (Template == nullptr || bPrefabOutOfDate) {
+				if (Template == nullptr) {
 					// We couldn't use a template,  so load the prefab properties in
 					LoadActorState(ChildActor, ActorItemData, InSettings);
 
