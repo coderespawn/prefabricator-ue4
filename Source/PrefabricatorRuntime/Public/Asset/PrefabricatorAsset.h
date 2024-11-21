@@ -3,6 +3,7 @@
 #pragma once
 #include "CoreMinimal.h"
 #include "Engine/EngineTypes.h"
+
 #include "PrefabricatorAsset.generated.h"
 
 class APrefabActor;
@@ -24,6 +25,20 @@ struct PREFABRICATORRUNTIME_API FPrefabricatorPropertyAssetMapping {
 	bool bUseQuotes = false;
 };
 
+
+USTRUCT()
+struct PREFABRICATORRUNTIME_API FPrefabricatorNestedPropertyData
+{
+	GENERATED_BODY()
+
+	/// Array length is used to initialize array inside FixupCrossReferences phase of serialization
+	UPROPERTY()
+	int32 ArrayLength = -1;
+
+	UPROPERTY()
+	FGuid CrossReferencePrefabActorId;
+};
+
 UCLASS()
 class PREFABRICATORRUNTIME_API UPrefabricatorProperty : public UObject {
 	GENERATED_BODY()
@@ -41,7 +56,10 @@ public:
 	bool bIsCrossReferencedActor = false;
 
 	UPROPERTY()
-	FGuid CrossReferencePrefabActorId;
+	bool bContainsStructProperty = false;
+
+	UPROPERTY()
+	TMap<FString, FPrefabricatorNestedPropertyData> NestedPropertyData;
 
 	void SaveReferencedAssetValues();
 	void LoadReferencedAssetValues();
