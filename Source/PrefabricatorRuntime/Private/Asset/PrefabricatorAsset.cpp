@@ -32,8 +32,10 @@ FVector FPrefabricatorAssetUtils::FindPivot(const TArray<AActor*>& InActors)
 			FBox ActorBounds = FPrefabTools::GetPrefabBounds(Actor, false);
 			Bounds += ActorBounds;
 		}
+		
+		AActor* FirstActor = InActors[0];
 
-		switch (GetDefault< UPrefabricatorSettings>()->PivotPosition)
+		switch (GetDefault<UPrefabricatorSettings>()->PivotPosition)
 		{
 		case EPrefabricatorPivotPosition::ExtremeLeft:
 			Pivot = Bounds.GetCenter() - Bounds.GetExtent();
@@ -44,6 +46,9 @@ FVector FPrefabricatorAssetUtils::FindPivot(const TArray<AActor*>& InActors)
 		case EPrefabricatorPivotPosition::Center:
 			Pivot = Bounds.GetCenter();
 			break;
+		case EPrefabricatorPivotPosition::FirstActor:
+			Pivot = FirstActor->GetActorLocation();
+			return Pivot;
 		default:;
 		}
 		Pivot.Z = Bounds.Min.Z;

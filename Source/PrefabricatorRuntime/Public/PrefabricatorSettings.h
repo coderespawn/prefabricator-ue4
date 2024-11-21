@@ -11,7 +11,8 @@ enum class EPrefabricatorPivotPosition : uint8
 {
 	ExtremeLeft,
 	ExtremeRight,
-	Center
+	Center,
+	FirstActor
 };
 
 /**
